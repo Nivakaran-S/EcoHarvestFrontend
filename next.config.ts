@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    domains: ['drive.usercontent.google.com', 'eco-harvest-backend.vercel.app', 'drive.google.com', 'lh3.googleusercontent.com', 'localhost'],
+  },
 };
 
 export default nextConfig;

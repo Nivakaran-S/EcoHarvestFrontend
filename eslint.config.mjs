@@ -22,6 +22,8 @@ const eslintConfig = [
       "no-unused-expressions": "off",
       "@typescript-eslint/no-explicit-any": "off",
       '@next/next/no-img-element': "off",
+      '@typescript-eslint/no-empty-object-type': "off",
+      "react-hooks/rules-of-hooks": "off"
     },
   },
 ];

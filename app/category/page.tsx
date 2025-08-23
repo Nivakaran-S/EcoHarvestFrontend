@@ -1,12 +1,12 @@
 "use client";
-
+import React, { Suspense } from "react";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import Max from "../components/Max";
 import Product from "../components/Product";
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import Star from '../images/log.png';
+import Star from "../images/log.png";
 import { useSearchParams } from "next/navigation";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -55,15 +55,15 @@ const CategoryPage: React.FC = () => {
   const [width, setWidth] = useState<number>(0);
   const selectRef = useRef<HTMLSelectElement>(null);
   const textRef = useRef<HTMLSpanElement>(null);
-  
+
   const searchParams = useSearchParams();
-  const categoryId = searchParams.get('categoryId') || '';
-  const categoryName = searchParams.get('categoryName') || 'All Categories';
-  
+  const categoryId = searchParams.get("categoryId") || "";
+  const categoryName = searchParams.get("categoryName") || "All Categories";
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [id, setId] = useState<string>('');
-  const [role, setRole] = useState<string>('');
+  const [id, setId] = useState<string>("");
+  const [role, setRole] = useState<string>("");
   const [userLoggedIn, setUserLoggedIn] = useState<boolean>(false);
   const [cart, setCart] = useState<Cart | undefined>(undefined);
   const [productsDetail, setProductsDetail] = useState<Product[]>([]);
@@ -89,8 +89,8 @@ const CategoryPage: React.FC = () => {
 
   useEffect(() => {
     updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
   // Fetch user cookie data
@@ -100,7 +100,7 @@ const CategoryPage: React.FC = () => {
         const response = await axios.get<UserData>(`${BASE_URL}/check-cookie/`, {
           withCredentials: true,
         });
-        
+
         setId(response.data.id);
         setRole(response.data.role);
 
@@ -132,7 +132,7 @@ const CategoryPage: React.FC = () => {
         setNumberOfCartItems(response.data.cart.products.length);
       } catch (err) {
         console.log("Cart Empty");
-        setCart(undefined); 
+        setCart(undefined);
       }
     };
     fetchCart();
@@ -144,8 +144,8 @@ const CategoryPage: React.FC = () => {
       try {
         const response = await axios.get<Product[]>(`${BASE_URL}/products?category=${categoryId}`);
         setProducts(response.data);
-        
-        const prices = response.data.map(p => p.unitPrice || 0);
+
+        const prices = response.data.map((p) => p.unitPrice || 0);
         const max = Math.max(...prices);
         const min = Math.min(...prices);
 
@@ -179,9 +179,7 @@ const CategoryPage: React.FC = () => {
   useEffect(() => {
     const sortProducts = () => {
       const filteredProducts = products.filter(
-        (product) =>
-          product.unitPrice >= priceRangeMin &&
-          product.unitPrice <= priceRangeMax
+        (product) => product.unitPrice >= priceRangeMin && product.unitPrice <= priceRangeMax
       );
 
       const sorted = [...filteredProducts];
@@ -219,7 +217,7 @@ const CategoryPage: React.FC = () => {
         id={id}
         userLoggedIn={userLoggedIn}
       />
-      
+
       <div className="pt-[15vh] w-full flex justify-center text-black">
         <div className="w-[95%] flex flex-row py-4">
           {/* Filters Sidebar */}
@@ -228,10 +226,12 @@ const CategoryPage: React.FC = () => {
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">Category</h3>
                 <div className="mt-2 space-y-2">
-                  {['All Categories', 'Daily Grocery', 'Drinks', 'Tea and Coffee'].map((category) => (
-                    <p 
+                  {["All Categories", "Daily Grocery", "Drinks", "Tea and Coffee"].map((category) => (
+                    <p
                       key={category}
-                      className={`cursor-pointer ${category === categoryName ? 'text-[#FDAA1C]' : 'hover:text-gray-500'}`}
+                      className={`cursor-pointer ${
+                        category === categoryName ? "text-[#FDAA1C]" : "hover:text-gray-500"
+                      }`}
                       onClick={() => router.push(`/category?categoryName=${encodeURIComponent(category)}`)}
                     >
                       {category}
@@ -261,11 +261,11 @@ const CategoryPage: React.FC = () => {
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">Brands</h3>
                 <div className="mt-2 space-y-2">
-                  {['Anchor', 'Nestle', 'Ambewela', 'Elephant House'].map((brand) => (
+                  {["Anchor", "Nestle", "Ambewela", "Elephant House"].map((brand) => (
                     <div key={brand} className="flex items-center space-x-2">
-                      <input 
-                        type="checkbox" 
-                        className="accent-[#FDAA1C] cursor-pointer" 
+                      <input
+                        type="checkbox"
+                        className="accent-[#FDAA1C] cursor-pointer"
                         onChange={() => {}}
                       />
                       <span>{brand}</span>
@@ -277,8 +277,15 @@ const CategoryPage: React.FC = () => {
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">Customer Reviews</h3>
                 <div className="flex items-center mt-2">
-                  {[1,2,3,4,5].map(star => (
-                    <Image key={star} src={Star} alt="Star" width={15} height={15} className="cursor-pointer" />
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Image
+                      key={star}
+                      src={Star}
+                      alt="Star"
+                      width={15}
+                      height={15}
+                      className="cursor-pointer"
+                    />
                   ))}
                   <span className="ml-1 text-sm">& Up</span>
                 </div>
@@ -289,9 +296,7 @@ const CategoryPage: React.FC = () => {
           {/* Products Grid */}
           <div className="w-5/6 pl-4 border-l border-gray-300">
             <div className="flex justify-between items-center bg-gray-100 rounded px-4 py-2 mb-4">
-              <p className="text-sm">
-                Showing {sortedProducts.length} results for {categoryName}
-              </p>
+              <p className="text-sm">Showing {sortedProducts.length} results for {categoryName}</p>
               <div className="flex items-center space-x-2">
                 <span className="text-sm">Sort by:</span>
                 <div className="relative">
@@ -317,7 +322,7 @@ const CategoryPage: React.FC = () => {
             </div>
 
             <h2 className="text-2xl font-bold mb-6">Results for {categoryName}</h2>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {sortedProducts.length > 0 ? (
                 sortedProducts.map((product) => (
@@ -347,4 +352,12 @@ const CategoryPage: React.FC = () => {
   );
 };
 
-export default CategoryPage;
+function Category(): React.JSX.Element {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CategoryPage />
+    </Suspense>
+  );
+}
+
+export default Category;

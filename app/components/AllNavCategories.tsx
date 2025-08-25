@@ -35,7 +35,7 @@ const AllNavCategories: React.FC = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get<ProductCategory[]>("http://localhost:8000/productcategories/");
+        const response = await axios.get<ProductCategory[]>("https://eco-harvest-backend.vercel.app/productcategories/");
         setProductCategories(response.data);
         console.log(response.data);
       } catch (error) {

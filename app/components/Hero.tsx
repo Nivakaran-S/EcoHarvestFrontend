@@ -1,8 +1,10 @@
 'use client';
 import Image from 'next/image';
-import HeroImage from '../images/teaAndCoffee2.png';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+
+// Define base URL
+const BASE_URL = 'https://eco-harvest-backend.vercel.app';
 
 // Define interface for advertisement object
 interface Advertisement {
@@ -20,7 +22,7 @@ const Hero: React.FC = () => {
   useEffect(() => {
     const fetchAdvertisement = async () => {
       try {
-        const response = await axios.get<Advertisement[]>('http://localhost:8000/advertisement/');
+        const response = await axios.get<Advertisement[]>(`${BASE_URL}/advertisement/`);
         setAdvertisement(response.data);
       } catch (error) {
         console.error('Error fetching advertisement:', error);
@@ -36,7 +38,7 @@ const Hero: React.FC = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:8000/report/generateorderreport',
+        `${BASE_URL}/report/generateorderreport`,
         {},
         { responseType: 'blob' }
       );

@@ -34,6 +34,7 @@ export default function CustomerHome() {
         });
 
         const userId = response.data.id;
+        console.log(userId)
 
         try {
           const response2 = await axios.get(`${BASE_URL}/customers/details/:${userId}`);

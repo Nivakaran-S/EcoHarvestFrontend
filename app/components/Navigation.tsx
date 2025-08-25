@@ -8,16 +8,19 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import LogoutButton from "./Logout";
 import AllNavCategories from "./AllNavCategories";
-import SearchIcon from '../images/search-icon.png';
-import mainMealsWallpaper from '../images/mainMealsWallpaper.jpg';
-import bakedFood from '../images/backedFood.jpg';
-import sideDishes from '../images/sideDishes.jpg';
-import meatSeaFood from '../images/meatAndSeaFood.jpg';
-import dairyProducts from '../images/Desserts.jpg';
-import riceAndGrains from '../images/RiceGrainsNoodles.jpg';
-import Beverages from '../images/beverages.jpg';
-import Sauces from '../images/Sauces.jpg';
-import EcoHarvest from '../images/ecoHarvestNavLogo2.png';
+import SearchIcon from "../images/search-icon.png";
+import mainMealsWallpaper from "../images/mainMealsWallpaper.jpg";
+import bakedFood from "../images/backedFood.jpg";
+import sideDishes from "../images/sideDishes.jpg";
+import meatSeaFood from "../images/meatAndSeaFood.jpg";
+import dairyProducts from "../images/Desserts.jpg";
+import riceAndGrains from "../images/RiceGrainsNoodles.jpg";
+import Beverages from "../images/beverages.jpg";
+import Sauces from "../images/Sauces.jpg";
+import EcoHarvest from "../images/ecoHarvestNavLogo2.png";
+
+// Centralized API base URL
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://eco-harvest-backend.vercel.app";
 
 // Define interfaces for props
 interface ProductCategory {
@@ -48,7 +51,13 @@ interface NavigationProps {
   numberOfCartItems: number;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ id, productsDetail, userLoggedIn, cart, numberOfCartItems }) => {
+const Navigation: React.FC<NavigationProps> = ({
+  id,
+  productsDetail,
+  userLoggedIn,
+  cart,
+  numberOfCartItems,
+}) => {
   const [productCategories, setProductCategories] = useState<ProductCategory[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [dropdownWidth, setDropdownWidth] = useState<string>("auto");
@@ -57,13 +66,13 @@ const Navigation: React.FC<NavigationProps> = ({ id, productsDetail, userLoggedI
   const [customerId, setCustomerId] = useState<string | undefined>(id);
   const [query, setQuery] = useState<string>("");
   const [onCategoryHover, setOnCategoryHover] = useState<boolean>(false);
-  const [navCategorySelect, setNavCategorySelect] = useState<string>('Meals & Main Courses');
+  const [navCategorySelect, setNavCategorySelect] = useState<string>("Meals & Main Courses");
   const [NumCartItems, setNumCartItems] = useState<number>(0);
   const router = useRouter();
 
   useEffect(() => {
     if (textRefs.current.length > 0) {
-      const maxWidth = Math.max(...textRefs.current.map(el => el?.offsetWidth || 0));
+      const maxWidth = Math.max(...textRefs.current.map((el) => el?.offsetWidth || 0));
       setDropdownWidth(`${maxWidth + 40}px`);
     }
   }, [productCategories]);
@@ -72,7 +81,7 @@ const Navigation: React.FC<NavigationProps> = ({ id, productsDetail, userLoggedI
     let isMounted = true;
     const fetchCategories = async () => {
       try {
-        const response = await axios.get<ProductCategory[]>("http://localhost:8000/productcategories/");
+        const response = await axios.get<ProductCategory[]>(`${BASE_URL}/productcategories/`);
         if (isMounted) {
           setProductCategories(response.data);
         }
@@ -85,7 +94,9 @@ const Navigation: React.FC<NavigationProps> = ({ id, productsDetail, userLoggedI
     };
 
     fetchCategories();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleNavLoginClick = () => {
@@ -95,7 +106,11 @@ const Navigation: React.FC<NavigationProps> = ({ id, productsDetail, userLoggedI
   const handleSearch = async () => {
     try {
       if (query) {
-        router.push(`/search?query=${encodeURIComponent(query)}&category=${encodeURIComponent(selectedCategory)}`);
+        router.push(
+          `/search?query=${encodeURIComponent(query)}&category=${encodeURIComponent(
+            selectedCategory
+          )}`
+        );
       }
     } catch (error) {
       console.error("Error searching products:", error);
@@ -110,13 +125,16 @@ const Navigation: React.FC<NavigationProps> = ({ id, productsDetail, userLoggedI
             <Image height={60} src={EcoHarvest} alt="EcoHarvest Logo" />
           </div>
           
+          {/* Search Bar + Categories */}
           <div className="flex flex-row ml-[10px] w-full">
             {/* Hidden width measurement elements */}
             <div className="absolute invisible">
               {productCategories.map((category, index) => (
                 <span
                   key={category._id}
-                  ref={el => { textRefs.current[index] = el; }}
+                  ref={(el) => {
+                    textRefs.current[index] = el;
+                  }}
                   className="whitespace-nowrap"
                 >
                   {category.name}
@@ -157,7 +175,11 @@ const Navigation: React.FC<NavigationProps> = ({ id, productsDetail, userLoggedI
               />
             </div>
 
-            <div onClick={handleSearch} className="bg-[#FDAA1C] flex items-center justify-center cursor-pointer h-[5.6vh] w-[8vh] rounded-r-[5px]">
+            {/* Search button */}
+            <div
+              onClick={handleSearch}
+              className="bg-[#FDAA1C] flex items-center justify-center cursor-pointer h-[5.6vh] w-[8vh] rounded-r-[5px]"
+            >
               <Image src={SearchIcon} height={20} width={20} alt="Search Icon" />
             </div>
           </div>
@@ -186,7 +208,9 @@ const Navigation: React.FC<NavigationProps> = ({ id, productsDetail, userLoggedI
               width={60}
               height={60}
             />
-            <p className="text-[#FFCC29] absolute top-[-19.5px] font-bold right-[11px] text-[33px]">{numberOfCartItems}</p>
+            <p className="text-[#FFCC29] absolute top-[-19.5px] font-bold right-[11px] text-[33px]">
+              {numberOfCartItems}
+            </p>
             <div className="w-[50vh] bg-[#F5F5F5] hidden group-hover:block p-[10px] absolute right-[2%] top-[6.4vh] drop-shadow-sm rounded-[10px] ring-gray-800 ring-[0.5px]">
               {cart && cart.products && cart.products.length > 0 ? (
                 cart.products.map((item) =>
@@ -252,17 +276,18 @@ const Navigation: React.FC<NavigationProps> = ({ id, productsDetail, userLoggedI
             <p>All Categories</p>
           </div>
           
-          <div onClick={() => router.push('/order-history')} className="cursor-pointer">
+          <div onClick={() => router.push("/order-history")} className="cursor-pointer">
             <p>Order History</p>
           </div>
           
-          <div onClick={() => router.push('/account')} className="cursor-pointer">
+          <div onClick={() => router.push("/account")} className="cursor-pointer">
             <p>Account Management</p>
           </div>
         </div>
         
+        {/* Categories dropdown expand */}
         <div
-          className={`${onCategoryHover ? 'max-h-[72vh]' : 'max-h-0'} 
+          className={`${onCategoryHover ? "max-h-[72vh]" : "max-h-0"} 
                       transition-all duration-500 
                       overflow-hidden 
                       origin-top 

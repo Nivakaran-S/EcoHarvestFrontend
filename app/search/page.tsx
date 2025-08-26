@@ -123,7 +123,7 @@ const SearchPage: React.FC = () => {
       />
 
       {/* Main Content */}
-      <div className="pt-[15vh] w-full flex items-start justify-center text-black">
+      <div className="pt-[15vh] bg-white w-full flex items-start justify-center text-black">
         <div className="w-[95%] flex flex-row py-[15px] gap-4">
           {/* Sidebar */}
           <div className="w-[16%]">

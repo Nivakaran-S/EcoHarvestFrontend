@@ -213,7 +213,7 @@ const Login: React.FC = () => {
                 value={username}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
                 type="text"
-                className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                 placeholder=" "
               />
               <label
@@ -239,7 +239,7 @@ const Login: React.FC = () => {
                 value={password}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                 type="password"
-                className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                 placeholder=" "
               />
               <label
@@ -344,7 +344,7 @@ const Login: React.FC = () => {
                         type="text"
                         value={regFirstName}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegFirstName(e.target.value)}
-                        className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                         placeholder=" "
                       />
                       <label
@@ -370,7 +370,7 @@ const Login: React.FC = () => {
                         type="text"
                         value={regLastName}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegLastName(e.target.value)}
-                        className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                         placeholder=" "
                       />
                       <label
@@ -395,7 +395,7 @@ const Login: React.FC = () => {
                         type="date"
                         value={regDateOfBirth}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegDateOfBirth(e.target.value)}
-                        className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                         placeholder=" "
                       />
                       <label
@@ -439,7 +439,7 @@ const Login: React.FC = () => {
                         type="text"
                         value={regAddress}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegAddress(e.target.value)}
-                        className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                         placeholder=" "
                       />
                       <label
@@ -527,7 +527,7 @@ const Login: React.FC = () => {
                       type="text"
                       value={regEmail}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegEmail(e.target.value)}
-                      className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                       placeholder=" "
                     />
                     <label
@@ -553,7 +553,7 @@ const Login: React.FC = () => {
                       type="text"
                       value={regPhoneNumber}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegPhoneNumber(e.target.value)}
-                      className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                       placeholder=" "
                     />
                     <label
@@ -636,7 +636,7 @@ const Login: React.FC = () => {
                       type="text"
                       value={regUserName}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegUserName(e.target.value)}
-                      className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                       placeholder=" "
                     />
                     <label
@@ -662,7 +662,7 @@ const Login: React.FC = () => {
                       type="password"
                       value={regPassword}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegPassword(e.target.value)}
-                      className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                       placeholder=" "
                     />
                     <label
@@ -687,7 +687,7 @@ const Login: React.FC = () => {
                       type="password"
                       value={regRepeatPassword}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegRepeatPassword(e.target.value)}
-                      className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                       placeholder=" "
                     />
                     <label
@@ -767,7 +767,7 @@ const Login: React.FC = () => {
                         type="text"
                         value={comCompanyName}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComCompanyName(e.target.value)}
-                        className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                         placeholder=" "
                       />
                       <label
@@ -793,7 +793,7 @@ const Login: React.FC = () => {
                         type="text"
                         value={comFirstName}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComFirstName(e.target.value)}
-                        className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                         placeholder=" "
                       />
                       <label
@@ -819,7 +819,7 @@ const Login: React.FC = () => {
                         type="text"
                         value={comLastName}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComLastName(e.target.value)}
-                        className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                         placeholder=" "
                       />
                       <label
@@ -844,7 +844,7 @@ const Login: React.FC = () => {
                         type="date"
                         value={comDateOfBirth}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComDateOfBirth(e.target.value)}
-                        className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                         placeholder=" "
                       />
                       <label
@@ -887,7 +887,7 @@ const Login: React.FC = () => {
                         type="text"
                         value={comCategory}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComCategory(e.target.value)}
-                        className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                         placeholder=" "
                       />
                       <label
@@ -977,7 +977,7 @@ const Login: React.FC = () => {
                       type="text"
                       value={comEmail}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComEmail(e.target.value)}
-                      className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                       placeholder=" "
                     />
                     <label
@@ -1003,7 +1003,7 @@ const Login: React.FC = () => {
                       type="text"
                       value={comAddress}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComAddress(e.target.value)}
-                      className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                       placeholder=" "
                     />
                     <label
@@ -1029,7 +1029,7 @@ const Login: React.FC = () => {
                       type="text"
                       value={comPhoneNumber}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComPhoneNumber(e.target.value)}
-                      className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                       placeholder=" "
                     />
                     <label
@@ -1112,7 +1112,7 @@ const Login: React.FC = () => {
                       type="text"
                       value={comUserName}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComUserName(e.target.value)}
-                      className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                       placeholder=" "
                     />
                     <label
@@ -1138,7 +1138,7 @@ const Login: React.FC = () => {
                       type="password"
                       value={comPassword}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComPassword(e.target.value)}
-                      className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                       placeholder=" "
                     />
                     <label
@@ -1163,7 +1163,7 @@ const Login: React.FC = () => {
                       type="password"
                       value={comRepeatPassword}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComRepeatPassword(e.target.value)}
-                      className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
                       placeholder=" "
                     />
                     <label

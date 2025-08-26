@@ -12,10 +12,10 @@ import { useState, useEffect, ChangeEvent } from "react";
 import axios from "axios";
 
 // ====== Base URL ======
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = "https://eco-harvest-backend.vercel.app/";
 
 // ====== Types ======
-interface Product {
+interface ProductDetail {
   id: string;
   name: string;
   subtitle: string;
@@ -24,7 +24,7 @@ interface Product {
   averageRating: number;
   numberOfReviews: number;
   statSubus?: string;
-  imageUrl?: string;
+  imageUrl: string;
 }
 
 interface Review {
@@ -33,8 +33,8 @@ interface Review {
   comment: string;
 }
 
-interface CartProduct {
-  _id: string; 
+interface CartItem {
+  _id: string;
   productId: string;
   quantity: number;
   name?: string;
@@ -48,7 +48,7 @@ interface CartProduct {
 }
 
 interface Cart {
-  products: CartProduct[];
+  products: CartItem[];
 }
 
 const ProductPage = () => {
@@ -63,7 +63,7 @@ const ProductPage = () => {
   // ====== State ======
   const [quantity, setQuantity] = useState<number>(1);
   const [cart, setCart] = useState<Cart>({ products: [] });
-  const [productDetails, setProductDetails] = useState<Product[]>([]);
+  const [productDetails, setProductDetails] = useState<ProductDetail[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [userReview, setUserReview] = useState<string>("");
   const [userRating, setUserRating] = useState<number>(0);
@@ -76,8 +76,11 @@ const ProductPage = () => {
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
-        const response = await axios.get<Product>(`${BASE_URL}/products/${productId}`);
-        setProductDetails([{ ...response.data, imageUrl: response.data.imageUrl || ProductImage2.src }]);
+        const response = await axios.get<ProductDetail>(`${BASE_URL}/products/${productId}`);
+        setProductDetails([{
+          ...response.data,
+          imageUrl: response.data.imageUrl || ProductImage2.src
+        }]);
       } catch (err) {
         console.error("Error fetching product details:", err);
       }
@@ -112,14 +115,13 @@ const ProductPage = () => {
         if (["Customer", "Company"].includes(response.data.role)) {
           setUserLoggedIn(true);
           try {
-            const cartResponse = await axios.get<{ cart: Cart; products: Product[] }>(
+            const cartResponse = await axios.get<{ cart: Cart; products: ProductDetail[] }>(
               `${BASE_URL}/cart/${response.data.id}`
             );
 
-            // Map fetched cart products to include _id
             const cartData: Cart = {
               products: cartResponse.data.cart.products.map((p: any) => ({
-                _id: p._id,
+                _id: p._id || String(Math.random()),
                 productId: p.productId,
                 quantity: p.quantity,
                 name: p.name,
@@ -130,17 +132,16 @@ const ProductPage = () => {
                 numberOfReviews: p.numberOfReviews,
                 statSubus: p.statSubus,
                 imageUrl: p.imageUrl || ProductImage2.src,
-              })),
+              }))
             };
 
             setCart(cartData);
             setNumberOfCartItems(cartData.products.length);
 
-            // Merge product details with cart products if empty
             if (productDetails.length === 0 && cartResponse.data.products.length > 0) {
-              const mergedProducts = cartResponse.data.products.map((p) => ({
+              const mergedProducts = cartResponse.data.products.map(p => ({
                 ...p,
-                imageUrl: p.imageUrl || ProductImage2.src,
+                imageUrl: p.imageUrl || ProductImage2.src
               }));
               setProductDetails(mergedProducts);
             }
@@ -152,7 +153,7 @@ const ProductPage = () => {
         } else if (response.data.role === "Admin") {
           router.push("/admin");
         }
-      } catch (error) {
+      } catch {
         setUserLoggedIn(false);
       }
     };
@@ -160,8 +161,8 @@ const ProductPage = () => {
   }, [router]);
 
   // ====== Quantity Handlers ======
-  const handleIncreaseQuantity = () => setQuantity((prev) => prev + 1);
-  const handleDecreaseQuantity = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+  const handleIncreaseQuantity = () => setQuantity(prev => prev + 1);
+  const handleDecreaseQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
   const handleQuantityChange = (e: ChangeEvent<HTMLInputElement>) =>
     setQuantity(Math.max(1, Number(e.target.value) || 1));
 
@@ -177,19 +178,18 @@ const ProductPage = () => {
       );
 
       if (response.data.success) {
-        // Update cart state locally
-        setCart((prev) => {
-          const existingIndex = prev.products.findIndex((p) => p.productId === productId);
+        setCart(prev => {
+          const existingIndex = prev.products.findIndex(p => p.productId === productId);
           if (existingIndex >= 0) {
             prev.products[existingIndex].quantity += quantity;
           } else {
             prev.products.push({
-              _id: response.data.cartItemId || String(Math.random()), // fallback _id
+              _id: response.data.cartItemId || String(Math.random()),
               productId,
               quantity,
               name: productDetails[0]?.name,
               unitPrice: productDetails[0]?.unitPrice,
-              imageUrl: productDetails[0]?.imageUrl,
+              imageUrl: productDetails[0]?.imageUrl || ProductImage2.src
             });
           }
           setNumberOfCartItems(prev.products.length);
@@ -210,17 +210,15 @@ const ProductPage = () => {
   // ====== Review Handler ======
   const handleReviewSubmit = async () => {
     if (!userLoggedIn) return router.push("/login");
+
     try {
-      const response = await axios.post(`${BASE_URL}/reviews/`, {
+      await axios.post(`${BASE_URL}/reviews/`, {
         productId,
         userId: id,
         comment: userReview,
-        rating: userRating,
+        rating: userRating
       });
-      console.log("Review submitted:", response.data);
-
-      // Update reviews locally
-      setReviews((prev) => [...prev, { userName: "You", comment: userReview, rating: userRating }]);
+      setReviews(prev => [...prev, { userName: "You", comment: userReview, rating: userRating }]);
       setUserReview("");
       setUserRating(0);
     } catch (err) {
@@ -234,17 +232,12 @@ const ProductPage = () => {
         cart={cart}
         id={id}
         userLoggedIn={userLoggedIn}
-        productsDetail={productDetails.map(p => ({
-          ...p,
-          imageUrl: p.imageUrl || ProductImage2.src, // ensures string
-        }))}
+        productsDetail={productDetails.map(p => ({ ...p, imageUrl: p.imageUrl || ProductImage2.src }))}
         numberOfCartItems={numberOfCartItems}
       />
 
-
-      {productDetails.map((product, index) => (
-        <div key={index}>
-          {/* ===== Product Section ===== */}
+      {productDetails.map((product, idx) => (
+        <div key={idx}>
           <div className="text-black bg-[#F5F5F5] w-full flex flex-col items-center space-y-10">
             <div className="bg-gradient-to-b pt-[16vh] flex flex-col items-center justify-center from-gray-400 to-[#F5F5F5] w-full h-full">
               <div className="w-[94vw] flex justify-center items-center rounded-[15px] overflow-hidden">
@@ -357,7 +350,7 @@ const ProductPage = () => {
                 {/* Product Image */}
                 <div className="w-[61.8%] flex flex-col items-center justify-center h-[83vh] space-y-[30px]">
                   <div className="w-full h-[350px] relative flex justify-center items-end">
-                    <Image alt="Product Image" src={ProductImage2} height={350} />
+                    <Image alt="Product Image" src={product.imageUrl || ProductImage2} height={350} width={350} />
                   </div>
                 </div>
               </div>
@@ -393,7 +386,6 @@ const ProductPage = () => {
                     </div>
                   )}
 
-                  {/* Write a Review */}
                   {userLoggedIn ? (
                     <div className="bg-white mt-[10px] ring-[0.5px] ring-gray-500 w-full py-[15px] px-[25px] rounded-[10px] flex flex-col space-y-[10px]">
                       <p className="text-[20px]">Write a Review</p>
@@ -435,4 +427,13 @@ const ProductPage = () => {
   );
 };
 
-export default ProductPage;
+
+import React, { Suspense } from "react";
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading product...</div>}>
+      <ProductPage />
+    </Suspense>
+  );
+}

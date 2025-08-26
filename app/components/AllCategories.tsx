@@ -17,6 +17,7 @@ interface ProductCategory {
 const AllCategories: React.FC = () => {
   const [productCategories, setProductCategories] = useState<ProductCategory[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [fallbackImages, setFallbackImages] = useState<{ [key: string]: string | StaticImageData }>({});
   const router = useRouter();
 
@@ -27,6 +28,7 @@ const AllCategories: React.FC = () => {
         setProductCategories(response.data);
       } catch (error) {
         console.error("Error fetching categories:", error);
+        setError("Failed to load categories. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -51,6 +53,14 @@ const AllCategories: React.FC = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="text-black bg-[#F5F5F5] flex items-center justify-center h-[100vh]">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="text-black bg-[#F5F5F5] flex items-center justify-center min-h-screen">
       <div className="w-[94vw]">
@@ -64,7 +74,7 @@ const AllCategories: React.FC = () => {
               <div
                 key={category._id}
                 onClick={() => handleCategoryClick(category._id, category.name)}
-                className="flex flex-col cursor-pointer ring-[1px] items-center justify-center relative bg-red-500 rounded-[10px] h-[28vh] w-[28vh] transition-shadow duration-300 hover:shadow-2xl"
+                className="flex flex-col cursor-pointer ring-[1px] items-center justify-center relative bg-red-500 rounded-[10px] h-[28vh] w-[28vh] transition duration-300 hover:scale-[105%] hover:shadow-2xl"
               >
                 <Image
                   src={fallbackImages[category._id] || category.imageUrl || PlaceholderImage}
@@ -74,8 +84,7 @@ const AllCategories: React.FC = () => {
                   className="rounded-[10px] h-[100%] object-cover"
                   onError={() => handleImageError(category._id)}
                 />
-
-                <p className="absolute px-3 py-1 text-center text-[23px] text-white leading-[27px] rounded-[0px] w-[100%] h-[45%] flex items-center justify-center bg-white/20 backdrop-blur-sm">
+                <p className="absolute px-3 py-1 text-center text-[23px] text-white leading-[27px] w-full h-[45%] flex items-center justify-center bg-white/20 backdrop-blur-sm">
                   {category.name}
                 </p>
               </div>

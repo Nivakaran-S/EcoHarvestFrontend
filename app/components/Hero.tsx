@@ -58,8 +58,8 @@ const Hero: React.FC = () => {
       {advertisement.length > 0 && (
         <div className="w-full px-[100px] flex flex-row items-center h-[95%] rounded-[20px]">
           <div className="select-none">
-            <div className="w-[90%]">
-              <p className="text-[45px] leading-[53px]">{advertisement[0].title}</p>
+            <div className="w-[80%]">
+              <p className="text-[55px] leading-[65px]">{advertisement[0].title}</p>
             </div>
             <div className="w-[80%] pt-[5px]">
               <p className="text-[20px] leading-[26px] text-gray-800">

@@ -98,7 +98,7 @@ const Max: React.FC = () => {
   };
 
   return (
-    <div className={`${max ? 'h-[100vh] w-[100vw]' : ''} fixed text-black bottom-[0px] right-[0px]`}>
+    <div className={`${max ? 'h-[100vh] w-[100vw]' : ''} fixed z-[9999] text-black bottom-[0px] right-[0px]`}>
       <div
         onClick={onMaxFalseClick}
         className={`absolute top-0 left-0 w-screen h-screen bg-black transition-opacity duration-500 opacity-40 ${max ? 'flex' : 'hidden'}`}

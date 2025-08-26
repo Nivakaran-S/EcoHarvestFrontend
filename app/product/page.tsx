@@ -82,7 +82,8 @@ const ProductPageComponent = () => {
           ...response.data,
           imageUrl: response.data.imageUrl || ProductImage2.src,
         });
-        console.log(response)
+        console.log('product: ',response.data)
+        console.log('product name', response.data.name)
       } catch (err) {
         console.error("Error fetching product details:", err);
         setError("Failed to load product details");

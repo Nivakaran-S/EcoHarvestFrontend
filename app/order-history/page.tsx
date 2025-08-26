@@ -208,7 +208,7 @@ const OrderHistory: React.FC = () => {
         id={id}
         userLoggedIn={userLoggedIn}
       />
-      <div className="pt-[15vh] w-[100%] flex items-center justify-center text-black">
+      <div className="pt-[15vh] bg-white w-[100%] flex items-center justify-center text-black">
         <div className="w-[95%] min-h-[100vh] flex flex-row ">
           <div className="w-[76.4%] pr-[20px] h-[100%]">
             <div className="w-[100%] flex flex-row h-[200px] bg-gray-300 rounded-[10px] mt-[10px] ring-[0.5px] ring-gray-800 ">

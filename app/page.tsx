@@ -27,44 +27,47 @@ export default function CustomerHome() {
   const router = useRouter();
 
   useEffect(() => {
-    const fetchCookies = async () => {
-      try {
-        const response = await axios.get(`${BASE_URL}/check-cookie/`, {
-          withCredentials: true,
-        });
+  const fetchCookiesAndData = async () => {
+    try {
+      
+      const { data } = await axios.get(`${BASE_URL}/check-cookie`, {
+        withCredentials: true,
+      });
 
-        const userId = response.data.id;
-        console.log(userId)
+      const userId = data.id;
+      setId(userId);
+      setRole(data.role);
+      setUserLoggedIn(true);
+      setIsLoggedIn(data.role === "Customer");
 
-        try {
-          const response2 = await axios.get(`${BASE_URL}/customers/details/:${userId}`);
-          setUserInformation(response2.data);
 
-          try {
-            const response3 = await axios.get(`${BASE_URL}/notification/:${userId}`);
-            setNotifications(response3.data);
-          } catch (err) {
-            console.error("Error fetching notifications:", err);
-          }
-        } catch (err) {
-          console.error("Error fetching user information:", err);
-        }
+      const [userRes, notifRes] = await Promise.allSettled([
+        axios.get(`${BASE_URL}/customers/details/${userId}`),
+        axios.get(`${BASE_URL}/notification/${userId}`),
+      ]);
 
-        setId(userId);
-        setRole(response.data.role);
-        setIsLoggedIn(true);
-        setUserLoggedIn(true);
-
-        if (response.data.role === "Customer") setIsLoggedIn(true);
-
-      } catch (error) {
-        setIsLoggedIn(false);
-        console.error("Error fetching cookies:", error);
+      if (userRes.status === "fulfilled") {
+        setUserInformation(userRes.value.data);
+      } else {
+        console.error("Error fetching user information:", userRes.reason);
       }
-    };
 
-    fetchCookies();
-  }, []);
+      if (notifRes.status === "fulfilled") {
+        setNotifications(notifRes.value.data);
+      } else {
+        console.error("Error fetching notifications:", notifRes.reason);
+      }
+
+    } catch (error) {
+      console.error("Error fetching cookies:", error);
+      setIsLoggedIn(false);
+      setUserLoggedIn(false);
+    }
+  };
+
+  fetchCookiesAndData();
+}, []);
+
 
   useEffect(() => {
     const fetchCart = async () => {

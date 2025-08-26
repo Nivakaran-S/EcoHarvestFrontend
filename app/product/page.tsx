@@ -1,27 +1,30 @@
 "use client";
-import { Suspense, useState, useEffect } from "react";
+
 import Footer from "../components/Footer";
 import Navigation from "../components/Navigation";
+import Max from "../components/Max";
+import StarRating from "../components/StarRating";
+
 import Image from "next/image";
 import ProductImage2 from "../images/product.png";
-import Star from "../images/log.png";
-import Max from "../components/Max";
-import ProductComp from "../components/Product"; // ✅ renamed import
 import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect, ChangeEvent } from "react";
 import axios from "axios";
-import StarRating from "../components/StarRating";
-import * as React from "react";
 
-const BASE_URL = "https://eco-harvest-backend.vercel.app";
+// ====== Base URL ======
+const BASE_URL = "http://localhost:8000";
 
+// ====== Types ======
 interface Product {
+  id: string;
   name: string;
   subtitle: string;
-  averageRating: number;
-  numberOfReviews: number;
   unitPrice: number;
   MRP: number;
-  statSubus: string;
+  averageRating: number;
+  numberOfReviews: number;
+  statSubus?: string;
+  imageUrl?: string;
 }
 
 interface Review {
@@ -30,96 +33,119 @@ interface Review {
   comment: string;
 }
 
-interface Cart {
-  products: any[];
+interface CartProduct {
+  _id: string; 
+  productId: string;
+  quantity: number;
+  name?: string;
+  subtitle?: string;
+  unitPrice?: number;
+  MRP?: number;
+  averageRating?: number;
+  numberOfReviews?: number;
+  statSubus?: string;
+  imageUrl?: string;
 }
 
-const ProductPage: React.FC = () => {
-  const searchParams = useSearchParams();
-  const productId = searchParams.get("productId") || "";
-  const discountPrice = searchParams.get("discountPrice");
-  const discountPercentage = searchParams.get("discountPercentage");
+interface Cart {
+  products: CartProduct[];
+}
 
+const ProductPage = () => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const productId = searchParams.get("productId") || "";
+  const discountPriceParam = searchParams.get("discountPrice");
+  const discountPercentage = searchParams.get("discountPercentage");
+  const discountPrice = discountPriceParam ? Number(discountPriceParam) : null;
+
+  // ====== State ======
   const [quantity, setQuantity] = useState<number>(1);
   const [cart, setCart] = useState<Cart>({ products: [] });
-  const [id, setId] = useState<string>("");
-  const [role, setRole] = useState<string>("");
-  const [userLoggedIn, setUserLoggedIn] = useState<boolean>(false);
   const [productDetails, setProductDetails] = useState<Product[]>([]);
-  const [product, setProduct] = useState<any[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [userReview, setUserReview] = useState<string>("");
   const [userRating, setUserRating] = useState<number>(0);
+  const [id, setId] = useState<string>("");
+  const [role, setRole] = useState<string>("");
+  const [userLoggedIn, setUserLoggedIn] = useState<boolean>(false);
   const [numberOfCartItems, setNumberOfCartItems] = useState<number>(0);
 
-  const router = useRouter();
-
-  const handleReviewSubmit = async (): Promise<void> => {
-    try {
-      const response = await axios.post(`${BASE_URL}/reviews/`, {
-        productId,
-        userId: id,
-        comment: userReview,
-        rating: userRating,
-      });
-      console.log("Review submitted successfully:", response.data);
-      window.location.reload();
-    } catch (error) {
-      console.error("Error submitting review:", error);
-    }
-  };
-
+  // ====== Fetch Product Details ======
   useEffect(() => {
-    const fetchProductDetails = async (): Promise<void> => {
+    const fetchProductDetails = async () => {
       try {
-        const response = await axios.get<Product[]>(
-          `${BASE_URL}/products/${productId}`
-        );
-        setProductDetails(response.data);
+        const response = await axios.get<Product>(`${BASE_URL}/products/${productId}`);
+        setProductDetails([{ ...response.data, imageUrl: response.data.imageUrl || ProductImage2.src }]);
       } catch (err) {
         console.error("Error fetching product details:", err);
       }
     };
-    if (productId) fetchProductDetails();
+    fetchProductDetails();
   }, [productId]);
 
+  // ====== Fetch Reviews ======
   useEffect(() => {
-    const fetchReviews = async (): Promise<void> => {
+    const fetchReviews = async () => {
       try {
-        const response = await axios.get<Review[]>(
-          `${BASE_URL}/reviews/${productId}`
-        );
+        const response = await axios.get<Review[]>(`${BASE_URL}/reviews/${productId}`);
         setReviews(response.data);
       } catch (err) {
         console.error("Error fetching reviews:", err);
       }
     };
-    if (productId) fetchReviews();
+    fetchReviews();
   }, [productId]);
 
+  // ====== Fetch User Info & Cart ======
   useEffect(() => {
-    const fetchCookies = async (): Promise<void> => {
+    const fetchUserAndCart = async () => {
       try {
-        const response = await axios.get<{ id: string; role: string }>(
-          `${BASE_URL}/check-cookie/`,
-          { withCredentials: true }
-        );
+        const response = await axios.get<{ id: string; role: string }>(`${BASE_URL}/check-cookie/`, {
+          withCredentials: true,
+        });
 
         setId(response.data.id);
         setRole(response.data.role);
 
-        if (response.data.role === "Customer" || response.data.role === "Company") {
+        if (["Customer", "Company"].includes(response.data.role)) {
           setUserLoggedIn(true);
           try {
-            const response2 = await axios.get<{
-              cart: Cart;
-              products: any[];
-            }>(`${BASE_URL}/cart/${response.data.id}`);
-            setCart(response2.data.cart);
-            setProduct(response2.data.products);
-            setNumberOfCartItems(response2.data.cart.products.length);
+            const cartResponse = await axios.get<{ cart: Cart; products: Product[] }>(
+              `${BASE_URL}/cart/${response.data.id}`
+            );
+
+            // Map fetched cart products to include _id
+            const cartData: Cart = {
+              products: cartResponse.data.cart.products.map((p: any) => ({
+                _id: p._id,
+                productId: p.productId,
+                quantity: p.quantity,
+                name: p.name,
+                subtitle: p.subtitle,
+                unitPrice: p.unitPrice,
+                MRP: p.MRP,
+                averageRating: p.averageRating,
+                numberOfReviews: p.numberOfReviews,
+                statSubus: p.statSubus,
+                imageUrl: p.imageUrl || ProductImage2.src,
+              })),
+            };
+
+            setCart(cartData);
+            setNumberOfCartItems(cartData.products.length);
+
+            // Merge product details with cart products if empty
+            if (productDetails.length === 0 && cartResponse.data.products.length > 0) {
+              const mergedProducts = cartResponse.data.products.map((p) => ({
+                ...p,
+                imageUrl: p.imageUrl || ProductImage2.src,
+              }));
+              setProductDetails(mergedProducts);
+            }
           } catch (err) {
-            console.log("Error fetching cart:", err);
+            console.log("User has no cart yet");
           }
         } else if (response.data.role === "Vendor") {
           router.push("/vendor");
@@ -130,83 +156,277 @@ const ProductPage: React.FC = () => {
         setUserLoggedIn(false);
       }
     };
-
-    fetchCookies();
+    fetchUserAndCart();
   }, [router]);
 
-  const handleIncreaseQuantity = (): void => {
-    setQuantity((prev) => prev + 1);
-  };
+  // ====== Quantity Handlers ======
+  const handleIncreaseQuantity = () => setQuantity((prev) => prev + 1);
+  const handleDecreaseQuantity = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+  const handleQuantityChange = (e: ChangeEvent<HTMLInputElement>) =>
+    setQuantity(Math.max(1, Number(e.target.value) || 1));
 
-  const handleDecreaseQuantity = (): void => {
-    if (quantity > 1) {
-      setQuantity((prev) => prev - 1);
-    }
-  };
+  // ====== Cart Handlers ======
+  const addToCart = async () => {
+    if (!userLoggedIn) return router.push("/login");
 
-  const handleAddToCart = async (): Promise<void> => {
     try {
-      if (!userLoggedIn) {
-        router.push("/login");
-        return;
-      }
-      const response = await axios.post<{ success: boolean }>(
+      const response = await axios.post(
         `${BASE_URL}/cart/`,
         { productId, userId: id, quantity },
         { withCredentials: true, headers: { "Content-Type": "application/json" } }
       );
 
       if (response.data.success) {
-        console.log("Product added to cart");
-      }
-      window.location.reload();
+        // Update cart state locally
+        setCart((prev) => {
+          const existingIndex = prev.products.findIndex((p) => p.productId === productId);
+          if (existingIndex >= 0) {
+            prev.products[existingIndex].quantity += quantity;
+          } else {
+            prev.products.push({
+              _id: response.data.cartItemId || String(Math.random()), // fallback _id
+              productId,
+              quantity,
+              name: productDetails[0]?.name,
+              unitPrice: productDetails[0]?.unitPrice,
+              imageUrl: productDetails[0]?.imageUrl,
+            });
+          }
+          setNumberOfCartItems(prev.products.length);
+          return { ...prev };
+        });
+      } else console.error("Error adding product to cart");
     } catch (err) {
       console.error("Error adding product to cart:", err);
     }
   };
 
-  const handleAddToCart2 = async (): Promise<void> => {
-    try {
-      if (!userLoggedIn) {
-        router.push("/login");
-        return;
-      }
-      await axios.post<{ success: boolean }>(
-        `${BASE_URL}/cart/`,
-        { productId, userId: id, quantity },
-        { withCredentials: true, headers: { "Content-Type": "application/json" } }
-      );
-    } catch (err) {
-      console.error("Error adding product to cart:", err);
-    }
-  };
-
-  const handleBuyNow = async (): Promise<void> => {
-    if (!userLoggedIn) {
-      router.push("/login");
-      return;
-    }
-    await handleAddToCart2();
+  const handleBuyNow = async () => {
+    if (!userLoggedIn) return router.push("/login");
+    await addToCart();
     router.push("/cart");
+  };
+
+  // ====== Review Handler ======
+  const handleReviewSubmit = async () => {
+    if (!userLoggedIn) return router.push("/login");
+    try {
+      const response = await axios.post(`${BASE_URL}/reviews/`, {
+        productId,
+        userId: id,
+        comment: userReview,
+        rating: userRating,
+      });
+      console.log("Review submitted:", response.data);
+
+      // Update reviews locally
+      setReviews((prev) => [...prev, { userName: "You", comment: userReview, rating: userRating }]);
+      setUserReview("");
+      setUserRating(0);
+    } catch (err) {
+      console.error("Error submitting review:", err);
+    }
   };
 
   return (
     <div>
       <Navigation
-        numberOfCartItems={numberOfCartItems}
-        productsDetail={product}
         cart={cart}
         id={id}
         userLoggedIn={userLoggedIn}
+        productsDetail={productDetails.map(p => ({
+          ...p,
+          imageUrl: p.imageUrl || ProductImage2.src, // ensures string
+        }))}
+        numberOfCartItems={numberOfCartItems}
       />
+
+
       {productDetails.map((product, index) => (
         <div key={index}>
-          {/* ---- Product Details ---- */}
-          <div className="text-black bg-[#F5F5F5] w-full flex flex-col space-y-[10px] justify-center items-center">
-            {/* your UI code unchanged... */}
+          {/* ===== Product Section ===== */}
+          <div className="text-black bg-[#F5F5F5] w-full flex flex-col items-center space-y-10">
+            <div className="bg-gradient-to-b pt-[16vh] flex flex-col items-center justify-center from-gray-400 to-[#F5F5F5] w-full h-full">
+              <div className="w-[94vw] flex justify-center items-center rounded-[15px] overflow-hidden">
+                {/* Product Info */}
+                <div className="w-[38.2%] ml-[10px] border-[0.5px] border-gray-500 rounded-[10px] bg-[#F5F5F5] h-[70vh] mb-[40px]">
+                  {!!discountPercentage && (
+                    <div className="drop-shadow-lg hover:drop-shadow-2xl rounded-[10px] flex flex-col items-center justify-between p-[10px]">
+                      <div className="absolute top-0 right-0 bg-red-500 text-white text-[12px] px-3 py-[3px] rounded-bl-lg font-semibold shadow-md z-10">
+                        -{discountPercentage}%
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="py-[20px] px-[25px]">
+                    <p className="text-[28px] w-[80%] leading-[32px]">{product.name}</p>
+
+                    {/* Rating */}
+                    <div className="flex relative items-center justify-between mt-2">
+                      <div>
+                        <p className="text-[20px] ml-[10px] text-orange-500">{product.subtitle}</p>
+                        <div className="flex flex-row items-center mt-[10px] space-x-[3px]">
+                          <StarRating onChange={() => {}} rating={product.averageRating} />
+                          <p className="text-gray-700 text-[13px] flex items-center">
+                            <span className="text-[15px]">{product.averageRating}</span> ({product.numberOfReviews})
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="absolute top-[10px] right-0 flex flex-col items-center">
+                        <div className="rounded-full bg-[#FDAA1C] text-black ring-gray-800 ring-[0.5px] px-[15px] py-[0px] cursor-pointer">
+                          <p className="text-[13px]">Ask Max</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Pricing */}
+                    <div className="flex justify-between mt-[20px]">
+                      <div>
+                        {discountPrice ? (
+                          <>
+                            <p className="text-[35px] mt-[5px]">Rs. {discountPrice}</p>
+                            <p className="text-[15px] text-gray-600 pl-[5px]">
+                              <s>MRP: Rs. {product.unitPrice}</s>
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-[35px] mt-[5px]">Rs. {product.unitPrice}</p>
+                            <p className="text-[15px] text-gray-600 pl-[5px]">
+                              <s>MRP: Rs. {product.MRP}</s>
+                            </p>
+                          </>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-center justify-center">
+                        <p className="text-green-800 text-[19px]">{product.statSubus}</p>
+                      </div>
+                    </div>
+
+                    {/* Quantity */}
+                    <div className="flex items-center my-[10px]">
+                      <div className="flex items-center space-x-[10px]">
+                        <p className="text-[20px]">Quantity</p>
+                        <div className="flex items-center justify-center w-[90px] h-[30px] rounded-[5px] ring-[1px] ring-gray-400 bg-white">
+                          <div className="px-[10px] cursor-pointer" onClick={handleDecreaseQuantity}>
+                            <div className="bg-black h-[1px] w-[10px]" />
+                          </div>
+                          <input
+                            value={quantity}
+                            onChange={handleQuantityChange}
+                            className="w-full text-[20px] text-center focus:outline-none"
+                          />
+                          <div className="px-[10px] cursor-pointer" onClick={handleIncreaseQuantity}>
+                            <p className="text-[20px]">+</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Subtotal & Delivery */}
+                    <div className="flex flex-col space-y-[8px] mt-[15px] text-[15px]">
+                      <div className="flex justify-between text-[18px]">
+                        <p>Delivery</p>
+                        <p>Colombo, Sri Lanka</p>
+                      </div>
+                      <div className="flex justify-between text-[18px]">
+                        <p>Sub Total</p>
+                        <p>Rs. {quantity * (discountPrice || product.unitPrice)}</p>
+                      </div>
+                    </div>
+
+                    {/* Add to Cart & Buy Now */}
+                    <div className="flex flex-col space-y-[8px] mt-[15px]">
+                      <button
+                        onClick={addToCart}
+                        className="w-full py-[5px] bg-[#FDAA1C] rounded flex justify-center items-center cursor-pointer"
+                      >
+                        Add to Cart
+                      </button>
+                      <button
+                        onClick={handleBuyNow}
+                        className="w-full py-[5px] bg-[#101010] text-white rounded flex justify-center items-center cursor-pointer"
+                      >
+                        Buy now
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Product Image */}
+                <div className="w-[61.8%] flex flex-col items-center justify-center h-[83vh] space-y-[30px]">
+                  <div className="w-full h-[350px] relative flex justify-center items-end">
+                    <Image alt="Product Image" src={ProductImage2} height={350} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div className="w-[94vw] pb-[50px] flex flex-col">
+              <div className="bg-white py-[20px] px-[25px] ring-[0.5px] ring-gray-500 rounded-[15px] mt-[10px] w-full">
+                <p className="text-[25px]">Reviews & Ratings</p>
+                <div className="flex flex-col space-y-[10px]">
+                  {reviews.length > 0 ? (
+                    reviews.map((review, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-gray-100 ring-[0.5px] ring-gray-500 p-[10px] rounded-[10px] flex flex-col space-y-[10px] h-[22vh]"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center space-x-[8px]">
+                            <div className="rounded-full bg-white ring-[0.5px] ring-gray-500 h-[40px] w-[40px]" />
+                            <div className="flex flex-col leading-[21px]">
+                              <p className="text-[19px]">{review.userName}</p>
+                              <StarRating onChange={() => {}} rating={review.rating} hoverStar={false} />
+                            </div>
+                          </div>
+                        </div>
+                        <p className="ml-[10px]">{review.comment}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-[30px] flex flex-col items-center py-[10px]">
+                      <p>No reviews for this product</p>
+                      <p>Be the first to review this product</p>
+                    </div>
+                  )}
+
+                  {/* Write a Review */}
+                  {userLoggedIn ? (
+                    <div className="bg-white mt-[10px] ring-[0.5px] ring-gray-500 w-full py-[15px] px-[25px] rounded-[10px] flex flex-col space-y-[10px]">
+                      <p className="text-[20px]">Write a Review</p>
+                      <StarRating rating={userRating} hoverStar={true} onChange={setUserRating} />
+                      <textarea
+                        value={userReview}
+                        onChange={(e) => setUserReview(e.target.value)}
+                        className="ring-[0.5px] ring-gray-500 h-[100px] rounded-[10px] px-[20px] py-[10px] focus:outline-none"
+                        placeholder="Enter review"
+                      />
+                      <button
+                        onClick={handleReviewSubmit}
+                        className="bg-[#FDAA1C] py-[5px] rounded-[5px] w-full flex justify-center items-center cursor-pointer"
+                      >
+                        Submit review
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-300 flex flex-col items-center py-[10px] rounded-[5px] mt-[10px]">
+                      <p>Please Login to submit review</p>
+                      <button
+                        onClick={() => router.push("/login")}
+                        className="bg-[#FDAA1C] px-[25px] py-[5px] mt-[10px] rounded-[5px] cursor-pointer"
+                      >
+                        Login
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Max and Footer */}
           <Max />
           <Footer />
         </div>
@@ -215,13 +435,4 @@ const ProductPage: React.FC = () => {
   );
 };
 
-// ✅ Wrapper with Suspense, renamed
-function ProductPageWrapper(): React.JSX.Element {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ProductPage />
-    </Suspense>
-  );
-}
-
-export default ProductPageWrapper;
+export default ProductPage;

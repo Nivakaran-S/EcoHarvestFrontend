@@ -218,7 +218,7 @@ const CategoryPage: React.FC = () => {
         userLoggedIn={userLoggedIn}
       />
 
-      <div className="pt-[15vh] w-full flex justify-center text-black">
+      <div className="pt-[15vh] bg-white w-full flex justify-center text-black">
         <div className="w-[95%] flex flex-row py-4">
           {/* Filters Sidebar */}
           <div className="w-1/6 pr-4">

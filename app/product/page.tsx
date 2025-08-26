@@ -12,7 +12,7 @@ import { useState, useEffect, ChangeEvent } from "react";
 import axios from "axios";
 
 // ====== Base URL ======
-const BASE_URL = "https://eco-harvest-backend.vercel.app/";
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
 
 // ====== Types ======
 interface ProductDetail {
@@ -51,7 +51,7 @@ interface Cart {
   products: CartItem[];
 }
 
-const ProductPage = () => {
+const ProductPageComponent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -63,7 +63,7 @@ const ProductPage = () => {
   // ====== State ======
   const [quantity, setQuantity] = useState<number>(1);
   const [cart, setCart] = useState<Cart>({ products: [] });
-  const [productDetails, setProductDetails] = useState<ProductDetail[]>([]);
+  const [productDetails, setProductDetails] = useState<ProductDetail | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [userReview, setUserReview] = useState<string>("");
   const [userRating, setUserRating] = useState<number>(0);
@@ -71,18 +71,20 @@ const ProductPage = () => {
   const [role, setRole] = useState<string>("");
   const [userLoggedIn, setUserLoggedIn] = useState<boolean>(false);
   const [numberOfCartItems, setNumberOfCartItems] = useState<number>(0);
+  const [error, setError] = useState<string | null>(null);
 
   // ====== Fetch Product Details ======
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
         const response = await axios.get<ProductDetail>(`${BASE_URL}/products/${productId}`);
-        setProductDetails([{
+        setProductDetails({
           ...response.data,
-          imageUrl: response.data.imageUrl || ProductImage2.src
-        }]);
+          imageUrl: response.data.imageUrl || ProductImage2.src,
+        });
       } catch (err) {
         console.error("Error fetching product details:", err);
+        setError("Failed to load product details");
       }
     };
     fetchProductDetails();
@@ -96,6 +98,7 @@ const ProductPage = () => {
         setReviews(response.data);
       } catch (err) {
         console.error("Error fetching reviews:", err);
+        setError("Failed to load reviews");
       }
     };
     fetchReviews();
@@ -105,7 +108,7 @@ const ProductPage = () => {
   useEffect(() => {
     const fetchUserAndCart = async () => {
       try {
-        const response = await axios.get<{ id: string; role: string }>(`${BASE_URL}/check-cookie/`, {
+        const response = await axios.get<{ id: string; role: string }>(`${BASE_URL}/check-cookie`, {
           withCredentials: true,
         });
 
@@ -121,7 +124,7 @@ const ProductPage = () => {
 
             const cartData: Cart = {
               products: cartResponse.data.cart.products.map((p: any) => ({
-                _id: p._id || String(Math.random()),
+                _id: p._id || `cart-item-${Date.now()}-${Math.random()}`, // Improved ID generation
                 productId: p.productId,
                 quantity: p.quantity,
                 name: p.name,
@@ -132,18 +135,17 @@ const ProductPage = () => {
                 numberOfReviews: p.numberOfReviews,
                 statSubus: p.statSubus,
                 imageUrl: p.imageUrl || ProductImage2.src,
-              }))
+              })),
             };
 
             setCart(cartData);
             setNumberOfCartItems(cartData.products.length);
 
-            if (productDetails.length === 0 && cartResponse.data.products.length > 0) {
-              const mergedProducts = cartResponse.data.products.map(p => ({
-                ...p,
-                imageUrl: p.imageUrl || ProductImage2.src
-              }));
-              setProductDetails(mergedProducts);
+            if (!productDetails && cartResponse.data.products.length > 0) {
+              setProductDetails({
+                ...cartResponse.data.products[0],
+                imageUrl: cartResponse.data.products[0].imageUrl || ProductImage2.src,
+              });
             }
           } catch (err) {
             console.log("User has no cart yet");
@@ -158,13 +160,17 @@ const ProductPage = () => {
       }
     };
     fetchUserAndCart();
-  }, [router]);
+  }, []);
 
   // ====== Quantity Handlers ======
-  const handleIncreaseQuantity = () => setQuantity(prev => prev + 1);
-  const handleDecreaseQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
-  const handleQuantityChange = (e: ChangeEvent<HTMLInputElement>) =>
-    setQuantity(Math.max(1, Number(e.target.value) || 1));
+  const handleIncreaseQuantity = () => setQuantity((prev) => prev + 1);
+  const handleDecreaseQuantity = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+  const handleQuantityChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    if (!isNaN(value) && value >= 1) {
+      setQuantity(value);
+    }
+  };
 
   // ====== Cart Handlers ======
   const addToCart = async () => {
@@ -172,32 +178,37 @@ const ProductPage = () => {
 
     try {
       const response = await axios.post(
-        `${BASE_URL}/cart/`,
+        `${BASE_URL}/cart`,
         { productId, userId: id, quantity },
         { withCredentials: true, headers: { "Content-Type": "application/json" } }
       );
 
       if (response.data.success) {
-        setCart(prev => {
-          const existingIndex = prev.products.findIndex(p => p.productId === productId);
+        setCart((prev) => {
+          const existingIndex = prev.products.findIndex((p) => p.productId === productId);
+          const newProducts = [...prev.products];
           if (existingIndex >= 0) {
-            prev.products[existingIndex].quantity += quantity;
+            newProducts[existingIndex].quantity += quantity;
           } else {
-            prev.products.push({
-              _id: response.data.cartItemId || String(Math.random()),
+            newProducts.push({
+              _id: response.data.cartItemId || `cart-item-${Date.now()}-${Math.random()}`, // Improved ID generation
               productId,
               quantity,
-              name: productDetails[0]?.name,
-              unitPrice: productDetails[0]?.unitPrice,
-              imageUrl: productDetails[0]?.imageUrl || ProductImage2.src
+              name: productDetails?.name,
+              unitPrice: productDetails?.unitPrice,
+              imageUrl: productDetails?.imageUrl || ProductImage2.src,
             });
           }
-          setNumberOfCartItems(prev.products.length);
-          return { ...prev };
+          setNumberOfCartItems(newProducts.length);
+          return { products: newProducts };
         });
-      } else console.error("Error adding product to cart");
+      } else {
+        console.error("Error adding product to cart");
+        setError("Failed to add product to cart");
+      }
     } catch (err) {
       console.error("Error adding product to cart:", err);
+      setError("Failed to add product to cart");
     }
   };
 
@@ -212,17 +223,19 @@ const ProductPage = () => {
     if (!userLoggedIn) return router.push("/login");
 
     try {
-      await axios.post(`${BASE_URL}/reviews/`, {
+      await axios.post(`${BASE_URL}/reviews`, {
         productId,
         userId: id,
         comment: userReview,
-        rating: userRating
+        rating: userRating,
       });
-      setReviews(prev => [...prev, { userName: "You", comment: userReview, rating: userRating }]);
+      setReviews((prev) => [...prev, { userName: "You", comment: userReview, rating: userRating }]);
       setUserReview("");
       setUserRating(0);
+      setError(null); // Clear any previous errors
     } catch (err) {
       console.error("Error submitting review:", err);
+      setError("Failed to submit review");
     }
   };
 
@@ -232,12 +245,14 @@ const ProductPage = () => {
         cart={cart}
         id={id}
         userLoggedIn={userLoggedIn}
-        productsDetail={productDetails.map(p => ({ ...p, imageUrl: p.imageUrl || ProductImage2.src }))}
+        productsDetail={productDetails ? [{ ...productDetails, imageUrl: productDetails.imageUrl || ProductImage2.src }] : []}
         numberOfCartItems={numberOfCartItems}
       />
 
-      {productDetails.map((product, idx) => (
-        <div key={idx}>
+      {error && <div className="text-red-500 text-center">{error}</div>}
+
+      {productDetails && (
+        <div>
           <div className="text-black bg-[#F5F5F5] w-full flex flex-col items-center space-y-10">
             <div className="bg-gradient-to-b pt-[16vh] flex flex-col items-center justify-center from-gray-400 to-[#F5F5F5] w-full h-full">
               <div className="w-[94vw] flex justify-center items-center rounded-[15px] overflow-hidden">
@@ -252,16 +267,16 @@ const ProductPage = () => {
                   )}
 
                   <div className="py-[20px] px-[25px]">
-                    <p className="text-[28px] w-[80%] leading-[32px]">{product.name}</p>
+                    <p className="text-[28px] w-[80%] leading-[32px]">{productDetails.name}</p>
 
                     {/* Rating */}
                     <div className="flex relative items-center justify-between mt-2">
                       <div>
-                        <p className="text-[20px] ml-[10px] text-orange-500">{product.subtitle}</p>
+                        <p className="text-[20px] ml-[10px] text-orange-500">{productDetails.subtitle}</p>
                         <div className="flex flex-row items-center mt-[10px] space-x-[3px]">
-                          <StarRating onChange={() => {}} rating={product.averageRating} />
+                          <StarRating onChange={() => {}} rating={productDetails.averageRating} />
                           <p className="text-gray-700 text-[13px] flex items-center">
-                            <span className="text-[15px]">{product.averageRating}</span> ({product.numberOfReviews})
+                            <span className="text-[15px]">{productDetails.averageRating}</span> ({productDetails.numberOfReviews})
                           </p>
                         </div>
                       </div>
@@ -280,20 +295,20 @@ const ProductPage = () => {
                           <>
                             <p className="text-[35px] mt-[5px]">Rs. {discountPrice}</p>
                             <p className="text-[15px] text-gray-600 pl-[5px]">
-                              <s>MRP: Rs. {product.unitPrice}</s>
+                              <s>MRP: Rs. {productDetails.unitPrice}</s>
                             </p>
                           </>
                         ) : (
                           <>
-                            <p className="text-[35px] mt-[5px]">Rs. {product.unitPrice}</p>
+                            <p className="text-[35px] mt-[5px]">Rs. {productDetails.unitPrice}</p>
                             <p className="text-[15px] text-gray-600 pl-[5px]">
-                              <s>MRP: Rs. {product.MRP}</s>
+                              <s>MRP: Rs. {productDetails.MRP}</s>
                             </p>
                           </>
                         )}
                       </div>
                       <div className="flex flex-col items-center justify-center">
-                        <p className="text-green-800 text-[19px]">{product.statSubus}</p>
+                        <p className="text-green-800 text-[19px]">{productDetails.statSubus}</p>
                       </div>
                     </div>
 
@@ -325,7 +340,7 @@ const ProductPage = () => {
                       </div>
                       <div className="flex justify-between text-[18px]">
                         <p>Sub Total</p>
-                        <p>Rs. {quantity * (discountPrice || product.unitPrice)}</p>
+                        <p>Rs. {quantity * (discountPrice || productDetails.unitPrice)}</p>
                       </div>
                     </div>
 
@@ -350,7 +365,7 @@ const ProductPage = () => {
                 {/* Product Image */}
                 <div className="w-[61.8%] flex flex-col items-center justify-center h-[83vh] space-y-[30px]">
                   <div className="w-full h-[350px] relative flex justify-center items-end">
-                    <Image alt="Product Image" src={product.imageUrl || ProductImage2} height={350} width={350} />
+                    <Image alt="Product Image" src={productDetails.imageUrl || ProductImage2} height={350} width={350} />
                   </div>
                 </div>
               </div>
@@ -422,18 +437,17 @@ const ProductPage = () => {
           <Max />
           <Footer />
         </div>
-      ))}
+      )}
     </div>
   );
 };
 
-
 import React, { Suspense } from "react";
 
-export default function Page() {
+export default function ProductPage() {
   return (
-    <Suspense fallback={<div>Loading product...</div>}>
-      <ProductPage />
+    <Suspense fallback={<div className="flex justify-center items-center h-screen">Loading product...</div>}>
+      <ProductPageComponent />
     </Suspense>
   );
 }

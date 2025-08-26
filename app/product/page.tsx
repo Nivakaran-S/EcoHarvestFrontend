@@ -82,6 +82,7 @@ const ProductPageComponent = () => {
           ...response.data,
           imageUrl: response.data.imageUrl || ProductImage2.src,
         });
+        console.log(response)
       } catch (err) {
         console.error("Error fetching product details:", err);
         setError("Failed to load product details");
@@ -96,6 +97,7 @@ const ProductPageComponent = () => {
       try {
         const response = await axios.get<Review[]>(`${BASE_URL}/reviews/${productId}`);
         setReviews(response.data);
+        console.log(response)
       } catch (err) {
         console.error("Error fetching reviews:", err);
         setError("Failed to load reviews");

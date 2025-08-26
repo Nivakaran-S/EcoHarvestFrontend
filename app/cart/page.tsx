@@ -255,7 +255,7 @@ const CartPage: React.FC = () => {
         userLoggedIn={userLoggedIn}
       />
 
-      <div className="pt-[15vh] w-[100%] flex items-center justify-center text-black">
+      <div className="pt-[15vh] bg-white w-[100%] flex items-center justify-center text-black">
         <div className="w-[95%] min-h-[100vh] flex flex-row">
           <div className="w-[76.4%] pr-[20px] h-[100%]">
             {/* Advertisement */}

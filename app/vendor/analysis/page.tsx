@@ -11,9 +11,13 @@ import {
   Product,
 } from "./reports";
 
+// ===== Base URL =====
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
+
+// ===== Fetch & generate functions =====
 const handleSalesReport = async () => {
   try {
-    const response = await fetch("http://localhost:8000/orders");
+    const response = await fetch(`${BASE_URL}/orders`);
     if (!response.ok) throw new Error("Failed to fetch orders");
     const data: Order[] = await response.json();
     generateSalesReport(data);
@@ -25,7 +29,7 @@ const handleSalesReport = async () => {
 
 const handleProductReport = async () => {
   try {
-    const response = await fetch("http://localhost:8000/products");
+    const response = await fetch(`${BASE_URL}/products`);
     if (!response.ok) throw new Error("Failed to fetch products");
     const data: Product[] = await response.json();
     generateProductReport(data);
@@ -37,7 +41,7 @@ const handleProductReport = async () => {
 
 const Analytics: React.FC = () => {
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex text-black min-h-screen bg-gray-100">
       <Sidebar />
       <div className="flex-1">
         <Navbar />

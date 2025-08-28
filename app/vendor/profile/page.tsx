@@ -41,39 +41,53 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchVendorId = async () => {
       try {
+        // Step 1: Check cookie & role
         const res = await fetch(`${BASE_URL}/check-cookie`, {
           credentials: "include",
         });
 
+        if (!res.ok) throw new Error("Failed to check cookie");
+
         const data = await res.json();
 
-        if (!res.ok || data.role !== "Vendor") {
-          throw new Error("Not a vendor or unauthorized");
+        if (data.role !== "Vendor") {
+          throw new Error("Not authorized or not a vendor");
         }
 
         const userId: string = data.id;
+        if (!userId) throw new Error("User ID not found in cookie check");
 
+        // Step 2: Fetch vendor info
         const userRes = await fetch(`${BASE_URL}/vendors/${userId}`, {
           credentials: "include",
         });
 
-        const userData: [VendorInfo, UserData] = await userRes.json();
-        if (!userRes.ok || !userData[1]?.entityId) {
-          throw new Error("User entityId (vendorId) not found");
+        if (!userRes.ok) throw new Error("Failed to fetch vendor data");
+
+        const userData: [VendorInfo | null, UserData | null] = await userRes.json();
+
+        const vendorInfo = userData?.[0] ?? null;
+        const userDetails = userData?.[1] ?? null;
+
+        if (!vendorInfo || !userDetails?.entityId) {
+          throw new Error(
+            `Vendor info or entityId missing. Vendor: ${JSON.stringify(
+              vendorInfo
+            )}, User: ${JSON.stringify(userDetails)}`
+          );
         }
 
-        const vendorInfo: VendorInfo = userData[0];
-        const userDetails: UserData = userData[1];
-
-        setVendorId(userDetails.entityId || null);
+        // Step 3: Set state safely
+        setVendorId(userDetails.entityId);
         setVendor(vendorInfo);
 
         setBusinessName(vendorInfo.businessName || "");
         setPhoneNumber(vendorInfo.phoneNumber || "");
         setEmail(vendorInfo.email || "");
         setUsername(userDetails.username || "");
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching vendor ID:", err);
+        toast.error(err.message || "Failed to load profile");
         router.push("/login");
       }
     };
@@ -97,17 +111,21 @@ export default function ProfilePage() {
         { withCredentials: true }
       );
 
+      if (!res.data.vendor) {
+        throw new Error("Vendor update response missing vendor object");
+      }
+
       setVendor(res.data.vendor);
       setIsEditing(false);
       toast.success("Vendor profile updated successfully!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating vendor:", error);
-      toast.error("Failed to update vendor profile.");
+      toast.error(error?.message || "Failed to update vendor profile.");
     }
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex text-black h-screen bg-gray-100">
       <Toaster />
       <Sidebar />
       <div className="flex-1 flex flex-col">

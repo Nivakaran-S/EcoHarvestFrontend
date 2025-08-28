@@ -87,7 +87,7 @@ export default function CustomerHome() {
   }, [id, userLoggedIn]);
 
   return (
-    <div>
+    <div className="text-black">
       <Navigation
         numberOfCartItems={numberOfCartItems}
         productsDetail={productsDetail}

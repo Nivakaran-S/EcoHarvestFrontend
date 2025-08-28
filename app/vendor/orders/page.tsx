@@ -65,7 +65,7 @@ export default function OrdersPage() {
   }, []);
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex text-black h-screen bg-gray-100">
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Navbar />

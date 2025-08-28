@@ -67,7 +67,7 @@ const Products: React.FC = () => {
   const displayedProducts = filteredProducts.slice(startIndex, startIndex + productsPerPage);
 
   return (
-    <div className="flex">
+    <div className="flex text-black">
       <Sidebar />
       <div className="flex-1 p-6 bg-gray-100">
         <Navbar />

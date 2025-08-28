@@ -29,7 +29,7 @@ interface ProductModalProps {
 
 // ===== Base URL =====
 const BASE_URL = "https://eco-harvest-backend.vercel.app";
-const PREDICTION_URL = "http://localhost:5000";
+const PREDICTION_URL = "https://nivakaran-food-classification.hf.space";
 
 const ProductModal: React.FC<ProductModalProps> = ({
   isOpen,

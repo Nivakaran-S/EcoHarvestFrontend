@@ -89,7 +89,7 @@ const ProductPageComponent = () => {
       }
     };
     if (productId) fetchProductDetails();
-  }, [productId]);
+  }, []);
 
   // ====== Fetch Reviews ======
   useEffect(() => {

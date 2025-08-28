@@ -27,6 +27,24 @@ interface ProductDetail {
   imageUrl: string;
 }
 
+interface ApiProductResponse {
+  _id: string;
+  vendorId: string;
+  name: string;
+  subtitle: string;
+  quantity: number;
+  unitPrice: number;
+  category: string;
+  productCategory_id: string;
+  imageUrl: string;
+  status: string;
+  createdAt: string;
+  __v: number;
+  MRP: number;
+  averageRating: number;
+  numberOfReviews: number;
+}
+
 interface Review {
   userName: string;
   rating: number;
@@ -91,7 +109,7 @@ const ProductPageComponent = () => {
         
         console.log(`Fetching product details for ID: ${productId}`);
         
-        const response = await axios.get<ProductDetail>(
+        const response = await axios.get(
           `${BASE_URL}/products/${productId}`,
           {
             timeout: 10000, // 10 second timeout
@@ -108,12 +126,41 @@ const ProductPageComponent = () => {
           throw new Error('No data received from API');
         }
 
+        // Handle the case where API returns data nested under numeric keys
+        let productData: ApiProductResponse;
+        if (response.data["0"]) {
+          // Data is nested under "0" key
+          productData = response.data["0"];
+        } else if (response.data.id || response.data._id) {
+          // Data is directly in response.data
+          productData = response.data;
+        } else {
+          // Check if it's an array and take the first element
+          if (Array.isArray(response.data) && response.data.length > 0) {
+            productData = response.data[0];
+          } else {
+            throw new Error('Invalid data format received from API');
+          }
+        }
+
+        console.log('Extracted product data:', productData);
+
+        if (!productData.name || !productData.unitPrice) {
+          throw new Error('Missing required product fields');
+        }
+
         const fetched: ProductDetail = {
-          ...response.data,
-          imageUrl: response.data.imageUrl || ProductImage2.src,
-          // Ensure all required fields have default values
-          averageRating: response.data.averageRating || 0,
-          numberOfReviews: response.data.numberOfReviews || 0,
+          id: productData._id || productData._id,
+          name: productData.name,
+          subtitle: productData.subtitle,
+          unitPrice: productData.unitPrice,
+          MRP: productData.MRP,
+          averageRating: productData.averageRating || 0,
+          numberOfReviews: productData.numberOfReviews || 0,
+          statSubus: productData.status || productData.status,
+          imageUrl: productData.imageUrl && productData.imageUrl !== ProductImage2.src 
+            ? productData.imageUrl 
+            : ProductImage2.src,
         };
         
         console.log('Processed product details:', fetched);

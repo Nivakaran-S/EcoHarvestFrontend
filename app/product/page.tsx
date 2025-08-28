@@ -72,6 +72,7 @@ const ProductPageComponent = () => {
   const [userLoggedIn, setUserLoggedIn] = useState<boolean>(false);
   const [numberOfCartItems, setNumberOfCartItems] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true); // Add a loading state
 
   // ====== Fetch Product Details ======
   useEffect(() => {
@@ -83,14 +84,17 @@ const ProductPageComponent = () => {
           imageUrl: response.data.imageUrl || ProductImage2.src,
         };
         setProductDetails(fetched);
-        // log the fresh object, not the stale state
-        console.log("Fetched product details:", fetched);
+        setLoading(false); // Set loading to false on success
       } catch (err) {
         console.error("Error fetching product details:", err);
         setError("Failed to load product details");
+        setLoading(false); // Set loading to false on error
       }
     };
-    if (productId) fetchProductDetails();
+    if (productId) {
+      setLoading(true); // Set loading to true before fetching
+      fetchProductDetails();
+    }
   }, [productId]);
 
   // ====== Fetch Reviews ======
@@ -234,6 +238,24 @@ const ProductPageComponent = () => {
     }
   };
 
+  // Conditional rendering based on loading state
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p>Loading product details...</p>
+      </div>
+    );
+  }
+
+  // Conditional rendering for error state
+  if (error) {
+    return (
+      <div className="text-red-500 text-center py-10">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <Navigation
@@ -245,8 +267,6 @@ const ProductPageComponent = () => {
         }
         numberOfCartItems={numberOfCartItems}
       />
-
-      {error && <div className="text-red-500 text-center">{error}</div>}
 
       {/* Product Section */}
       <div className="text-black bg-[#F5F5F5] w-full flex flex-col items-center space-y-10">

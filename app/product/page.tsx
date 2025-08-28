@@ -77,19 +77,10 @@ const ProductPageComponent = () => {
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/products/${productId}`);
-        const data = response.data;
-
+        const response = await axios.get<ProductDetail>(`${BASE_URL}/products/${productId}`);
         setProductDetails({
-          id: data.id || data._id || productId,
-          name: data.name || data.title || "Unnamed product",
-          subtitle: data.subtitle || data.description || "No subtitle available",
-          unitPrice: data.unitPrice || data.price || 0,
-          MRP: data.MRP || data.mrp || data.unitPrice || 0,
-          averageRating: data.averageRating || 0,
-          numberOfReviews: data.numberOfReviews || 0,
-          statSubus: data.statSubus || "In stock",
-          imageUrl: data.imageUrl || ProductImage2.src,
+          ...response.data,
+          imageUrl: response.data.imageUrl || ProductImage2.src,
         });
       } catch (err) {
         console.error("Error fetching product details:", err);
@@ -103,16 +94,8 @@ const ProductPageComponent = () => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/reviews/${productId}`);
-        const reviewsData = Array.isArray(response.data) ? response.data : [];
-
-        setReviews(
-          reviewsData.map((r: any) => ({
-            userName: r.userName || r.user || "Anonymous",
-            rating: r.rating || 0,
-            comment: r.comment || "",
-          }))
-        );
+        const response = await axios.get<Review[]>(`${BASE_URL}/reviews/${productId}`);
+        setReviews(response.data);
       } catch (err) {
         console.error("Error fetching reviews:", err);
         setError("Failed to load reviews");
@@ -135,7 +118,7 @@ const ProductPageComponent = () => {
         if (["Customer", "Company"].includes(response.data.role)) {
           setUserLoggedIn(true);
           try {
-            const cartResponse = await axios.get<{ cart: Cart }>(
+            const cartResponse = await axios.get<{ cart: Cart; products: ProductDetail[] }>(
               `${BASE_URL}/cart/${response.data.id}`
             );
 
@@ -264,8 +247,188 @@ const ProductPageComponent = () => {
 
       {productDetails && (
         <div>
-          {/* Product details section remains same as your original code */}
-          {/* ... */}
+          <div className="text-black bg-[#F5F5F5] w-full flex flex-col items-center space-y-10">
+            <div className="bg-gradient-to-b pt-[16vh] flex flex-col items-center justify-center from-gray-400 to-[#F5F5F5] w-full h-full">
+              <div className="w-[94vw] flex justify-center items-center rounded-[15px] overflow-hidden">
+                {/* Product Info */}
+                <div className="w-[38.2%] ml-[10px] border-[0.5px] border-gray-500 rounded-[10px] bg-[#F5F5F5] h-[70vh] mb-[40px] p-[20px] relative">
+                  {!!discountPercentage && (
+                    <div className="absolute top-0 right-0 bg-red-500 text-white text-[12px] px-3 py-[3px] rounded-bl-lg font-semibold shadow-md z-10">
+                      -{discountPercentage}%
+                    </div>
+                  )}
+
+                  <p className="text-[28px] w-[80%] leading-[32px]">{productDetails.name}</p>
+
+                  {/* Rating */}
+                  <div className="flex relative items-center justify-between mt-2">
+                    <div>
+                      <p className="text-[20px] ml-[10px] text-orange-500">{productDetails.subtitle}</p>
+                      <div className="flex flex-row items-center mt-[10px] space-x-[3px]">
+                        <StarRating onChange={() => {}} rating={productDetails.averageRating} />
+                        <p className="text-gray-700 text-[13px] flex items-center">
+                          <span className="text-[15px]">{productDetails.averageRating}</span> ({productDetails.numberOfReviews})
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="absolute top-[10px] right-0 flex flex-col items-center">
+                      <div className="rounded-full bg-[#FDAA1C] text-black ring-gray-800 ring-[0.5px] px-[15px] py-[0px] cursor-pointer">
+                        <p className="text-[13px]">Ask Max</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pricing */}
+                  <div className="flex justify-between mt-[20px]">
+                    <div>
+                      {discountPrice ? (
+                        <>
+                          <p className="text-[35px] mt-[5px]">Rs. {discountPrice}</p>
+                          <p className="text-[15px] text-gray-600 pl-[5px]">
+                            <s>MRP: Rs. {productDetails.unitPrice}</s>
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-[35px] mt-[5px]">Rs. {productDetails.unitPrice}</p>
+                          <p className="text-[15px] text-gray-600 pl-[5px]">
+                            <s>MRP: Rs. {productDetails.MRP}</s>
+                          </p>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-green-800 text-[19px]">{productDetails.statSubus}</p>
+                    </div>
+                  </div>
+
+                  {/* Quantity */}
+                  <div className="flex items-center my-[10px]">
+                    <div className="flex items-center space-x-[10px]">
+                      <p className="text-[20px]">Quantity</p>
+                      <div className="flex items-center justify-center w-[90px] h-[30px] rounded-[5px] ring-[1px] ring-gray-400 bg-white">
+                        <div className="px-[10px] cursor-pointer" onClick={handleDecreaseQuantity}>
+                          <div className="bg-black h-[1px] w-[10px]" />
+                        </div>
+                        <input
+                          value={quantity}
+                          onChange={handleQuantityChange}
+                          className="w-full text-[20px] text-center focus:outline-none"
+                        />
+                        <div className="px-[10px] cursor-pointer" onClick={handleIncreaseQuantity}>
+                          <p className="text-[20px]">+</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Subtotal & Delivery */}
+                  <div className="flex flex-col space-y-[8px] mt-[15px] text-[15px]">
+                    <div className="flex justify-between text-[18px]">
+                      <p>Delivery</p>
+                      <p>Colombo, Sri Lanka</p>
+                    </div>
+                    <div className="flex justify-between text-[18px]">
+                      <p>Sub Total</p>
+                      <p>Rs. {quantity * (discountPrice || productDetails.unitPrice)}</p>
+                    </div>
+                  </div>
+
+                  {/* Add to Cart & Buy Now */}
+                  <div className="flex flex-col space-y-[8px] mt-[15px]">
+                    <button
+                      onClick={addToCart}
+                      className="w-full py-[5px] bg-[#FDAA1C] rounded flex justify-center items-center cursor-pointer"
+                    >
+                      Add to Cart
+                    </button>
+                    <button
+                      onClick={handleBuyNow}
+                      className="w-full py-[5px] bg-[#101010] text-white rounded flex justify-center items-center cursor-pointer"
+                    >
+                      Buy now
+                    </button>
+                  </div>
+                </div>
+
+                {/* Product Image */}
+                <div className="w-[61.8%] flex flex-col items-center justify-center h-[83vh] space-y-[30px]">
+                  <div className="w-full h-[350px] relative flex justify-center items-end">
+                    <Image
+                      alt="Product Image"
+                      src={productDetails.imageUrl || ProductImage2}
+                      height={350}
+                      width={350}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div className="w-[94vw] pb-[50px] flex flex-col">
+              <div className="bg-white py-[20px] px-[25px] ring-[0.5px] ring-gray-500 rounded-[15px] mt-[10px] w-full">
+                <p className="text-[25px]">Reviews & Ratings</p>
+                <div className="flex flex-col space-y-[10px]">
+                  {reviews.length > 0 ? (
+                    reviews.map((review, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-gray-100 ring-[0.5px] ring-gray-500 p-[10px] rounded-[10px] flex flex-col space-y-[10px] h-[22vh]"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center space-x-[8px]">
+                            <div className="rounded-full bg-white ring-[0.5px] ring-gray-500 h-[40px] w-[40px]" />
+                            <div className="flex flex-col leading-[21px]">
+                              <p className="text-[19px]">{review.userName}</p>
+                              <StarRating onChange={() => {}} rating={review.rating} hoverStar={false} />
+                            </div>
+                          </div>
+                        </div>
+                        <p className="ml-[10px]">{review.comment}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-[30px] flex flex-col items-center py-[10px]">
+                      <p>No reviews for this product</p>
+                      <p>Be the first to review this product</p>
+                    </div>
+                  )}
+
+                  {userLoggedIn ? (
+                    <div className="bg-white mt-[10px] ring-[0.5px] ring-gray-500 w-full py-[15px] px-[25px] rounded-[10px] flex flex-col space-y-[10px]">
+                      <p className="text-[20px]">Write a Review</p>
+                      <StarRating rating={userRating} hoverStar={true} onChange={setUserRating} />
+                      <textarea
+                        value={userReview}
+                        onChange={(e) => setUserReview(e.target.value)}
+                        className="ring-[0.5px] ring-gray-500 h-[100px] rounded-[10px] px-[20px] py-[10px] focus:outline-none"
+                        placeholder="Enter review"
+                      />
+                      <button
+                        onClick={handleReviewSubmit}
+                        className="bg-[#FDAA1C] py-[5px] rounded-[5px] w-full flex justify-center items-center cursor-pointer"
+                      >
+                        Submit review
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-300 flex flex-col items-center py-[10px] rounded-[5px] mt-[10px]">
+                      <p>Please Login to submit review</p>
+                      <button
+                        onClick={() => router.push("/login")}
+                        className="bg-[#FDAA1C] px-[25px] py-[5px] mt-[10px] rounded-[5px] cursor-pointer"
+                      >
+                        Login
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <Max />
           <Footer />
         </div>

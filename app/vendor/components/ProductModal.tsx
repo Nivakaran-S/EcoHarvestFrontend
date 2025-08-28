@@ -64,8 +64,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const [productCategories, setProductCategories] = useState<ProductCategory[]>([]);
   const [isPredicting, setIsPredicting] = useState(false);
   const [predictionError, setPredictionError] = useState<string>("");
-  const [isUploadingToGDrive, setIsUploadingToGDrive] = useState(false);
-  const [uploadError, setUploadError] = useState<string>("");
+  const [tempImageUrl, setTempImageUrl] = useState<string>(""); // Temporary URL input
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -85,7 +84,6 @@ const ProductModal: React.FC<ProductModalProps> = ({
       fetchCategories();
       // Reset errors when modal opens
       setPredictionError("");
-      setUploadError("");
     }
   }, [isOpen]);
 
@@ -93,10 +91,14 @@ const ProductModal: React.FC<ProductModalProps> = ({
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleImageUrlChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setTempImageUrl(e.target.value);
+  };
+
   const resetForm = () => {
     setFormData(initialFormData);
     setPredictionError("");
-    setUploadError("");
+    setTempImageUrl("");
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -104,86 +106,63 @@ const ProductModal: React.FC<ProductModalProps> = ({
     onSubmit(formData, resetForm);
   };
 
-  // Function to upload image to Google Drive using the same backend as prediction
-  const uploadToGoogleDrive = async (file: File): Promise<string> => {
-    const uploadData = new FormData();
-    uploadData.append("file", file);
-    uploadData.append("fileName", file.name);
-
-    try {
-      const res = await fetch(`${PREDICTION_URL}/upload-to-gdrive`, {
-        method: "POST",
-        body: uploadData,
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || errorData.message || `Upload failed: ${res.status}`);
-      }
-
-      const data = await res.json();
-      return data.shareableLink || data.url || data.link;
-    } catch (error) {
-      console.error("Google Drive upload error:", error);
-      throw error;
+  // Function to convert Google Drive share link to direct download link
+  const convertGoogleDriveUrl = (url: string): string => {
+    // Check if it's a Google Drive share URL
+    const driveShareMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9-_]+)/);
+    if (driveShareMatch) {
+      const fileId = driveShareMatch[1];
+      return `https://drive.google.com/uc?id=${fileId}&export=download`;
     }
+    
+    // Check if it's already a direct download link
+    if (url.includes('drive.google.com/uc?id=')) {
+      return url;
+    }
+    
+    // Return original URL if not a Google Drive link
+    return url;
   };
 
-  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    if (!allowedTypes.includes(file.type)) {
-      setPredictionError("Please upload only JPG/PNG images");
-      return;
-    }
-
-    // Validate file size (5MB limit as per backend)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      setPredictionError("File size must be less than 5MB");
+  const handlePredictFromUrl = async () => {
+    if (!tempImageUrl.trim()) {
+      setPredictionError("Please enter a Google Drive image URL");
       return;
     }
 
     // Reset errors
     setPredictionError("");
-    setUploadError("");
-
-    // Step 1: Upload to Google Drive
-    setIsUploadingToGDrive(true);
-    let googleDriveUrl = "";
-
-    try {
-      googleDriveUrl = await uploadToGoogleDrive(file);
-      
-      // Update imageUrl field immediately after successful Google Drive upload
-      setFormData((prev) => ({
-        ...prev,
-        imageUrl: googleDriveUrl,
-      }));
-
-    } catch (err) {
-      console.error("Google Drive upload error:", err);
-      const errorMessage = err instanceof Error ? err.message : "Failed to upload to Google Drive";
-      setUploadError(errorMessage);
-      setIsUploadingToGDrive(false);
-      return;
-    } finally {
-      setIsUploadingToGDrive(false);
-    }
-
-    // Step 2: Send to AI prediction - use same PREDICTION_URL
-    const uploadData = new FormData();
-    uploadData.append("file", file);
-
     setIsPredicting(true);
 
     try {
+      // Convert Google Drive share link to direct download link
+      const directUrl = convertGoogleDriveUrl(tempImageUrl.trim());
+      
+      // First, try to fetch the image from the URL to validate it
+      const imageResponse = await fetch(directUrl, {
+        method: 'HEAD', // Just check if the image exists
+      });
+
+      if (!imageResponse.ok) {
+        throw new Error("Cannot access the image from the provided URL. Please ensure it's a publicly accessible Google Drive link.");
+      }
+
+      // Download the image and convert to blob for prediction
+      const imageDataResponse = await fetch(directUrl);
+      if (!imageDataResponse.ok) {
+        throw new Error("Failed to download image from URL");
+      }
+
+      const imageBlob = await imageDataResponse.blob();
+      
+      // Create FormData for the prediction API
+      const formData = new FormData();
+      formData.append("file", imageBlob, "image.jpg");
+
+      // Send to AI prediction
       const res = await fetch(`${PREDICTION_URL}/predict`, {
         method: "POST",
-        body: uploadData,
+        body: formData,
       });
 
       if (!res.ok) {
@@ -198,10 +177,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
         ...prev,
         predictedFoodName: data.label || "Unknown",
         predictedFoodCategory: data.category || "Uncategorized",
-        // Optionally pre-fill the product name with predicted food name
-        name: prev.name || data.label || "",
-        // Keep the Google Drive URL that was already set
-        imageUrl: prev.imageUrl || googleDriveUrl,
+        // Pre-fill the product name with predicted food name
+        name: data.label || "",
+        // Set the image URL
+        imageUrl: tempImageUrl.trim(),
       }));
 
       // Try to match predicted category with existing product categories
@@ -217,12 +196,15 @@ const ProductModal: React.FC<ProductModalProps> = ({
         }));
       }
 
+      // Clear the temporary URL input
+      setTempImageUrl("");
+
     } catch (err) {
       console.error("Prediction error:", err);
       const errorMessage = err instanceof Error ? err.message : "Prediction failed";
       setPredictionError(errorMessage);
       
-      // Clear prediction fields on error, but keep Google Drive URL
+      // Clear prediction fields on error
       setFormData((prev) => ({
         ...prev,
         predictedFoodName: "",
@@ -247,30 +229,33 @@ const ProductModal: React.FC<ProductModalProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* File upload section - FIRST */}
+          {/* Google Drive URL section - FIRST */}
           <div className="space-y-2 bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
             <label className="block text-lg font-semibold text-blue-800">
-              🍎 Step 1: Upload Food Image for AI Classification
+              🍎 Step 1: Provide Google Drive Image Link for AI Classification
             </label>
             <p className="text-sm text-blue-600 mb-2">
-              Upload an image to automatically upload to Google Drive, get the sharing link, and identify the food
+              Paste a Google Drive image link to automatically identify the food and fill product details
             </p>
-            <input
-              type="file"
-              accept="image/jpeg,image/jpg,image/png"
-              className="w-full p-2 border rounded"
-              onChange={handleFileUpload}
-              disabled={isPredicting || isUploadingToGDrive}
-            />
+            <div className="space-y-2">
+              <input
+                type="url"
+                value={tempImageUrl}
+                placeholder="https://drive.google.com/file/d/your-file-id/view?usp=sharing"
+                className="w-full p-2 border rounded"
+                onChange={handleImageUrlChange}
+                disabled={isPredicting}
+              />
+              <button
+                type="button"
+                onClick={handlePredictFromUrl}
+                disabled={isPredicting || !tempImageUrl.trim()}
+                className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                {isPredicting ? "Analyzing Image..." : "Predict Food Category"}
+              </button>
+            </div>
             
-            {/* Google Drive Upload Loading */}
-            {isUploadingToGDrive && (
-              <div className="flex items-center space-x-2 text-blue-600">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span className="text-sm">Uploading to Google Drive...</span>
-              </div>
-            )}
-
             {/* AI Prediction Loading */}
             {isPredicting && (
               <div className="flex items-center space-x-2 text-green-600">
@@ -279,26 +264,24 @@ const ProductModal: React.FC<ProductModalProps> = ({
               </div>
             )}
             
-            {/* Upload Error message */}
-            {uploadError && (
-              <div className="text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200">
-                Google Drive Upload Error: {uploadError}
-              </div>
-            )}
-
             {/* Prediction Error message */}
             {predictionError && (
-              <div className="text-sm text-orange-600 bg-orange-50 p-2 rounded border border-orange-200">
+              <div className="text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200">
                 AI Prediction Error: {predictionError}
               </div>
             )}
 
-            {/* Success message when Google Drive upload completes */}
-            {formData.imageUrl && !isUploadingToGDrive && !uploadError && (
+            {/* Success message when prediction completes */}
+            {formData.predictedFoodName && !isPredicting && !predictionError && (
               <div className="text-sm text-green-600 bg-green-50 p-2 rounded border border-green-200">
-                ✅ Image successfully uploaded to Google Drive and URL auto-filled!
+                ✅ Food identified successfully! Product details auto-filled below.
               </div>
             )}
+
+            {/* Instructions for Google Drive links */}
+            <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+              <strong>Note:</strong> Make sure your Google Drive image is set to "Anyone with the link can view" for the AI to access it.
+            </div>
           </div>
 
           {/* Predicted Results Section */}
@@ -419,20 +402,20 @@ const ProductModal: React.FC<ProductModalProps> = ({
           
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
-              Image URL (Auto-filled from Google Drive)
+              Image URL (Auto-filled from Google Drive link)
             </label>
             <input
               type="url"
               name="imageUrl"
               value={formData.imageUrl}
-              placeholder="Will be auto-filled after image upload"
-              className="w-full p-2 border rounded bg-gray-50"
+              placeholder="Will be auto-filled after image prediction"
+              className={`w-full p-2 border rounded ${formData.imageUrl ? 'bg-gray-50' : ''}`}
               onChange={handleChange}
               readOnly={!!formData.imageUrl} // Make read-only if URL is auto-filled
             />
             {formData.imageUrl && (
               <p className="text-xs text-gray-500">
-                ℹ️ This URL was automatically generated from your Google Drive upload
+                ℹ️ This URL was automatically set from your Google Drive link
               </p>
             )}
           </div>
@@ -461,9 +444,9 @@ const ProductModal: React.FC<ProductModalProps> = ({
             <button
               type="submit"
               className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-              disabled={isPredicting || isUploadingToGDrive}
+              disabled={isPredicting}
             >
-              {isUploadingToGDrive ? "Uploading to Drive..." : isPredicting ? "Processing..." : "Add Product"}
+              {isPredicting ? "Processing..." : "Add Product"}
             </button>
           </div>
         </form>

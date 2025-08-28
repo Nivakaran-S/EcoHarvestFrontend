@@ -55,6 +55,7 @@ const ProductPageComponent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  // ====== Get URL Parameters ======
   const productId = searchParams.get("productId") || "";
   const discountPriceParam = searchParams.get("discountPrice");
   const discountPercentage = searchParams.get("discountPercentage");
@@ -72,66 +73,136 @@ const ProductPageComponent = () => {
   const [userLoggedIn, setUserLoggedIn] = useState<boolean>(false);
   const [numberOfCartItems, setNumberOfCartItems] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true); // Add a loading state
+  const [loading, setLoading] = useState<boolean>(true);
+  const [productNotFound, setProductNotFound] = useState<boolean>(false);
 
   // ====== Fetch Product Details ======
   useEffect(() => {
     const fetchProductDetails = async () => {
+      if (!productId) {
+        setError("No product ID provided");
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await axios.get<ProductDetail>(`${BASE_URL}/products/${productId}`);
-        const fetched = {
+        setLoading(true);
+        setError(null);
+        
+        console.log(`Fetching product details for ID: ${productId}`);
+        
+        const response = await axios.get<ProductDetail>(
+          `${BASE_URL}/products/${productId}`,
+          {
+            timeout: 10000, // 10 second timeout
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          }
+        );
+        
+        console.log('Raw API response:', response);
+        console.log('Response data:', response.data);
+        
+        if (!response.data) {
+          throw new Error('No data received from API');
+        }
+
+        const fetched: ProductDetail = {
           ...response.data,
           imageUrl: response.data.imageUrl || ProductImage2.src,
+          // Ensure all required fields have default values
+          averageRating: response.data.averageRating || 0,
+          numberOfReviews: response.data.numberOfReviews || 0,
         };
-        console.log('Product details: ', fetched)
+        
+        console.log('Processed product details:', fetched);
         setProductDetails(fetched);
-        setLoading(false); // Set loading to false on success
-      } catch (err) {
+        setProductNotFound(false);
+        
+      } catch (err: any) {
         console.error("Error fetching product details:", err);
-        setError("Failed to load product details");
-        setLoading(false); // Set loading to false on error
+        
+        if (err.response?.status === 404) {
+          setProductNotFound(true);
+          setError("Product not found");
+        } else if (err.code === 'ECONNABORTED') {
+          setError("Request timeout - please try again");
+        } else if (err.response?.status >= 500) {
+          setError("Server error - please try again later");
+        } else if (!navigator.onLine) {
+          setError("No internet connection");
+        } else {
+          setError(err.response?.data?.message || err.message || "Failed to load product details");
+        }
+      } finally {
+        setLoading(false);
       }
     };
-    if (productId) {
-      setLoading(true); // Set loading to true before fetching
-      fetchProductDetails();
-    }
-  }, []);
 
+    fetchProductDetails();
+  }, [productId]); // Add productId as dependency
+
+  // ====== Debug Effect ======
   useEffect(() => {
-    console.log('Product Details Fetched', productDetails)
-  }, []);
+    console.log('Current state:', {
+      productId,
+      loading,
+      error,
+      productDetails,
+      productNotFound
+    });
+  }, [productId, loading, error, productDetails, productNotFound]);
 
   // ====== Fetch Reviews ======
   useEffect(() => {
     const fetchReviews = async () => {
+      if (!productId) return;
+      
       try {
-        const response = await axios.get<Review[]>(`${BASE_URL}/reviews/${productId}`);
-        setReviews(response.data);
-      } catch (err) {
+        console.log(`Fetching reviews for product ID: ${productId}`);
+        const response = await axios.get<Review[]>(
+          `${BASE_URL}/reviews/${productId}`,
+          { timeout: 8000 }
+        );
+        console.log('Reviews response:', response.data);
+        setReviews(response.data || []);
+      } catch (err: any) {
         console.error("Error fetching reviews:", err);
-        setError("Failed to load reviews");
+        // Don't set error state for reviews as it's not critical
+        setReviews([]);
       }
     };
-    if (productId) fetchReviews();
-  }, [productId]);
+    
+    if (productId && !loading && productDetails) {
+      fetchReviews();
+    }
+  }, [productId, loading, productDetails]);
 
   // ====== Fetch User Info & Cart ======
   useEffect(() => {
     const fetchUserAndCart = async () => {
       try {
-        const response = await axios.get<{ id: string; role: string }>(`${BASE_URL}/check-cookie`, {
-          withCredentials: true,
-        });
+        const response = await axios.get<{ id: string; role: string }>(
+          `${BASE_URL}/check-cookie`,
+          {
+            withCredentials: true,
+            timeout: 8000
+          }
+        );
 
+        console.log('User check response:', response.data);
         setId(response.data.id);
         setRole(response.data.role);
 
         if (["Customer", "Company"].includes(response.data.role)) {
           setUserLoggedIn(true);
+          
+          // Fetch cart
           try {
             const cartResponse = await axios.get<{ cart: Cart; products: ProductDetail[] }>(
-              `${BASE_URL}/cart/${response.data.id}`
+              `${BASE_URL}/cart/${response.data.id}`,
+              { timeout: 8000 }
             );
 
             const cartData: Cart = {
@@ -152,18 +223,24 @@ const ProductPageComponent = () => {
 
             setCart(cartData);
             setNumberOfCartItems(cartData.products.length);
-          } catch {
-            console.log("User has no cart yet");
+          } catch (cartErr) {
+            console.log("User has no cart yet or cart fetch failed:", cartErr);
+            setCart({ products: [] });
+            setNumberOfCartItems(0);
           }
         } else if (response.data.role === "Vendor") {
           router.push("/vendor");
         } else if (response.data.role === "Admin") {
           router.push("/admin");
         }
-      } catch {
+      } catch (userErr) {
+        console.log("User not logged in:", userErr);
         setUserLoggedIn(false);
+        setId("");
+        setRole("");
       }
     };
+    
     fetchUserAndCart();
   }, [router]);
 
@@ -179,19 +256,38 @@ const ProductPageComponent = () => {
 
   // ====== Cart Handlers ======
   const addToCart = async () => {
-    if (!userLoggedIn) return router.push("/login");
+    if (!userLoggedIn) {
+      router.push("/login");
+      return;
+    }
+
+    if (!productDetails) {
+      setError("Product details not loaded");
+      return;
+    }
 
     try {
       const response = await axios.post(
         `${BASE_URL}/cart`,
-        { productId, userId: id, quantity },
-        { withCredentials: true, headers: { "Content-Type": "application/json" } }
+        { 
+          productId, 
+          userId: id, 
+          quantity 
+        },
+        { 
+          withCredentials: true, 
+          headers: { "Content-Type": "application/json" },
+          timeout: 8000
+        }
       );
+
+      console.log('Add to cart response:', response.data);
 
       if (response.data.success) {
         setCart((prev) => {
           const existingIndex = prev.products.findIndex((p) => p.productId === productId);
           const newProducts = [...prev.products];
+          
           if (existingIndex >= 0) {
             newProducts[existingIndex].quantity += quantity;
           } else {
@@ -199,64 +295,152 @@ const ProductPageComponent = () => {
               _id: response.data.cartItemId || `cart-item-${Date.now()}-${Math.random()}`,
               productId,
               quantity,
-              name: productDetails?.name,
-              unitPrice: productDetails?.unitPrice,
-              imageUrl: productDetails?.imageUrl || ProductImage2.src,
+              name: productDetails.name,
+              subtitle: productDetails.subtitle,
+              unitPrice: productDetails.unitPrice,
+              MRP: productDetails.MRP,
+              averageRating: productDetails.averageRating,
+              numberOfReviews: productDetails.numberOfReviews,
+              statSubus: productDetails.statSubus,
+              imageUrl: productDetails.imageUrl || ProductImage2.src,
             });
           }
+          
           setNumberOfCartItems(newProducts.length);
           return { products: newProducts };
         });
+        
+        // Clear any previous errors
+        setError(null);
       } else {
-        setError("Failed to add product to cart");
+        setError(response.data.message || "Failed to add product to cart");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error adding product to cart:", err);
-      setError("Failed to add product to cart");
+      setError(err.response?.data?.message || "Failed to add product to cart");
     }
   };
 
   const handleBuyNow = async () => {
-    if (!userLoggedIn) return router.push("/login");
+    if (!userLoggedIn) {
+      router.push("/login");
+      return;
+    }
+    
     await addToCart();
-    router.push("/cart");
+    
+    // Only redirect if there's no error
+    if (!error) {
+      router.push("/cart");
+    }
   };
 
   // ====== Review Handler ======
   const handleReviewSubmit = async () => {
-    if (!userLoggedIn) return router.push("/login");
+    if (!userLoggedIn) {
+      router.push("/login");
+      return;
+    }
+
+    if (!userReview.trim() || userRating === 0) {
+      setError("Please provide both rating and review comment");
+      return;
+    }
 
     try {
-      await axios.post(`${BASE_URL}/reviews`, {
-        productId,
-        userId: id,
-        comment: userReview,
-        rating: userRating,
-      });
-      setReviews((prev) => [...prev, { userName: "You", comment: userReview, rating: userRating }]);
+      const response = await axios.post(
+        `${BASE_URL}/reviews`,
+        {
+          productId,
+          userId: id,
+          comment: userReview,
+          rating: userRating,
+        },
+        { timeout: 8000 }
+      );
+      
+      console.log('Review submission response:', response.data);
+      
+      setReviews((prev) => [
+        ...prev, 
+        { 
+          userName: "You", 
+          comment: userReview, 
+          rating: userRating 
+        }
+      ]);
+      
       setUserReview("");
       setUserRating(0);
       setError(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error submitting review:", err);
-      setError("Failed to submit review");
+      setError(err.response?.data?.message || "Failed to submit review");
     }
   };
 
-  // Conditional rendering based on loading state
+  // ====== Retry Handler ======
+  const handleRetry = () => {
+    setError(null);
+    setLoading(true);
+    // This will trigger the useEffect to fetch product details again
+    window.location.reload();
+  };
+
+  // ====== Loading State ======
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <p>Loading product details...</p>
+      <div className="flex flex-col justify-center items-center h-screen bg-[#F5F5F5]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FDAA1C] mb-4"></div>
+        <p className="text-lg text-gray-600">Loading product details...</p>
+        <p className="text-sm text-gray-500 mt-2">Product ID: {productId}</p>
       </div>
     );
   }
 
-  // Conditional rendering for error state
-  if (error) {
+  // ====== Error State ======
+  if (error && !productDetails) {
     return (
-      <div className="text-red-500 text-center py-10">
-        <p>{error}</p>
+      <div className="flex flex-col justify-center items-center h-screen bg-[#F5F5F5]">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            {productNotFound ? "Product Not Found" : "Error Loading Product"}
+          </h2>
+          <p className="text-red-600 mb-4">{error}</p>
+          <p className="text-sm text-gray-500 mb-6">Product ID: {productId}</p>
+          <div className="space-y-3">
+            <button
+              onClick={handleRetry}
+              className="w-full py-2 px-4 bg-[#FDAA1C] text-black rounded hover:bg-[#e8961a] transition-colors"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => router.push("/")}
+              className="w-full py-2 px-4 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+            >
+              Go Back to Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ====== No Product Data State ======
+  if (!productDetails) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-[#F5F5F5]">
+        <div className="text-center">
+          <p className="text-xl text-gray-600">No product data available</p>
+          <button
+            onClick={() => router.push("/")}
+            className="mt-4 py-2 px-4 bg-[#FDAA1C] text-black rounded"
+          >
+            Go Back to Home
+          </button>
+        </div>
       </div>
     );
   }
@@ -267,11 +451,16 @@ const ProductPageComponent = () => {
         cart={cart}
         id={id}
         userLoggedIn={userLoggedIn}
-        productsDetail={
-          productDetails ? [{ ...productDetails, imageUrl: productDetails.imageUrl || ProductImage2.src }] : []
-        }
+        productsDetail={[{ ...productDetails, imageUrl: productDetails.imageUrl || ProductImage2.src }]}
         numberOfCartItems={numberOfCartItems}
       />
+
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mx-4 mt-4">
+          <p>{error}</p>
+        </div>
+      )}
 
       {/* Product Section */}
       <div className="text-black bg-[#F5F5F5] w-full flex flex-col items-center space-y-10">
@@ -285,16 +474,16 @@ const ProductPageComponent = () => {
                 </div>
               )}
 
-              <p className="text-[28px] w-[80%] leading-[32px]">{productDetails?.name}</p>
+              <p className="text-[28px] w-[80%] leading-[32px]">{productDetails.name}</p>
 
               {/* Rating */}
               <div className="flex relative items-center justify-between mt-2">
                 <div>
-                  <p className="text-[20px] ml-[10px] text-orange-500">{productDetails?.subtitle}</p>
+                  <p className="text-[20px] ml-[10px] text-orange-500">{productDetails.subtitle}</p>
                   <div className="flex flex-row items-center mt-[10px] space-x-[3px]">
-                    <StarRating onChange={() => {}} rating={productDetails?.averageRating} />
+                    <StarRating onChange={() => {}} rating={productDetails.averageRating} />
                     <p className="text-gray-700 text-[13px] flex items-center">
-                      <span className="text-[15px]">{productDetails?.averageRating}</span> ({productDetails?.numberOfReviews})
+                      <span className="text-[15px]">{productDetails.averageRating}</span> ({productDetails.numberOfReviews})
                     </p>
                   </div>
                 </div>
@@ -313,20 +502,20 @@ const ProductPageComponent = () => {
                     <>
                       <p className="text-[35px] mt-[5px]">Rs. {discountPrice}</p>
                       <p className="text-[15px] text-gray-600 pl-[5px]">
-                        <s>MRP: Rs. {productDetails?.unitPrice}</s>
+                        <s>MRP: Rs. {productDetails.unitPrice}</s>
                       </p>
                     </>
                   ) : (
                     <>
-                      <p className="text-[35px] mt-[5px]">Rs. {productDetails?.unitPrice}</p>
+                      <p className="text-[35px] mt-[5px]">Rs. {productDetails.unitPrice}</p>
                       <p className="text-[15px] text-gray-600 pl-[5px]">
-                        <s>MRP: Rs. {productDetails?.MRP}</s>
+                        <s>MRP: Rs. {productDetails.MRP}</s>
                       </p>
                     </>
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center">
-                  <p className="text-green-800 text-[19px]">{productDetails?.statSubus}</p>
+                  <p className="text-green-800 text-[19px]">{productDetails.statSubus}</p>
                 </div>
               </div>
 
@@ -358,7 +547,7 @@ const ProductPageComponent = () => {
                 </div>
                 <div className="flex justify-between text-[18px]">
                   <p>Sub Total</p>
-                  <p>Rs. {quantity * (discountPrice || productDetails?.unitPrice || 0)}</p>
+                  <p>Rs. {quantity * (discountPrice || productDetails.unitPrice)}</p>
                 </div>
               </div>
 
@@ -366,15 +555,17 @@ const ProductPageComponent = () => {
               <div className="flex flex-col space-y-[8px] mt-[15px]">
                 <button
                   onClick={addToCart}
-                  className="w-full py-[5px] bg-[#FDAA1C] rounded flex justify-center items-center cursor-pointer"
+                  className="w-full py-[5px] bg-[#FDAA1C] rounded flex justify-center items-center cursor-pointer hover:bg-[#e8961a] transition-colors"
+                  disabled={loading}
                 >
-                  Add to Cart
+                  {loading ? "Adding..." : "Add to Cart"}
                 </button>
                 <button
                   onClick={handleBuyNow}
-                  className="w-full py-[5px] bg-[#101010] text-white rounded flex justify-center items-center cursor-pointer"
+                  className="w-full py-[5px] bg-[#101010] text-white rounded flex justify-center items-center cursor-pointer hover:bg-[#333] transition-colors"
+                  disabled={loading}
                 >
-                  Buy now
+                  {loading ? "Processing..." : "Buy now"}
                 </button>
               </div>
             </div>
@@ -383,10 +574,15 @@ const ProductPageComponent = () => {
             <div className="w-[61.8%] flex flex-col items-center justify-center h-[83vh] space-y-[30px]">
               <div className="w-full h-[350px] relative flex justify-center items-end">
                 <Image
-                  alt="Product Image"
-                  src={productDetails?.imageUrl || ProductImage2}
+                  alt={`${productDetails.name} - Product Image`}
+                  src={productDetails.imageUrl || ProductImage2}
                   height={350}
                   width={350}
+                  priority
+                  onError={(e) => {
+                    console.log('Image failed to load, using fallback');
+                    e.currentTarget.src = ProductImage2.src;
+                  }}
                 />
               </div>
             </div>
@@ -435,7 +631,7 @@ const ProductPageComponent = () => {
                   />
                   <button
                     onClick={handleReviewSubmit}
-                    className="bg-[#FDAA1C] py-[5px] rounded-[5px] w-full flex justify-center items-center cursor-pointer"
+                    className="bg-[#FDAA1C] py-[5px] rounded-[5px] w-full flex justify-center items-center cursor-pointer hover:bg-[#e8961a] transition-colors"
                   >
                     Submit review
                   </button>
@@ -445,7 +641,7 @@ const ProductPageComponent = () => {
                   <p>Please Login to submit review</p>
                   <button
                     onClick={() => router.push("/login")}
-                    className="bg-[#FDAA1C] px-[25px] py-[5px] mt-[10px] rounded-[5px] cursor-pointer"
+                    className="bg-[#FDAA1C] px-[25px] py-[5px] mt-[10px] rounded-[5px] cursor-pointer hover:bg-[#e8961a] transition-colors"
                   >
                     Login
                   </button>
@@ -464,7 +660,12 @@ const ProductPageComponent = () => {
 
 export default function ProductPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center items-center h-screen">Loading product...</div>}>
+    <Suspense fallback={
+      <div className="flex flex-col justify-center items-center h-screen bg-[#F5F5F5]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FDAA1C] mb-4"></div>
+        <p className="text-lg text-gray-600">Loading product...</p>
+      </div>
+    }>
       <ProductPageComponent />
     </Suspense>
   );

@@ -104,14 +104,14 @@ const ProductModal: React.FC<ProductModalProps> = ({
     onSubmit(formData, resetForm);
   };
 
-  // Function to upload image to Google Drive
+  // Function to upload image to Google Drive using the same backend as prediction
   const uploadToGoogleDrive = async (file: File): Promise<string> => {
     const uploadData = new FormData();
     uploadData.append("file", file);
     uploadData.append("fileName", file.name);
 
     try {
-      const res = await fetch(`${BASE_URL}/upload-to-gdrive`, {
+      const res = await fetch(`${PREDICTION_URL}/upload-to-gdrive`, {
         method: "POST",
         body: uploadData,
       });
@@ -174,7 +174,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
       setIsUploadingToGDrive(false);
     }
 
-    // Step 2: Send to AI prediction (only if Google Drive upload succeeded)
+    // Step 2: Send to AI prediction - use same PREDICTION_URL
     const uploadData = new FormData();
     uploadData.append("file", file);
 

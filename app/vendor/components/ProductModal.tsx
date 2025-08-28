@@ -13,6 +13,8 @@ interface ProductFormData {
   imageUrl: string;
   status: string;
   MRP: string;
+  predictedFoodName: string; // Predicted food name from API
+  predictedFoodCategory: string; // Predicted food category from API
 }
 
 interface ProductCategory {
@@ -25,6 +27,13 @@ interface ProductModalProps {
   onClose: () => void;
   onSubmit: (formData: ProductFormData, resetForm: () => void) => void;
   toastMessage: string;
+}
+
+// API Response interface for prediction
+interface PredictionResponse {
+  label: string; // Food name
+  category: string; // Food category
+  output_image?: string; // Optional base64 image
 }
 
 // ===== Base URL =====
@@ -47,15 +56,22 @@ const ProductModal: React.FC<ProductModalProps> = ({
     imageUrl: "",
     status: "In Stock",
     MRP: "",
+    predictedFoodName: "",
+    predictedFoodCategory: "",
   };
 
   const [formData, setFormData] = useState<ProductFormData>(initialFormData);
   const [productCategories, setProductCategories] = useState<ProductCategory[]>([]);
+  const [isPredicting, setIsPredicting] = useState(false);
+  const [predictionError, setPredictionError] = useState<string>("");
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await fetch(`${BASE_URL}/productcategories`);
+        if (!res.ok) {
+          throw new Error("Failed to fetch categories");
+        }
         const data: ProductCategory[] = await res.json();
         setProductCategories(data);
       } catch (err) {
@@ -63,7 +79,11 @@ const ProductModal: React.FC<ProductModalProps> = ({
       }
     };
 
-    if (isOpen) fetchCategories();
+    if (isOpen) {
+      fetchCategories();
+      // Reset prediction error when modal opens
+      setPredictionError("");
+    }
   }, [isOpen]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -72,6 +92,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
   const resetForm = () => {
     setFormData(initialFormData);
+    setPredictionError("");
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -79,14 +100,29 @@ const ProductModal: React.FC<ProductModalProps> = ({
     onSubmit(formData, resetForm);
   };
 
-  if (!isOpen) return null;
-
   const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      setPredictionError("Please upload only JPG/PNG images");
+      return;
+    }
+
+    // Validate file size (5MB limit as per backend)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      setPredictionError("File size must be less than 5MB");
+      return;
+    }
+
     const uploadData = new FormData();
-    uploadData.append("image", file);
+    uploadData.append("file", file); // Backend expects "file" parameter
+
+    setIsPredicting(true);
+    setPredictionError("");
 
     try {
       const res = await fetch(`${PREDICTION_URL}/predict`, {
@@ -94,21 +130,56 @@ const ProductModal: React.FC<ProductModalProps> = ({
         body: uploadData,
       });
 
-      if (!res.ok) throw new Error("Image prediction failed");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${res.status}: ${res.statusText}`);
+      }
 
-      const data = await res.json();
+      const data: PredictionResponse = await res.json();
+      
+      // Update form with predicted food name and category
       setFormData((prev) => ({
         ...prev,
-        productCategory_id: data.categoryId,
+        predictedFoodName: data.label || "Unknown",
+        predictedFoodCategory: data.category || "Uncategorized",
+        // Optionally pre-fill the product name with predicted food name
+        name: prev.name || data.label || "",
       }));
+
+      // Try to match predicted category with existing product categories
+      const matchingCategory = productCategories.find(
+        cat => cat.name.toLowerCase().includes(data.category.toLowerCase()) ||
+               data.category.toLowerCase().includes(cat.name.toLowerCase())
+      );
+
+      if (matchingCategory) {
+        setFormData(prev => ({
+          ...prev,
+          productCategory_id: matchingCategory._id
+        }));
+      }
+
     } catch (err) {
       console.error("Prediction error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Prediction failed";
+      setPredictionError(errorMessage);
+      
+      // Clear prediction fields on error
+      setFormData((prev) => ({
+        ...prev,
+        predictedFoodName: "",
+        predictedFoodCategory: "",
+      }));
+    } finally {
+      setIsPredicting(false);
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
-      <div className="bg-white p-6 rounded-md shadow-lg w-96 relative">
+      <div className="bg-white p-6 rounded-md shadow-lg w-96 max-h-[90vh] overflow-y-auto relative">
         <h2 className="text-lg font-semibold mb-4">Add New Product</h2>
 
         {toastMessage && (
@@ -127,6 +198,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
             onChange={handleChange}
             required
           />
+          
           <input
             type="text"
             name="subtitle"
@@ -136,6 +208,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
             onChange={handleChange}
             required
           />
+          
           <input
             type="number"
             name="quantity"
@@ -144,7 +217,9 @@ const ProductModal: React.FC<ProductModalProps> = ({
             className="w-full p-2 border rounded"
             onChange={handleChange}
             required
+            min="0"
           />
+          
           <input
             type="number"
             name="unitPrice"
@@ -153,7 +228,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
             className="w-full p-2 border rounded"
             onChange={handleChange}
             required
+            min="0"
+            step="0.01"
           />
+          
           <select
             name="category"
             value={formData.category}
@@ -165,12 +243,66 @@ const ProductModal: React.FC<ProductModalProps> = ({
             <option value="Recycling">Recycling</option>
             <option value="Fertilizer">Fertilizer</option>
           </select>
-          <input
-            type="file"
-            accept="image/*"
-            className="w-full p-2 border rounded"
-            onChange={handleFileUpload}
-          />
+          
+          {/* File upload section */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Upload Food Image for AI Classification
+            </label>
+            <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png"
+              className="w-full p-2 border rounded"
+              onChange={handleFileUpload}
+              disabled={isPredicting}
+            />
+            
+            {/* Loading indicator */}
+            {isPredicting && (
+              <div className="flex items-center space-x-2 text-blue-600">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span className="text-sm">Analyzing food image...</span>
+              </div>
+            )}
+            
+            {/* Error message */}
+            {predictionError && (
+              <div className="text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200">
+                Error: {predictionError}
+              </div>
+            )}
+          </div>
+
+          {/* Predicted Food Name Display */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Predicted Food Name
+            </label>
+            <input
+              type="text"
+              name="predictedFoodName"
+              value={formData.predictedFoodName}
+              placeholder="AI will identify the food item"
+              className="w-full p-2 border rounded bg-gray-50"
+              readOnly
+            />
+          </div>
+
+          {/* Predicted Food Category Display */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Predicted Food Category
+            </label>
+            <input
+              type="text"
+              name="predictedFoodCategory"
+              value={formData.predictedFoodCategory}
+              placeholder="AI will categorize the food type"
+              className="w-full p-2 border rounded bg-gray-50"
+              readOnly
+            />
+          </div>
+
           <select
             name="productCategory_id"
             value={formData.productCategory_id}
@@ -185,8 +317,9 @@ const ProductModal: React.FC<ProductModalProps> = ({
               </option>
             ))}
           </select>
+          
           <input
-            type="text"
+            type="url"
             name="imageUrl"
             value={formData.imageUrl}
             placeholder="Image URL"
@@ -194,6 +327,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
             onChange={handleChange}
             required
           />
+          
           <input
             type="number"
             name="MRP"
@@ -202,21 +336,25 @@ const ProductModal: React.FC<ProductModalProps> = ({
             className="w-full p-2 border rounded"
             onChange={handleChange}
             required
+            min="0"
+            step="0.01"
           />
 
-          <div className="flex justify-between">
+          <div className="flex justify-between pt-4">
             <button
               type="button"
-              className="bg-gray-400 text-white px-4 py-2 rounded"
+              className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition-colors"
               onClick={onClose}
+              disabled={isPredicting}
             >
-              Close
+              Cancel
             </button>
             <button
               type="submit"
-              className="bg-yellow-500 text-white px-4 py-2 rounded"
+              className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+              disabled={isPredicting}
             >
-              Add Product
+              {isPredicting ? "Processing..." : "Add Product"}
             </button>
           </div>
         </form>

@@ -1,20 +1,18 @@
 "use client";
-import React, { Suspense } from "react";
+import React, { Suspense, useState, useEffect, useRef } from "react";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import Max from "../components/Max";
 import Product from "../components/Product";
-import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Star from "../images/log.png";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import axios from "axios";
-import { useRouter } from "next/navigation";
 
-// Base URL for API
+// API base
 const BASE_URL = "https://eco-harvest-backend.vercel.app";
 
-// TypeScript interfaces
+// --- Interfaces ---
 interface Product {
   _id: string;
   name: string;
@@ -23,6 +21,7 @@ interface Product {
   unitPrice: number;
   rating?: number;
   category?: string;
+  brand?: string;
 }
 
 interface CartItem {
@@ -52,48 +51,34 @@ interface UserData {
 }
 
 const CategoryPage: React.FC = () => {
-  const [width, setWidth] = useState<number>(0);
-  const selectRef = useRef<HTMLSelectElement>(null);
-  const textRef = useRef<HTMLSpanElement>(null);
-
+  const router = useRouter();
   const searchParams = useSearchParams();
   const categoryId = searchParams.get("categoryId") || "";
   const categoryName = searchParams.get("categoryName") || "All Categories";
 
+  // State
   const [products, setProducts] = useState<Product[]>([]);
+  const [sortedProducts, setSortedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [discounts, setDiscounts] = useState<Discount[]>([]);
+
+  // Filters
+  const [minPrice, setMinPrice] = useState<number>(0);
+  const [maxPrice, setMaxPrice] = useState<number>(0);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [minRating, setMinRating] = useState<number>(0);
+  const [sortOption, setSortOption] = useState<string>("Featured");
+
+  // Cart & user
   const [id, setId] = useState<string>("");
   const [role, setRole] = useState<string>("");
   const [userLoggedIn, setUserLoggedIn] = useState<boolean>(false);
   const [cart, setCart] = useState<Cart | undefined>(undefined);
   const [productsDetail, setProductsDetail] = useState<Product[]>([]);
   const [numberOfCartItems, setNumberOfCartItems] = useState<number>(0);
-  const [discounts, setDiscounts] = useState<Discount[]>([]);
-  const [maxPrice, setMaxPrice] = useState<number>(0);
-  const [minPrice, setMinPrice] = useState<number>(0);
-  const [priceRangeMin, setPriceRangeMin] = useState<number>(0);
-  const [priceRangeMax, setPriceRangeMax] = useState<number>(0);
-  const [selectedOption, setSelectedOption] = useState<string>("Featured");
-  const [sortedProducts, setSortedProducts] = useState<Product[]>([]);
 
-  const router = useRouter();
-
-  const updateWidth = () => {
-    if (selectRef.current && textRef.current) {
-      const selectedText = selectRef.current.options[selectRef.current.selectedIndex].text;
-      textRef.current.textContent = selectedText;
-      setWidth(textRef.current.offsetWidth + 20);
-      setSelectedOption(selectedText);
-    }
-  };
-
-  useEffect(() => {
-    updateWidth();
-    window.addEventListener("resize", updateWidth);
-    return () => window.removeEventListener("resize", updateWidth);
-  }, []);
-
-  // Fetch user cookie data
+  // --- Fetch cookies (user login state) ---
   useEffect(() => {
     const fetchCookies = async () => {
       try {
@@ -104,22 +89,21 @@ const CategoryPage: React.FC = () => {
         setId(response.data.id);
         setRole(response.data.role);
 
-        if (response.data.role === "Customer" || response.data.role === "Company") {
+        if (["Customer", "Company"].includes(response.data.role)) {
           setUserLoggedIn(true);
         } else if (response.data.role === "Vendor") {
           router.push("/vendor");
         } else if (response.data.role === "Admin") {
           router.push("/admin");
         }
-      } catch (error) {
+      } catch {
         setUserLoggedIn(false);
       }
     };
-
     fetchCookies();
   }, [router]);
 
-  // Fetch cart
+  // --- Fetch cart ---
   useEffect(() => {
     const fetchCart = async () => {
       if (!userLoggedIn) return;
@@ -130,29 +114,29 @@ const CategoryPage: React.FC = () => {
         setCart(response.data.cart);
         setProductsDetail(response.data.products);
         setNumberOfCartItems(response.data.cart.products.length);
-      } catch (err) {
-        console.log("Cart Empty");
+      } catch {
         setCart(undefined);
       }
     };
     fetchCart();
   }, [id, userLoggedIn]);
 
-  // Fetch products for the category
+  // --- Fetch products ---
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get<Product[]>(`${BASE_URL}/products?category=${categoryId}`);
+        const response = await axios.get<Product[]>(
+          `${BASE_URL}/products?category=${categoryId}`
+        );
         setProducts(response.data);
 
+        // Price range setup
         const prices = response.data.map((p) => p.unitPrice || 0);
-        const max = Math.max(...prices);
         const min = Math.min(...prices);
-
-        setMaxPrice(max);
+        const max = Math.max(...prices);
         setMinPrice(min);
-        setPriceRangeMin(min);
-        setPriceRangeMax(max);
+        setMaxPrice(max);
+        setPriceRange([min, max]);
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally {
@@ -162,7 +146,7 @@ const CategoryPage: React.FC = () => {
     fetchProducts();
   }, [categoryId]);
 
-  // Fetch discounts
+  // --- Fetch discounts ---
   useEffect(() => {
     const fetchDiscounts = async () => {
       try {
@@ -175,34 +159,39 @@ const CategoryPage: React.FC = () => {
     fetchDiscounts();
   }, []);
 
-  // Sorting and filtering products
+  // --- Filtering + Sorting ---
   useEffect(() => {
-    const sortProducts = () => {
-      const filteredProducts = products.filter(
-        (product) => product.unitPrice >= priceRangeMin && product.unitPrice <= priceRangeMax
-      );
+    let filtered = products.filter(
+      (p) =>
+        p.unitPrice >= priceRange[0] &&
+        p.unitPrice <= priceRange[1] &&
+        (!selectedBrands.length || selectedBrands.includes(p.brand || "")) &&
+        (p.rating || 0) >= minRating
+    );
 
-      const sorted = [...filteredProducts];
+    switch (sortOption) {
+      case "Price: Low to High":
+        filtered = filtered.sort((a, b) => a.unitPrice - b.unitPrice);
+        break;
+      case "Price: High to Low":
+        filtered = filtered.sort((a, b) => b.unitPrice - a.unitPrice);
+        break;
+      case "Highly Rated":
+        filtered = filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        break;
+      default:
+        break;
+    }
 
-      switch (selectedOption) {
-        case "Price: Low to High":
-          sorted.sort((a, b) => a.unitPrice - b.unitPrice);
-          break;
-        case "Price: High to Low":
-          sorted.sort((a, b) => b.unitPrice - a.unitPrice);
-          break;
-        case "Highly Rated":
-          sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-          break;
-        default:
-          break;
-      }
+    setSortedProducts(filtered);
+  }, [products, priceRange, selectedBrands, minRating, sortOption]);
 
-      setSortedProducts(sorted);
-    };
-
-    sortProducts();
-  }, [selectedOption, products, priceRangeMin, priceRangeMax]);
+  // --- Handlers ---
+  const toggleBrand = (brand: string) => {
+    setSelectedBrands((prev) =>
+      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
+    );
+  };
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -220,44 +209,63 @@ const CategoryPage: React.FC = () => {
 
       <div className="pt-[15vh] bg-white w-full flex justify-center text-black">
         <div className="w-[95%] flex flex-row py-4">
-          {/* Filters Sidebar */}
+          {/* Sidebar Filters */}
           <div className="w-1/6 pr-4">
             <div className="sticky top-24 space-y-6">
+              {/* Category */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">Category</h3>
                 <div className="mt-2 space-y-2">
-                  {["All Categories", "Daily Grocery", "Drinks", "Tea and Coffee"].map((category) => (
-                    <p
-                      key={category}
-                      className={`cursor-pointer ${
-                        category === categoryName ? "text-[#FDAA1C]" : "hover:text-gray-500"
-                      }`}
-                      onClick={() => router.push(`/category?categoryName=${encodeURIComponent(category)}`)}
-                    >
-                      {category}
-                    </p>
-                  ))}
+                  {["All Categories", "Daily Grocery", "Drinks", "Tea and Coffee"].map(
+                    (category) => (
+                      <p
+                        key={category}
+                        className={`cursor-pointer ${
+                          category === categoryName ? "text-[#FDAA1C]" : "hover:text-gray-500"
+                        }`}
+                        onClick={() =>
+                          router.push(`/category?categoryName=${encodeURIComponent(category)}`)
+                        }
+                      >
+                        {category}
+                      </p>
+                    )
+                  )}
                 </div>
               </div>
 
+              {/* Price Range */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">Price</h3>
-                <div className="mt-2">
+                <div className="mt-2 space-y-2">
                   <input
                     type="range"
                     min={minPrice}
                     max={maxPrice}
-                    value={priceRangeMin}
-                    onChange={(e) => setPriceRangeMin(Number(e.target.value))}
+                    value={priceRange[0]}
+                    onChange={(e) =>
+                      setPriceRange([Number(e.target.value), priceRange[1]])
+                    }
+                    className="w-full accent-[#FDAA1C] h-1.5 cursor-pointer"
+                  />
+                  <input
+                    type="range"
+                    min={minPrice}
+                    max={maxPrice}
+                    value={priceRange[1]}
+                    onChange={(e) =>
+                      setPriceRange([priceRange[0], Number(e.target.value)])
+                    }
                     className="w-full accent-[#FDAA1C] h-1.5 cursor-pointer"
                   />
                   <div className="flex justify-between text-sm mt-1">
-                    <span>Rs. {priceRangeMin}</span>
-                    <span>Rs. {priceRangeMax}</span>
+                    <span>Rs. {priceRange[0]}</span>
+                    <span>Rs. {priceRange[1]}</span>
                   </div>
                 </div>
               </div>
 
+              {/* Brands */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">Brands</h3>
                 <div className="mt-2 space-y-2">
@@ -265,8 +273,9 @@ const CategoryPage: React.FC = () => {
                     <div key={brand} className="flex items-center space-x-2">
                       <input
                         type="checkbox"
+                        checked={selectedBrands.includes(brand)}
                         className="accent-[#FDAA1C] cursor-pointer"
-                        onChange={() => {}}
+                        onChange={() => toggleBrand(brand)}
                       />
                       <span>{brand}</span>
                     </div>
@@ -274,20 +283,28 @@ const CategoryPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Ratings */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">Customer Reviews</h3>
-                <div className="flex items-center mt-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Image
+                <div className="space-y-2 mt-2">
+                  {[5, 4, 3, 2, 1].map((star) => (
+                    <div
                       key={star}
-                      src={Star}
-                      alt="Star"
-                      width={15}
-                      height={15}
-                      className="cursor-pointer"
-                    />
+                      className="flex items-center cursor-pointer"
+                      onClick={() => setMinRating(star)}
+                    >
+                      {Array.from({ length: star }).map((_, idx) => (
+                        <Image
+                          key={idx}
+                          src={Star}
+                          alt="Star"
+                          width={15}
+                          height={15}
+                        />
+                      ))}
+                      <span className="ml-1 text-sm">& Up</span>
+                    </div>
                   ))}
-                  <span className="ml-1 text-sm">& Up</span>
                 </div>
               </div>
             </div>
@@ -296,28 +313,21 @@ const CategoryPage: React.FC = () => {
           {/* Products Grid */}
           <div className="w-5/6 pl-4 border-l border-gray-300">
             <div className="flex justify-between items-center bg-gray-100 rounded px-4 py-2 mb-4">
-              <p className="text-sm">Showing {sortedProducts.length} results for {categoryName}</p>
+              <p className="text-sm">
+                Showing {sortedProducts.length} results for {categoryName}
+              </p>
               <div className="flex items-center space-x-2">
                 <span className="text-sm">Sort by:</span>
-                <div className="relative">
-                  <span
-                    ref={textRef}
-                    className="absolute opacity-0 pointer-events-none whitespace-nowrap"
-                  >
-                    Featured
-                  </span>
-                  <select
-                    ref={selectRef}
-                    onChange={updateWidth}
-                    style={{ width }}
-                    className="bg-transparent border-none focus:outline-none cursor-pointer"
-                  >
-                    <option>Featured</option>
-                    <option>Price: Low to High</option>
-                    <option>Price: High to Low</option>
-                    <option>Highly Rated</option>
-                  </select>
-                </div>
+                <select
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value)}
+                  className="bg-transparent border rounded px-2 py-1 focus:outline-none cursor-pointer"
+                >
+                  <option>Featured</option>
+                  <option>Price: Low to High</option>
+                  <option>Price: High to Low</option>
+                  <option>Highly Rated</option>
+                </select>
               </div>
             </div>
 
@@ -338,7 +348,7 @@ const CategoryPage: React.FC = () => {
                 ))
               ) : (
                 <div className="col-span-full text-center py-10">
-                  <p>No products found in this category</p>
+                  <p className="text-gray-600">No products match your filters.</p>
                 </div>
               )}
             </div>

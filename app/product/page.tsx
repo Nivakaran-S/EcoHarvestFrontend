@@ -97,6 +97,9 @@ const ProductPageComponent = () => {
     }
   }, [productId]);
 
+  useEffect(() => {
+    console.log('Product Details Fetched', productDetails)
+  }, [productId]);
   // ====== Fetch Reviews ======
   useEffect(() => {
     const fetchReviews = async () => {

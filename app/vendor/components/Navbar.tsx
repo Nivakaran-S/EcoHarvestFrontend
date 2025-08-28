@@ -14,6 +14,9 @@ interface ProductData {
   [key: string]: any;
 }
 
+// ===== Base URL =====
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
+
 const Navbar: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
@@ -22,7 +25,7 @@ const Navbar: React.FC = () => {
   useEffect(() => {
     const fetchVendorId = async () => {
       try {
-        const res = await fetch("http://localhost:8000/check-cookie", {
+        const res = await fetch(`${BASE_URL}/check-cookie`, {
           credentials: "include",
         });
 
@@ -32,7 +35,7 @@ const Navbar: React.FC = () => {
         }
 
         const userId = data.id;
-        const userRes = await fetch(`http://localhost:8000/vendors/${userId}`, {
+        const userRes = await fetch(`${BASE_URL}/vendors/${userId}`, {
           credentials: "include",
         });
         const userData: any[] = await userRes.json();
@@ -58,7 +61,7 @@ const Navbar: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:8000/logout", {
+      const response = await fetch(`${BASE_URL}/logout`, {
         method: "POST",
         credentials: "include",
       });
@@ -89,7 +92,7 @@ const Navbar: React.FC = () => {
     };
 
     try {
-      const response = await fetch("http://localhost:8000/products", {
+      const response = await fetch(`${BASE_URL}/products`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

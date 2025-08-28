@@ -55,6 +55,7 @@ const Login: React.FC = () => {
   const handleLoginClick = (): void => {
     setLoginClick(!loginClick);
   };
+  
 
   const handleLoginSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
@@ -93,7 +94,7 @@ const Login: React.FC = () => {
             console.error("Unknown role:", response.data.role);
             break;
         }
-      }, 100); // 100ms delay
+      }, 100); 
 
     } catch (err) {
       console.error("Login error:", err);

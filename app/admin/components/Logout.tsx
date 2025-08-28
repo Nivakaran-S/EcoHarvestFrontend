@@ -6,7 +6,7 @@ const LogoutButton = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:8000/logout", {
+      const response = await fetch("https://eco-harvest-backend.vercel.app/logout", {
         method: "POST",
         credentials: "include",
       });

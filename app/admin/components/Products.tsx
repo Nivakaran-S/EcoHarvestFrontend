@@ -170,7 +170,7 @@ export default function Products() {
         open={popup.open}
         onClose={() => setPopup({ open: false, initial: null })}
         onSaved={load}
-        initial={popup.initial}
+        initial={popup.initial || undefined}
       />
 
       <ConfirmDialog

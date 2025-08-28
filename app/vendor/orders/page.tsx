@@ -6,6 +6,9 @@ import Navbar from "../components/Navbar";
 import { FiFilter } from "react-icons/fi";
 import axios from "axios";
 
+// ===== Base URL =====
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
+
 // Interfaces for TypeScript
 interface User {
   _id: string;
@@ -36,7 +39,7 @@ export default function OrdersPage() {
   useEffect(() => {
     const fetchVendorOrders = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/check-cookie/", {
+        const res = await axios.get(`${BASE_URL}/check-cookie/`, {
           withCredentials: true,
         });
 
@@ -46,9 +49,9 @@ export default function OrdersPage() {
         const vid = localStorage.getItem("vendorId");
         if (!vid) throw new Error("Vendor ID not found in localStorage");
 
-        const ordersRes = await axios.get<Order[]>(
-          `http://localhost:8000/orders/vendor/${vid}`
-        );
+        const ordersRes = await axios.get<Order[]>(`${BASE_URL}/orders/vendor/${vid}`, {
+          withCredentials: true,
+        });
 
         setOrders(ordersRes.data);
         setLoading(false);
@@ -128,9 +131,7 @@ export default function OrdersPage() {
                             {order.status}
                           </span>
                         </td>
-                        <td className="py-2 px-4">
-                          ${order.totalAmount.toFixed(2)}
-                        </td>
+                        <td className="py-2 px-4">${order.totalAmount.toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -150,9 +151,7 @@ export default function OrdersPage() {
               </p>
               <div className="flex items-center gap-2">
                 <button className="px-3 py-1 border rounded-md">Previous</button>
-                <button className="px-3 py-1 bg-yellow-500 text-white rounded-md">
-                  1
-                </button>
+                <button className="px-3 py-1 bg-yellow-500 text-white rounded-md">1</button>
                 <button className="px-3 py-1 border rounded-md">Next</button>
               </div>
             </div>

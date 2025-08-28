@@ -4,6 +4,9 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+// ===== Base URL =====
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
+
 interface Advertisement {
   _id: string;
   title: string;
@@ -19,29 +22,30 @@ const Advertisements: React.FC = () => {
   const [advertisementDescription, setAdvertisementDescription] = useState('');
   const [advertisementImageUrl, setAdvertisementImageUrl] = useState('');
 
+  // Fetch advertisements
   useEffect(() => {
     const fetchAdvertisements = async () => {
       try {
-        const response = await axios.get<Advertisement[]>("http://localhost:8000/advertisement");
+        const response = await axios.get<Advertisement[]>(`${BASE_URL}/advertisement`);
         setAdvertisements(response.data);
       } catch (err) {
         console.error("Error in fetching advertisements: ", err);
       }
     };
     fetchAdvertisements();
-  }, []);
+  }, [isChanged]);
 
+  // Update advertisement
   const updateAdvertisement = async (advertisementId: string) => {
     try {
-      const response = await axios.put("http://localhost:8000/advertisement/update", {
+      await axios.put(`${BASE_URL}/advertisement/update`, {
         advertisementId,
         title: advertisementTitle,
         description: advertisementDescription,
         imageUrl: advertisementImageUrl
       });
-      console.log(response.data);
       setEditClick(false);
-      setIsChanged(!isChanged); // trigger re-render if needed
+      setIsChanged(!isChanged); // trigger re-render
     } catch (err) {
       console.error("Error in updating advertisements: ", err);
     }
@@ -72,7 +76,7 @@ const Advertisements: React.FC = () => {
                 </div>
               </div>
 
-              <div className="h-[500px] flex pb-[10px] flex-col space-y-[5px]">
+              <div className="h-[500px] flex pb-[10px] flex-col space-y-[5px] overflow-auto">
                 {advertisements.map((advertisement) => (
                   <div
                     key={advertisement._id}

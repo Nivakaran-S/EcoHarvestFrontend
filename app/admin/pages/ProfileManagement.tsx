@@ -1,15 +1,14 @@
+"use client";
+
 import axios from "axios";
 import React, { useState } from "react";
 
 import { Notification } from "../components/types";
 
-interface ProfileManagementProps {
-  id: string;
-  userInformation: any; // you can type this properly later
-  notifications: Notification[];
-}
+// ==== Base URL ====
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
 
-// Define types for props
+// Types
 interface UserInformation {
   firstName: string;
   lastName: string;
@@ -21,7 +20,7 @@ interface UserInformation {
 
 interface ProfileManagementProps {
   id: string;
-  userInformation: any; // you can type this properly later
+  userInformation: any; // type properly later
   notifications: Notification[];
 }
 
@@ -38,9 +37,10 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({ userInformation, 
   const [onEditClick, setOnEditClick] = useState<boolean>(false);
   const [profileUpdateSuccess, setProfileUpdateSuccess] = useState<boolean>(false);
 
+  // Update profile
   const updateInformation = async () => {
     try {
-      const response = await axios.post('http://localhost:8000/api/auth/updateAdmin', {
+      const response = await axios.post(`${BASE_URL}/api/auth/updateAdmin`, {
         firstName,
         lastName,
         email,
@@ -56,9 +56,10 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({ userInformation, 
     }
   }
 
+  // Delete notification
   const handleDeleteNotification = async (notificationId: string) => {
     try {
-      const response = await axios.delete(`http://localhost:8000/notification/${notificationId}`);
+      const response = await axios.delete(`${BASE_URL}/notification/${notificationId}`);
       console.log(response.data);
       window.location.reload();
     } catch (err) {
@@ -68,11 +69,14 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({ userInformation, 
 
   return (
     <div className="border-t-[1px] border-gray-400 text-black flex flex-row w-[100%] h-[100vh] bg-gray-100">
+      
+      {/* Left panel - profile */}
       <div className="flex flex-col px-[20px] py-[10px] w-[75%]">
         <p className="text-[25px]">Profile Management</p>
         <p>Manage your account information</p>
 
         <div className="flex flex-col bg-gray-200 ring-gray-500 ring-[0.5px] px-[20px] py-[15px] rounded-[10px] space-y-[10px] mt-[20px]">
+
           {/* Personal Information */}
           <div>
             <p className="text-[20px]">Personal Information</p>
@@ -191,7 +195,7 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({ userInformation, 
           notifications.map((notification) => (
             <div
               key={notification._id}
-              className="bg-gray-400 ring-gray-800 ring-[0.5px] rounded-[5px] px-[10px] py-[10px]"
+              className="bg-gray-400 ring-gray-800 ring-[0.5px] rounded-[5px] px-[10px] py-[10px] mb-[10px]"
             >
               <div className="flex flex-row justify-between items-center">
                 <p className="text-[17px] leading-[22px]">{notification.title}</p>
@@ -205,7 +209,7 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({ userInformation, 
               <p className="text-[13px] pl-[10px]">{notification.message}</p>
               <div className="flex flex-row justify-between">
                 <p className="text-[13px] flex flex-row justify-end pl-[10px]">
-                  {new Date(notification.createdAt).toLocaleString([], { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
                 <p className="text-[13px] pr-[10px]">
                   {new Date(notification.createdAt).toLocaleDateString()}

@@ -10,6 +10,9 @@ interface EditProductModalProps {
   onSave: (updatedProduct: Product) => void;
 }
 
+// ===== Base URL =====
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
+
 const EditProductModal: React.FC<EditProductModalProps> = ({
   isOpen,
   onClose,
@@ -43,7 +46,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     };
 
     try {
-      const res = await fetch(`http://localhost:8000/products/${formData._id}`, {
+      const res = await fetch(`${BASE_URL}/products/${formData._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedProduct),

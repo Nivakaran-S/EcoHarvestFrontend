@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+// ==== Base URL ====
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
+
 // ==== Types ====
 interface Product {
   productId?: {
@@ -28,7 +31,7 @@ const RecentOrders: React.FC = () => {
   useEffect(() => {
     const fetchVendorId = async () => {
       try {
-        const res = await fetch("http://localhost:8000/check-cookie", {
+        const res = await fetch(`${BASE_URL}/check-cookie`, {
           credentials: "include",
         });
         const data = await res.json();
@@ -38,7 +41,7 @@ const RecentOrders: React.FC = () => {
         }
 
         const userId = data.id;
-        const userRes = await fetch(`http://localhost:8000/vendors/${userId}`, {
+        const userRes = await fetch(`${BASE_URL}/vendors/${userId}`, {
           credentials: "include",
         });
         const userData = await userRes.json();
@@ -63,7 +66,7 @@ const RecentOrders: React.FC = () => {
 
       try {
         const ordersRes = await axios.get<Order[]>(
-          `http://localhost:8000/orders/vendor/${vendorId}`,
+          `${BASE_URL}/orders/vendor/${vendorId}`,
           { withCredentials: true }
         );
         setOrders(ordersRes.data);

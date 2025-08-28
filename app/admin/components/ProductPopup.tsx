@@ -1,134 +1,135 @@
 'use client';
+
 import { useState, useEffect } from 'react';
-import { Vehicle, InventoryItem, ApiError } from './types';
-import { VEHICLE, INVENTORY, apiHandler } from './api';
 import toast, { Toaster } from 'react-hot-toast';
+import { Vehicle, InventoryItem, Category } from './types';
+import { INVENTORY, VEHICLE } from './api';
+
+const CATEGORIES: Category[] = ['Resale', 'Recycle', 'Fertilizer'];
 
 interface ProductPopupProps {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
-  initial?: InventoryItem | null;
+  initial?: InventoryItem;
 }
 
-interface FormValues {
-  name: string;
-  price: number;
-  category: InventoryItem['category'];
-  quantity: number;
-  vendorName: string;
-  vehicle?: string;
-}
-
-interface FormErrors {
-  name: string;
-  price: string;
-  quantity: string;
-  vendorName: string;
-  vehicle: string;
-  category: string;
-}
-
-const ProductPopup: React.FC<ProductPopupProps> = ({ open, onClose, onSaved, initial }) => {
+export default function ProductPopup({ open, onClose, onSaved, initial }: ProductPopupProps) {
   if (!open) return null;
-
   const isEdit = Boolean(initial);
 
-  const [form, setForm] = useState<FormValues>({
-    name: initial?.name ?? '',
-    price: initial?.price ?? 0,
-    category: initial?.category ?? 'Resale',
-    quantity: initial?.quantity ?? 0,
-    vendorName: initial?.vendorName ?? '',
-    vehicle: typeof initial?.vehicle === 'object' ? initial.vehicle._id : initial?.vehicle ?? '',
+
+  const [form, setForm] = useState({
+    productName: '',
+    category: 'Resale' as Category,
+    quantity: 0,
+    vendorName: '',
+    vehicle: '' as string,
   });
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [errors, setErrors] = useState<FormErrors>({
-    name: '',
-    price: '',
+  const [errors, setErrors] = useState({
+    productName: '',
     quantity: '',
     vendorName: '',
     vehicle: '',
-    category: '',
   });
 
-  // Load vehicles
+  
   useEffect(() => {
-    const loadVehicles = async () => {
+    (async () => {
       try {
-        const data: Vehicle[] = await apiHandler(VEHICLE.LIST());
-        setVehicles(data.filter((v) => v.status === 'Available'));
-      } catch {
+        const { data } = await VEHICLE.LIST(); 
+        setVehicles(data.filter((v: Vehicle) => v.status === 'Available'));
+      } catch (error) {
         toast.error('Failed to load vehicles');
       }
-    };
-    loadVehicles();
+    })();
   }, []);
 
-  // Prefill form when editing
   useEffect(() => {
     if (initial) {
       setForm({
-        name: initial.name,
-        price: initial.price,
+        productName: initial.name,
         category: initial.category,
         quantity: initial.quantity,
         vendorName: initial.vendorName,
-        vehicle: typeof initial.vehicle === 'object' ? initial.vehicle._id : initial.vehicle,
+        vehicle: typeof initial.vehicle === 'string' ? initial.vehicle : initial.vehicle?._id || '',
       });
     }
   }, [initial]);
 
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: name === 'price' || name === 'quantity' ? Number(value) : value,
-    }));
-    setErrors((prev) => ({ ...prev, [name]: '' }));
+    setForm({ ...form, [name]: value });
+    setErrors({ ...errors, [name]: '' });
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {
-      name: !form.name.trim() ? 'Product name is required' : '',
-      price: !form.price || form.price <= 0 ? 'Price must be positive' : '',
-      quantity: !form.quantity || form.quantity <= 0 ? 'Quantity must be positive' : '',
-      vendorName: !form.vendorName.trim() ? 'Vendor name is required' : '',
-      vehicle: !form.vehicle ? 'Vehicle selection is required' : '',
-      category: !form.category ? 'Category selection is required' : '',
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = {
+      productName: '',
+      quantity: '',
+      vendorName: '',
+      vehicle: '',
     };
+
+    if (!form.productName.trim()) {
+      newErrors.productName = 'Product name is required';
+      isValid = false;
+    }
+
+    if (!form.quantity || form.quantity <= 0) {
+      newErrors.quantity = 'Quantity must be a positive number';
+      isValid = false;
+    }
+
+    if (!form.vendorName.trim()) {
+      newErrors.vendorName = 'Vendor name is required';
+      isValid = false;
+    }
+
+    if (!form.vehicle) {
+      newErrors.vehicle = 'Vehicle selection is required';
+      isValid = false;
+    }
+
     setErrors(newErrors);
-    return !Object.values(newErrors).some(Boolean);
+    return isValid;
   };
 
   const handleSubmit = async () => {
-  if (!validateForm()) {
-    toast.error('Please fix the errors in the form');
-    return;
-  }
-
-  try {
-    if (isEdit && initial?._id) {
-      // Update existing inventory
-      await apiHandler(INVENTORY.UPDATE(initial._id, form));
-      toast.success('Product updated successfully');
-    } else {
-      // Create new inventory
-      const newItem = {
-        ...form,
-        status: 'Active', // Add default status
-      };
-      await apiHandler(INVENTORY.CREATE(newItem));
-      toast.success('Product created successfully');
+    if (!validateForm()) {
+      toast.error('Please fill all required fields correctly');
+      return;
     }
-    onSaved();
-    onClose();
-  } catch (error) {
-    const apiError = error as ApiError;
-    toast.error(apiError.message || 'Failed to save product');
-  }
-};
+
+    try {
+      const body: Omit<InventoryItem, '_id'> = {
+        name: form.productName,
+        category: form.category,
+        quantity: Number(form.quantity),
+        vendorName: form.vendorName,
+        vehicle: form.vehicle,
+        price: 0, 
+        status: 'Available', // default status
+      };
+
+      if (isEdit && initial?._id) {
+        await INVENTORY.UPDATE(initial._id, body);
+        toast.success('Product updated successfully');
+      } else {
+        await INVENTORY.CREATE(body);
+        toast.success('Product created successfully');
+      }
+
+      onSaved();
+      onClose();
+    } catch (error: any) {
+      toast.error(`Error: ${error.message || 'Failed to save product'}`);
+    }
+  };
 
 
   return (
@@ -137,34 +138,59 @@ const ProductPopup: React.FC<ProductPopupProps> = ({ open, onClose, onSaved, ini
       <div className="w-full max-w-md rounded-xl bg-white p-6">
         <h2 className="mb-4 text-xl font-semibold">{isEdit ? 'Edit Product' : 'Add Product'}</h2>
 
-        {/* Render form inputs here (name, price, category, quantity, vendorName, vehicle) */}
-        {/* Example: Product Name */}
+        {[
+          { name: 'productName', label: 'Product Name' },
+          { name: 'quantity', label: 'Quantity', type: 'number' },
+          { name: 'vendorName', label: 'Vendor Name' },
+        ].map(f => (
+          <div key={f.name} className="mb-3">
+            <label className="block mb-1 text-sm font-medium text-gray-700">{f.label}</label>
+            <input
+              name={f.name}
+              type={f.type || 'text'}
+              placeholder={f.label}
+              value={form[f.name as keyof typeof form]}
+              onChange={handleChange}
+              className={`w-full rounded-lg border px-3 py-2 ${
+                errors[f.name as keyof typeof errors] ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {errors[f.name as keyof typeof errors] && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors[f.name as keyof typeof errors]}
+              </p>
+            )}
+          </div>
+        ))}
+
         <div className="mb-3">
-          <label className="mb-1 block text-sm font-medium text-gray-700">Product Name</label>
-          <input
-            name="name"
-            type="text"
-            value={form.name}
+          <label className="block mb-1 text-sm font-medium text-gray-700">Category</label>
+          <select
+            name="category"
+            value={form.category}
             onChange={handleChange}
-            className={`w-full rounded-lg border px-3 py-2 ${errors.name ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          />
-          {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2"
+          >
+            {CATEGORIES.map(c => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
         </div>
 
-        {/* Repeat similar blocks for price, category, quantity, vendorName, vehicle */}
-        {/* Vehicle */}
         <div className="mb-3">
-          <label className="mb-1 block text-sm font-medium text-gray-700">Vehicle</label>
+          <label className="block mb-1 text-sm font-medium text-gray-700">Vehicle</label>
           <select
             name="vehicle"
             value={form.vehicle}
             onChange={handleChange}
-            className={`w-full rounded-lg border px-3 py-2 ${errors.vehicle ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            className={`w-full rounded-lg border px-3 py-2 ${
+              errors.vehicle ? 'border-red-500' : 'border-gray-300'
+            }`}
           >
-            <option value="">Select a vehicle</option>
-            {vehicles.map((v) => (
+            <option value="">— Select vehicle —</option>
+            {vehicles.map(v => (
               <option key={v._id} value={v._id}>
-                {v.make} {v.model} ({v.year})
+                {v.plateNumber || `${v.make} ${v.model}`} ({v.year})
               </option>
             ))}
           </select>
@@ -172,12 +198,14 @@ const ProductPopup: React.FC<ProductPopupProps> = ({ open, onClose, onSaved, ini
         </div>
 
         <div className="mt-4 flex justify-end gap-3">
-          <button onClick={onClose} className="rounded-lg bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300">Cancel</button>
-          <button onClick={handleSubmit} className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">{isEdit ? 'Save' : 'Create'}</button>
+          <button onClick={onClose} className="rounded-lg bg-gray-200 px-4 py-2">
+            Cancel
+          </button>
+          <button onClick={handleSubmit} className="rounded-lg bg-blue-600 px-4 py-2 text-white">
+            {isEdit ? 'Save' : 'Create'}
+          </button>
         </div>
       </div>
     </div>
   );
-};
-
-export default ProductPopup;
+}

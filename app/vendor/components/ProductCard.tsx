@@ -9,13 +9,16 @@ interface ProductCardProps {
   onEdit: (product: Product) => void;
 }
 
+// ===== Base URL =====
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
+
 const ProductCard: React.FC<ProductCardProps> = ({ product, onDelete, onEdit }) => {
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
-      const res = await fetch(`http://localhost:8000/products/${product._id}`, {
+      const res = await fetch(`${BASE_URL}/products/${product._id}`, {
         method: "DELETE",
       });
       const data = await res.json();

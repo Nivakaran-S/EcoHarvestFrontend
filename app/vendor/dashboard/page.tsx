@@ -14,12 +14,15 @@ import saved from "../images/saved.png";
 import orders from "../images/orders.png";
 import reduced from "../images/reduced.png";
 
+// ==== Base URL ====
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
+
 // ==== Types ====
 interface UserInformation {
   _id: string;
   name?: string;
   entityId?: string;
-  [key: string]: any; 
+  [key: string]: any;
 }
 
 interface Notification {
@@ -42,7 +45,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchCookies = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/check-cookie/", {
+        const response = await axios.get(`${BASE_URL}/check-cookie/`, {
           withCredentials: true,
         });
 
@@ -60,11 +63,11 @@ export default function Dashboard() {
         }
 
         try {
-          const userInfoResponse = await axios.get(`http://localhost:8000/vendors/${userId}`);
+          const userInfoResponse = await axios.get(`${BASE_URL}/vendors/${userId}`);
           setUserInformation(userInfoResponse.data);
 
           try {
-            const notificationsResponse = await axios.get(`http://localhost:8000/notification/${userId}`);
+            const notificationsResponse = await axios.get(`${BASE_URL}/notification/${userId}`);
             setNotifications(notificationsResponse.data);
           } catch (err) {
             console.error("Error fetching notifications:", err);

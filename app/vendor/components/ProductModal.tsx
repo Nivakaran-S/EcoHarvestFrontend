@@ -27,7 +27,10 @@ interface ProductModalProps {
   toastMessage: string;
 }
 
-// ==== Component ====
+// ===== Base URL =====
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
+const PREDICTION_URL = "http://localhost:5000";
+
 const ProductModal: React.FC<ProductModalProps> = ({
   isOpen,
   onClose,
@@ -52,7 +55,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch("http://localhost:8000/productcategories");
+        const res = await fetch(`${BASE_URL}/productcategories`);
         const data: ProductCategory[] = await res.json();
         setProductCategories(data);
       } catch (err) {
@@ -86,7 +89,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
     uploadData.append("image", file);
 
     try {
-      const res = await fetch("http://localhost:5000/predict", {
+      const res = await fetch(`${PREDICTION_URL}/predict`, {
         method: "POST",
         body: uploadData,
       });

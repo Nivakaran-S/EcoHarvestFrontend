@@ -10,6 +10,9 @@ import EditProductModal from "../components/EditProductModal";
 import axios from "axios";
 import { Product } from "../components/types";
 
+// ===== Base URL =====
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
+
 const Products: React.FC = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -29,7 +32,7 @@ const Products: React.FC = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get<Product[]>("http://localhost:8000/products");
+        const res = await axios.get<Product[]>(`${BASE_URL}/products`);
         setProducts(res.data);
       } catch (err) {
         console.error("Failed to fetch products:", err);
@@ -41,9 +44,7 @@ const Products: React.FC = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get<{ _id: string; name: string }[]>(
-          "http://localhost:8000/productcategories/"
-        );
+        const response = await axios.get<{ _id: string; name: string }[]>(`${BASE_URL}/productcategories/`);
         setProductCategories(response.data);
       } catch (error) {
         console.error("Error fetching categories:", error);

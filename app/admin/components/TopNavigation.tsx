@@ -7,6 +7,9 @@ import Bell from "../images/bell.png";
 import LogoutButton from "../../components/Logout";
 import axios from "axios";
 
+// ==== Config ====
+const BASE_URL = "https://eco-harvest-backend.vercel.app/";
+
 // ==== Types ====
 export interface Notification {
   _id: string;
@@ -38,8 +41,8 @@ const TopNavigation: React.FC<TopNavigationProps> = ({
 
   const handleDeleteNotification = async (notificationId: string) => {
     try {
-      await axios.delete(`http://localhost:8000/notification/${notificationId}`);
-      window.location.reload();
+      await axios.delete(`${BASE_URL}/notification/${notificationId}`);
+      window.location.reload(); // or consider better state update instead of reload
     } catch (err) {
       console.error("Error in deleting notification: ", err);
     }
@@ -48,6 +51,7 @@ const TopNavigation: React.FC<TopNavigationProps> = ({
   return (
     <div className="w-full text-black h-[10vh] flex items-center justify-between px-[30px] bg-white">
       <div className="flex items-center space-x-4">
+        {/* Notifications */}
         <div className="relative group">
           <div className="bg-gray-300 group-hover:ring-gray-600 group-hover:ring-[0.5px] cursor-pointer flex items-center justify-center rounded-full w-[36px] h-[36px]">
             <Image alt="Bell" src={Bell} height={20} width={20} />
@@ -86,6 +90,7 @@ const TopNavigation: React.FC<TopNavigationProps> = ({
           </div>
         </div>
 
+        {/* Profile */}
         <div className="flex items-center space-x-3">
           <Image
             alt="Profile"
@@ -103,6 +108,7 @@ const TopNavigation: React.FC<TopNavigationProps> = ({
         </div>
       </div>
 
+      {/* Logout */}
       {isLoggedIn && <LogoutButton />}
     </div>
   );

@@ -6,6 +6,9 @@ import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
+// ===== Base URL =====
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
+
 // Define types for orders
 interface ProductItem {
   productId: {
@@ -52,7 +55,7 @@ const OrdersDashboard: React.FC = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        let url = "http://localhost:8000/orders/";
+        let url = `${BASE_URL}/orders/`;
         if (startDate && endDate) {
           url += `?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
         }

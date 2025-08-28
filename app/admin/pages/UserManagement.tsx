@@ -1,5 +1,10 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+
+// ==== Base URL ====
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
 
 // Define types
 interface UserDetails {
@@ -48,7 +53,7 @@ export default function UserManagement() {
     const fetchUserManagement = async () => {
       try {
         setLoading(true);
-        const response = await axios.get<User[]>("http://localhost:8000/api/auth");
+        const response = await axios.get<User[]>(`${BASE_URL}/api/auth`);
         setUserInformation(response.data);
       } catch (error) {
         console.error("Error fetching user management:", error);
@@ -67,7 +72,7 @@ export default function UserManagement() {
     }
 
     try {
-      const response = await axios.post("http://localhost:8000/api/auth/registerAdmin", {
+      const response = await axios.post(`${BASE_URL}/api/auth/registerAdmin`, {
         firstName,
         lastName,
         email,
@@ -110,7 +115,7 @@ export default function UserManagement() {
     }
 
     try {
-      const response = await axios.post("http://localhost:8000/api/auth/registerVendor", {
+      const response = await axios.post(`${BASE_URL}/api/auth/registerVendor`, {
         firstName: vendorFirstName,
         lastName: vendorLastName,
         email: vendorEmail,

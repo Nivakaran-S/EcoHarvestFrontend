@@ -18,6 +18,9 @@ import UserManagement from "./pages/UserManagement";
 import ProfileManagement from "./pages/ProfileManagement";
 import { Notification } from "./components/types";
 
+// ==== Base URL ====
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
+
 interface UserDetails {
   firstName: string;
   lastName: string;
@@ -49,9 +52,7 @@ export default function AdminDashboard() {
   // Initialize socket after id and role are available
   useEffect(() => {
     if (id && role) {
-      const newSocket = io("http://localhost:8000", {
-        query: { id, role },
-      });
+      const newSocket = io(BASE_URL, { query: { id, role } });
       setSocket(newSocket);
 
       newSocket.on("connect", () => {
@@ -70,7 +71,7 @@ export default function AdminDashboard() {
     const fetchCookies = async () => {
       try {
         const response = await axios.get<{ id: string; role: string }>(
-          "http://localhost:8000/check-cookie/",
+          `${BASE_URL}/check-cookie/`,
           { withCredentials: true }
         );
 
@@ -89,9 +90,7 @@ export default function AdminDashboard() {
 
         // Fetch admin user info
         try {
-          const response2 = await axios.get<UserInformation>(
-            `http://localhost:8000/admin/:${userId}`
-          );
+          const response2 = await axios.get<UserInformation>(`${BASE_URL}/admin/${userId}`);
           setUserInformation(response2.data);
         } catch (err) {
           console.error("Error fetching user information:", err);
@@ -99,9 +98,7 @@ export default function AdminDashboard() {
 
         // Fetch notifications
         try {
-          const response3 = await axios.get<Notification[]>(
-            `http://localhost:8000/notification/:${userId}`
-          );
+          const response3 = await axios.get<Notification[]>(`${BASE_URL}/notification/${userId}`);
           setNotifications(response3.data);
         } catch (err) {
           console.error("Error fetching notifications:", err);

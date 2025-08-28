@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
+// ====== Base URL ======
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
+
 // Vendor type
 interface Vendor {
   _id: string;
@@ -11,7 +14,7 @@ interface Vendor {
   phoneNumber?: string;
   email?: string;
   username?: string;
-  [key: string]: any; 
+  [key: string]: any;
 }
 
 // Notification type
@@ -19,7 +22,7 @@ interface Notification {
   _id: string;
   message: string;
   read: boolean;
-  [key: string]: any; 
+  [key: string]: any;
 }
 
 // Cookie response type
@@ -41,7 +44,7 @@ export default function Home() {
     const fetchCookies = async () => {
       try {
         const response = await axios.get<CookieResponse>(
-          "http://localhost:8000/check-cookie/",
+          `${BASE_URL}/check-cookie/`,
           { withCredentials: true }
         );
 
@@ -49,13 +52,13 @@ export default function Home() {
 
         try {
           const response2 = await axios.get<Vendor[]>(
-            `http://localhost:8000/vendors/:${userId}`
+            `${BASE_URL}/vendors/${userId}`
           );
           setUserInformation(response2.data);
 
           try {
             const response3 = await axios.get<Notification[]>(
-              `http://localhost:8000/notification/:${userId}`
+              `${BASE_URL}/notification/${userId}`
             );
             setNotifications(response3.data);
           } catch (err) {

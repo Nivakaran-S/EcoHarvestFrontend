@@ -8,7 +8,10 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
 
-// Vendor type
+// ===== Base URL =====
+const BASE_URL = "https://eco-harvest-backend.vercel.app";
+
+// ===== Vendor type =====
 interface VendorInfo {
   _id?: string;
   businessName?: string;
@@ -38,7 +41,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchVendorId = async () => {
       try {
-        const res = await fetch("http://localhost:8000/check-cookie", {
+        const res = await fetch(`${BASE_URL}/check-cookie`, {
           credentials: "include",
         });
 
@@ -50,7 +53,7 @@ export default function ProfilePage() {
 
         const userId: string = data.id;
 
-        const userRes = await fetch(`http://localhost:8000/vendors/${userId}`, {
+        const userRes = await fetch(`${BASE_URL}/vendors/${userId}`, {
           credentials: "include",
         });
 
@@ -62,7 +65,7 @@ export default function ProfilePage() {
         const vendorInfo: VendorInfo = userData[0];
         const userDetails: UserData = userData[1];
 
-        setVendorId(userData[1].entityId || null);
+        setVendorId(userDetails.entityId || null);
         setVendor(vendorInfo);
 
         setBusinessName(vendorInfo.businessName || "");
@@ -83,7 +86,7 @@ export default function ProfilePage() {
 
     try {
       const res = await axios.put(
-        `http://localhost:8000/vendors/${vendorId}`,
+        `${BASE_URL}/vendors/${vendorId}`,
         {
           businessName,
           phoneNumber,

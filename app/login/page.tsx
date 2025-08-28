@@ -73,22 +73,30 @@ const Login: React.FC = () => {
       );
 
       console.log(response.data);
-
-      switch (response.data.role) {
-        case "Vendor":
-          router.push("/vendor");
-          break;
-        case "Company":
-        case "Customer":
-          router.push("/");
-          break;
-        case "Admin":
-          router.push("/admin");
-          break;
-      }
       console.log("Login successful");
       setLoginError(false);
+
+      // Add a small delay to ensure cookie is set before navigation
+      setTimeout(() => {
+        switch (response.data.role) {
+          case "Vendor":
+            router.push("/vendor");
+            break;
+          case "Company":
+          case "Customer":
+            router.push("/");
+            break;
+          case "Admin":
+            router.push("/admin");
+            break;
+          default:
+            console.error("Unknown role:", response.data.role);
+            break;
+        }
+      }, 100); // 100ms delay
+
     } catch (err) {
+      console.error("Login error:", err);
       setLoginError(true);
     } finally {
       setIsLoading(false);

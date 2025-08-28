@@ -1,5 +1,5 @@
 "use client";
-import React, { Suspense, useState, useEffect, useRef } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import Max from "../components/Max";
@@ -106,7 +106,7 @@ const CategoryPage: React.FC = () => {
   // --- Fetch cart ---
   useEffect(() => {
     const fetchCart = async () => {
-      if (!userLoggedIn) return;
+      if (!userLoggedIn || !id) return;
       try {
         const response = await axios.get<{ cart: Cart; products: Product[] }>(
           `${BASE_URL}/cart/${id}`
@@ -131,12 +131,14 @@ const CategoryPage: React.FC = () => {
         setProducts(response.data);
 
         // Price range setup
-        const prices = response.data.map((p) => p.unitPrice || 0);
-        const min = Math.min(...prices);
-        const max = Math.max(...prices);
-        setMinPrice(min);
-        setMaxPrice(max);
-        setPriceRange([min, max]);
+        if (response.data.length > 0) {
+          const prices = response.data.map((p) => p.unitPrice || 0);
+          const min = Math.min(...prices);
+          const max = Math.max(...prices);
+          setMinPrice(min);
+          setMaxPrice(max);
+          setPriceRange([min, max]);
+        }
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally {
@@ -161,7 +163,7 @@ const CategoryPage: React.FC = () => {
 
   // --- Filtering + Sorting ---
   useEffect(() => {
-    let filtered = products.filter(
+    const filtered = products.filter(
       (p) =>
         p.unitPrice >= priceRange[0] &&
         p.unitPrice <= priceRange[1] &&
@@ -171,15 +173,13 @@ const CategoryPage: React.FC = () => {
 
     switch (sortOption) {
       case "Price: Low to High":
-        filtered = filtered.sort((a, b) => a.unitPrice - b.unitPrice);
+        filtered.sort((a, b) => a.unitPrice - b.unitPrice);
         break;
       case "Price: High to Low":
-        filtered = filtered.sort((a, b) => b.unitPrice - a.unitPrice);
+        filtered.sort((a, b) => b.unitPrice - a.unitPrice);
         break;
       case "Highly Rated":
-        filtered = filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-        break;
-      default:
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         break;
     }
 

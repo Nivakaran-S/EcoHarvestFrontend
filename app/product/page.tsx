@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState, useEffect, ChangeEvent, Suspense } from "react";
 import Footer from "../components/Footer";
 import Navigation from "../components/Navigation";
 import Max from "../components/Max";
@@ -8,7 +9,6 @@ import StarRating from "../components/StarRating";
 import Image from "next/image";
 import ProductImage2 from "../images/product.png";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect, ChangeEvent } from "react";
 import axios from "axios";
 
 // ====== Base URL ======
@@ -82,14 +82,12 @@ const ProductPageComponent = () => {
           ...response.data,
           imageUrl: response.data.imageUrl || ProductImage2.src,
         });
-        console.log('product: ',response.data)
-        console.log('product name', response.data.name)
       } catch (err) {
         console.error("Error fetching product details:", err);
         setError("Failed to load product details");
       }
     };
-    fetchProductDetails();
+    if (productId) fetchProductDetails();
   }, [productId]);
 
   // ====== Fetch Reviews ======
@@ -98,13 +96,12 @@ const ProductPageComponent = () => {
       try {
         const response = await axios.get<Review[]>(`${BASE_URL}/reviews/${productId}`);
         setReviews(response.data);
-        console.log(response)
       } catch (err) {
         console.error("Error fetching reviews:", err);
         setError("Failed to load reviews");
       }
     };
-    fetchReviews();
+    if (productId) fetchReviews();
   }, [productId]);
 
   // ====== Fetch User Info & Cart ======
@@ -127,7 +124,7 @@ const ProductPageComponent = () => {
 
             const cartData: Cart = {
               products: cartResponse.data.cart.products.map((p: any) => ({
-                _id: p._id || `cart-item-${Date.now()}-${Math.random()}`, // Improved ID generation
+                _id: p._id || `cart-item-${Date.now()}-${Math.random()}`,
                 productId: p.productId,
                 quantity: p.quantity,
                 name: p.name,
@@ -143,14 +140,7 @@ const ProductPageComponent = () => {
 
             setCart(cartData);
             setNumberOfCartItems(cartData.products.length);
-
-            if (!productDetails && cartResponse.data.products.length > 0) {
-              setProductDetails({
-                ...cartResponse.data.products[0],
-                imageUrl: cartResponse.data.products[0].imageUrl || ProductImage2.src,
-              });
-            }
-          } catch (err) {
+          } catch {
             console.log("User has no cart yet");
           }
         } else if (response.data.role === "Vendor") {
@@ -163,7 +153,7 @@ const ProductPageComponent = () => {
       }
     };
     fetchUserAndCart();
-  }, []);
+  }, [router]);
 
   // ====== Quantity Handlers ======
   const handleIncreaseQuantity = () => setQuantity((prev) => prev + 1);
@@ -194,7 +184,7 @@ const ProductPageComponent = () => {
             newProducts[existingIndex].quantity += quantity;
           } else {
             newProducts.push({
-              _id: response.data.cartItemId || `cart-item-${Date.now()}-${Math.random()}`, // Improved ID generation
+              _id: response.data.cartItemId || `cart-item-${Date.now()}-${Math.random()}`,
               productId,
               quantity,
               name: productDetails?.name,
@@ -206,7 +196,6 @@ const ProductPageComponent = () => {
           return { products: newProducts };
         });
       } else {
-        console.error("Error adding product to cart");
         setError("Failed to add product to cart");
       }
     } catch (err) {
@@ -235,7 +224,7 @@ const ProductPageComponent = () => {
       setReviews((prev) => [...prev, { userName: "You", comment: userReview, rating: userRating }]);
       setUserReview("");
       setUserRating(0);
-      setError(null); // Clear any previous errors
+      setError(null);
     } catch (err) {
       console.error("Error submitting review:", err);
       setError("Failed to submit review");
@@ -248,7 +237,9 @@ const ProductPageComponent = () => {
         cart={cart}
         id={id}
         userLoggedIn={userLoggedIn}
-        productsDetail={productDetails ? [{ ...productDetails, imageUrl: productDetails.imageUrl || ProductImage2.src }] : []}
+        productsDetail={
+          productDetails ? [{ ...productDetails, imageUrl: productDetails.imageUrl || ProductImage2.src }] : []
+        }
         numberOfCartItems={numberOfCartItems}
       />
 
@@ -260,115 +251,116 @@ const ProductPageComponent = () => {
             <div className="bg-gradient-to-b pt-[16vh] flex flex-col items-center justify-center from-gray-400 to-[#F5F5F5] w-full h-full">
               <div className="w-[94vw] flex justify-center items-center rounded-[15px] overflow-hidden">
                 {/* Product Info */}
-                <div className="w-[38.2%] ml-[10px] border-[0.5px] border-gray-500 rounded-[10px] bg-[#F5F5F5] h-[70vh] mb-[40px]">
+                <div className="w-[38.2%] ml-[10px] border-[0.5px] border-gray-500 rounded-[10px] bg-[#F5F5F5] h-[70vh] mb-[40px] p-[20px] relative">
                   {!!discountPercentage && (
-                    <div className="drop-shadow-lg hover:drop-shadow-2xl rounded-[10px] flex flex-col items-center justify-between p-[10px]">
-                      <div className="absolute top-0 right-0 bg-red-500 text-white text-[12px] px-3 py-[3px] rounded-bl-lg font-semibold shadow-md z-10">
-                        -{discountPercentage}%
-                      </div>
+                    <div className="absolute top-0 right-0 bg-red-500 text-white text-[12px] px-3 py-[3px] rounded-bl-lg font-semibold shadow-md z-10">
+                      -{discountPercentage}%
                     </div>
                   )}
 
-                  <div className="py-[20px] px-[25px]">
-                    <p className="text-[28px] w-[80%] leading-[32px]">{productDetails.name}</p>
+                  <p className="text-[28px] w-[80%] leading-[32px]">{productDetails.name}</p>
 
-                    {/* Rating */}
-                    <div className="flex relative items-center justify-between mt-2">
-                      <div>
-                        <p className="text-[20px] ml-[10px] text-orange-500">{productDetails.subtitle}</p>
-                        <div className="flex flex-row items-center mt-[10px] space-x-[3px]">
-                          <StarRating onChange={() => {}} rating={productDetails.averageRating} />
-                          <p className="text-gray-700 text-[13px] flex items-center">
-                            <span className="text-[15px]">{productDetails.averageRating}</span> ({productDetails.numberOfReviews})
+                  {/* Rating */}
+                  <div className="flex relative items-center justify-between mt-2">
+                    <div>
+                      <p className="text-[20px] ml-[10px] text-orange-500">{productDetails.subtitle}</p>
+                      <div className="flex flex-row items-center mt-[10px] space-x-[3px]">
+                        <StarRating onChange={() => {}} rating={productDetails.averageRating} />
+                        <p className="text-gray-700 text-[13px] flex items-center">
+                          <span className="text-[15px]">{productDetails.averageRating}</span> ({productDetails.numberOfReviews})
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="absolute top-[10px] right-0 flex flex-col items-center">
+                      <div className="rounded-full bg-[#FDAA1C] text-black ring-gray-800 ring-[0.5px] px-[15px] py-[0px] cursor-pointer">
+                        <p className="text-[13px]">Ask Max</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pricing */}
+                  <div className="flex justify-between mt-[20px]">
+                    <div>
+                      {discountPrice ? (
+                        <>
+                          <p className="text-[35px] mt-[5px]">Rs. {discountPrice}</p>
+                          <p className="text-[15px] text-gray-600 pl-[5px]">
+                            <s>MRP: Rs. {productDetails.unitPrice}</s>
                           </p>
-                        </div>
-                      </div>
-
-                      <div className="absolute top-[10px] right-0 flex flex-col items-center">
-                        <div className="rounded-full bg-[#FDAA1C] text-black ring-gray-800 ring-[0.5px] px-[15px] py-[0px] cursor-pointer">
-                          <p className="text-[13px]">Ask Max</p>
-                        </div>
-                      </div>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-[35px] mt-[5px]">Rs. {productDetails.unitPrice}</p>
+                          <p className="text-[15px] text-gray-600 pl-[5px]">
+                            <s>MRP: Rs. {productDetails.MRP}</s>
+                          </p>
+                        </>
+                      )}
                     </div>
-
-                    {/* Pricing */}
-                    <div className="flex justify-between mt-[20px]">
-                      <div>
-                        {discountPrice ? (
-                          <>
-                            <p className="text-[35px] mt-[5px]">Rs. {discountPrice}</p>
-                            <p className="text-[15px] text-gray-600 pl-[5px]">
-                              <s>MRP: Rs. {productDetails.unitPrice}</s>
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-[35px] mt-[5px]">Rs. {productDetails.unitPrice}</p>
-                            <p className="text-[15px] text-gray-600 pl-[5px]">
-                              <s>MRP: Rs. {productDetails.MRP}</s>
-                            </p>
-                          </>
-                        )}
-                      </div>
-                      <div className="flex flex-col items-center justify-center">
-                        <p className="text-green-800 text-[19px]">{productDetails.statSubus}</p>
-                      </div>
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-green-800 text-[19px]">{productDetails.statSubus}</p>
                     </div>
+                  </div>
 
-                    {/* Quantity */}
-                    <div className="flex items-center my-[10px]">
-                      <div className="flex items-center space-x-[10px]">
-                        <p className="text-[20px]">Quantity</p>
-                        <div className="flex items-center justify-center w-[90px] h-[30px] rounded-[5px] ring-[1px] ring-gray-400 bg-white">
-                          <div className="px-[10px] cursor-pointer" onClick={handleDecreaseQuantity}>
-                            <div className="bg-black h-[1px] w-[10px]" />
-                          </div>
-                          <input
-                            value={quantity}
-                            onChange={handleQuantityChange}
-                            className="w-full text-[20px] text-center focus:outline-none"
-                          />
-                          <div className="px-[10px] cursor-pointer" onClick={handleIncreaseQuantity}>
-                            <p className="text-[20px]">+</p>
-                          </div>
+                  {/* Quantity */}
+                  <div className="flex items-center my-[10px]">
+                    <div className="flex items-center space-x-[10px]">
+                      <p className="text-[20px]">Quantity</p>
+                      <div className="flex items-center justify-center w-[90px] h-[30px] rounded-[5px] ring-[1px] ring-gray-400 bg-white">
+                        <div className="px-[10px] cursor-pointer" onClick={handleDecreaseQuantity}>
+                          <div className="bg-black h-[1px] w-[10px]" />
+                        </div>
+                        <input
+                          value={quantity}
+                          onChange={handleQuantityChange}
+                          className="w-full text-[20px] text-center focus:outline-none"
+                        />
+                        <div className="px-[10px] cursor-pointer" onClick={handleIncreaseQuantity}>
+                          <p className="text-[20px]">+</p>
                         </div>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Subtotal & Delivery */}
-                    <div className="flex flex-col space-y-[8px] mt-[15px] text-[15px]">
-                      <div className="flex justify-between text-[18px]">
-                        <p>Delivery</p>
-                        <p>Colombo, Sri Lanka</p>
-                      </div>
-                      <div className="flex justify-between text-[18px]">
-                        <p>Sub Total</p>
-                        <p>Rs. {quantity * (discountPrice || productDetails.unitPrice)}</p>
-                      </div>
+                  {/* Subtotal & Delivery */}
+                  <div className="flex flex-col space-y-[8px] mt-[15px] text-[15px]">
+                    <div className="flex justify-between text-[18px]">
+                      <p>Delivery</p>
+                      <p>Colombo, Sri Lanka</p>
                     </div>
+                    <div className="flex justify-between text-[18px]">
+                      <p>Sub Total</p>
+                      <p>Rs. {quantity * (discountPrice || productDetails.unitPrice)}</p>
+                    </div>
+                  </div>
 
-                    {/* Add to Cart & Buy Now */}
-                    <div className="flex flex-col space-y-[8px] mt-[15px]">
-                      <button
-                        onClick={addToCart}
-                        className="w-full py-[5px] bg-[#FDAA1C] rounded flex justify-center items-center cursor-pointer"
-                      >
-                        Add to Cart
-                      </button>
-                      <button
-                        onClick={handleBuyNow}
-                        className="w-full py-[5px] bg-[#101010] text-white rounded flex justify-center items-center cursor-pointer"
-                      >
-                        Buy now
-                      </button>
-                    </div>
+                  {/* Add to Cart & Buy Now */}
+                  <div className="flex flex-col space-y-[8px] mt-[15px]">
+                    <button
+                      onClick={addToCart}
+                      className="w-full py-[5px] bg-[#FDAA1C] rounded flex justify-center items-center cursor-pointer"
+                    >
+                      Add to Cart
+                    </button>
+                    <button
+                      onClick={handleBuyNow}
+                      className="w-full py-[5px] bg-[#101010] text-white rounded flex justify-center items-center cursor-pointer"
+                    >
+                      Buy now
+                    </button>
                   </div>
                 </div>
 
                 {/* Product Image */}
                 <div className="w-[61.8%] flex flex-col items-center justify-center h-[83vh] space-y-[30px]">
                   <div className="w-full h-[350px] relative flex justify-center items-end">
-                    <Image alt="Product Image" src={productDetails.imageUrl || ProductImage2} height={350} width={350} />
+                    <Image
+                      alt="Product Image"
+                      src={productDetails.imageUrl || ProductImage2}
+                      height={350}
+                      width={350}
+                    />
                   </div>
                 </div>
               </div>
@@ -444,8 +436,6 @@ const ProductPageComponent = () => {
     </div>
   );
 };
-
-import React, { Suspense } from "react";
 
 export default function ProductPage() {
   return (

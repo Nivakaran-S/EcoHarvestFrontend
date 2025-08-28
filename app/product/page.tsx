@@ -82,7 +82,6 @@ const ProductPageComponent = () => {
           ...response.data,
           imageUrl: response.data.imageUrl || ProductImage2.src,
         });
-        console.log('Product details', productDetails?.name)
       } catch (err) {
         console.error("Error fetching product details:", err);
         setError("Failed to load product details");
@@ -90,6 +89,13 @@ const ProductPageComponent = () => {
     };
     if (productId) fetchProductDetails();
   }, []);
+
+  useEffect(() => {
+    if (productDetails) {
+      console.log("Updated product details:", productDetails);
+    }
+  }, [productDetails]);
+
 
   // ====== Fetch Reviews ======
   useEffect(() => {

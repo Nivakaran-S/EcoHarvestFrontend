@@ -95,11 +95,12 @@ const ProductPageComponent = () => {
       setLoading(true); // Set loading to true before fetching
       fetchProductDetails();
     }
-  }, [productId]);
+  }, []);
 
   useEffect(() => {
     console.log('Product Details Fetched', productDetails)
-  }, [productId]);
+  }, []);
+  
   // ====== Fetch Reviews ======
   useEffect(() => {
     const fetchReviews = async () => {

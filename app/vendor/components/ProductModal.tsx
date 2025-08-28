@@ -182,7 +182,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
       className="fixed inset-0 flex items-center justify-center z-40"
       style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
     >
-      <div className="bg-white p-6 rounded-md shadow-lg w-96 max-h-[90vh] overflow-y-auto relative">
+      <div className="bg-white p-6 rounded-md shadow-lg w-[50vw] max-h-[90vh] overflow-y-auto relative">
         <h2 className="text-lg font-semibold mb-4">Add New Product</h2>
 
         {toastMessage && (

@@ -83,6 +83,7 @@ const ProductPageComponent = () => {
           ...response.data,
           imageUrl: response.data.imageUrl || ProductImage2.src,
         };
+        console.log('Product details: ', fetched)
         setProductDetails(fetched);
         setLoading(false); // Set loading to false on success
       } catch (err) {
@@ -100,7 +101,7 @@ const ProductPageComponent = () => {
   useEffect(() => {
     console.log('Product Details Fetched', productDetails)
   }, []);
-  
+
   // ====== Fetch Reviews ======
   useEffect(() => {
     const fetchReviews = async () => {

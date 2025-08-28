@@ -189,6 +189,84 @@ const ProductModal: React.FC<ProductModalProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* File upload section - FIRST */}
+          <div className="space-y-2 bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+            <label className="block text-lg font-semibold text-blue-800">
+              🍎 Step 1: Upload Food Image for AI Classification
+            </label>
+            <p className="text-sm text-blue-600 mb-2">
+              Upload an image to automatically identify the food and its category
+            </p>
+            <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png"
+              className="w-full p-2 border rounded"
+              onChange={handleFileUpload}
+              disabled={isPredicting}
+            />
+            
+            {/* Loading indicator */}
+            {isPredicting && (
+              <div className="flex items-center space-x-2 text-blue-600">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span className="text-sm">Analyzing food image...</span>
+              </div>
+            )}
+            
+            {/* Error message */}
+            {predictionError && (
+              <div className="text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200">
+                Error: {predictionError}
+              </div>
+            )}
+          </div>
+
+          {/* Predicted Results Section */}
+          {(formData.predictedFoodName || formData.predictedFoodCategory) && (
+            <div className="space-y-3 bg-green-50 p-4 rounded-lg border border-green-200">
+              <h3 className="text-lg font-semibold text-green-800">
+                🤖 AI Prediction Results
+              </h3>
+              
+              {/* Predicted Food Name Display */}
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-green-700">
+                  Identified Food Item
+                </label>
+                <input
+                  type="text"
+                  name="predictedFoodName"
+                  value={formData.predictedFoodName}
+                  placeholder="AI will identify the food item"
+                  className="w-full p-2 border rounded bg-white"
+                  readOnly
+                />
+              </div>
+
+              {/* Predicted Food Category Display */}
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-green-700">
+                  Food Category
+                </label>
+                <input
+                  type="text"
+                  name="predictedFoodCategory"
+                  value={formData.predictedFoodCategory}
+                  placeholder="AI will categorize the food type"
+                  className="w-full p-2 border rounded bg-white"
+                  readOnly
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Divider */}
+          <div className="border-t pt-4">
+            <h3 className="text-lg font-semibold text-gray-700 mb-3">
+              📝 Step 2: Complete Product Details
+            </h3>
+          </div>
+
           <input
             type="text"
             name="name"
@@ -243,65 +321,6 @@ const ProductModal: React.FC<ProductModalProps> = ({
             <option value="Recycling">Recycling</option>
             <option value="Fertilizer">Fertilizer</option>
           </select>
-          
-          {/* File upload section */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Upload Food Image for AI Classification
-            </label>
-            <input
-              type="file"
-              accept="image/jpeg,image/jpg,image/png"
-              className="w-full p-2 border rounded"
-              onChange={handleFileUpload}
-              disabled={isPredicting}
-            />
-            
-            {/* Loading indicator */}
-            {isPredicting && (
-              <div className="flex items-center space-x-2 text-blue-600">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span className="text-sm">Analyzing food image...</span>
-              </div>
-            )}
-            
-            {/* Error message */}
-            {predictionError && (
-              <div className="text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200">
-                Error: {predictionError}
-              </div>
-            )}
-          </div>
-
-          {/* Predicted Food Name Display */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Predicted Food Name
-            </label>
-            <input
-              type="text"
-              name="predictedFoodName"
-              value={formData.predictedFoodName}
-              placeholder="AI will identify the food item"
-              className="w-full p-2 border rounded bg-gray-50"
-              readOnly
-            />
-          </div>
-
-          {/* Predicted Food Category Display */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Predicted Food Category
-            </label>
-            <input
-              type="text"
-              name="predictedFoodCategory"
-              value={formData.predictedFoodCategory}
-              placeholder="AI will categorize the food type"
-              className="w-full p-2 border rounded bg-gray-50"
-              readOnly
-            />
-          </div>
 
           <select
             name="productCategory_id"

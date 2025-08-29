@@ -240,7 +240,7 @@ const OrderHistory: React.FC = () => {
                     return (
                       <div
                         key={item._id}
-                        className="w-[100%] h-[220px] pl-[5px] pr-[20px] py-[10px] bg-white rounded-[8px] ring-gray-500 ring-[0.5px] flex flex-col justify-between"
+                        className="w-[100%] min-h-[220px] pl-[5px] pr-[20px] py-[10px] bg-white rounded-[8px] ring-gray-500 ring-[0.5px] flex flex-col justify-between"
                       >
                         <div className="flex flex-row px-[10px] justify-between items-center">
                           <div className="text-[20px]">Order #{item.orderNumber}</div>
@@ -253,11 +253,11 @@ const OrderHistory: React.FC = () => {
                           <div>Time: {time}</div>
                         </div>
                         <div className="px-[10px]">Total amount: Rs. {item.totalAmount}</div>
-                        <div className="flex flex-row bg-gray-200 py-[10px] mt-[5px] w-[100%] ml-[8px] rounded-[10px] ring-[0.5px] ring-gray-800">
+                        <div className="flex flex-col px-[10px] bg-gray-200 py-[10px] mt-[5px] w-[100%] mx-[8px] rounded-[10px] ring-[0.5px] ring-gray-800">
                           {item.products.map((product) => (
                             <div
                               key={product.productId._id}
-                              className="flex flex-row items-center space-x-[10px]"
+                              className="flex flex-row my-[5px] ring-gray-500 rounded-[5px] py-[10px] ring-[0.5px] items-center space-x-[10px]"
                             >
                               <Image
                                 src={product.productId.imageUrl}
@@ -287,6 +287,7 @@ const OrderHistory: React.FC = () => {
                                 <p>Quantity</p>
                                 <p className="text-gray-600">{product.quantity}</p>
                               </div>
+                              
                             </div>
                           ))}
                         </div>

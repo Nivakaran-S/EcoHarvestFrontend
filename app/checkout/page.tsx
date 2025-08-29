@@ -6,11 +6,12 @@ import Max from "../components/Max";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import Image from "next/image";
 
 // Base URL for API
 const BASE_URL = "https://eco-harvest-backend.vercel.app";
 
-// Define TypeScript interfaces
+// ==== Types ====
 interface CartItem {
   _id: string;
   productId: string;
@@ -25,6 +26,7 @@ interface Product {
   averageRating: number;
   imageUrl: string;
   MRP: number;
+  quantity: number;
   unitPrice: number;
 }
 
@@ -58,10 +60,11 @@ const CheckoutPage: React.FC = () => {
   const [numberOfCartItems, setNumberOfCartItems] = useState<number>(0);
   const [advertisement, setAdvertisement] = useState<Advertisement[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [paymentMethod, setPaymentMethod] = useState<string>("COD");
 
   const router = useRouter();
 
-  // Fetch advertisement data
+  // Fetch advertisement
   useEffect(() => {
     const fetchAdvertisement = async (): Promise<void> => {
       try {
@@ -75,24 +78,20 @@ const CheckoutPage: React.FC = () => {
     fetchAdvertisement();
   }, []);
 
-  // Fetch user data and cart
+  // Fetch user data + cart
   useEffect(() => {
     const fetchUserData = async (): Promise<void> => {
       setLoading(true);
       try {
-        // Check user authentication
         const authResponse = await axios.get<UserData>(`${BASE_URL}/check-cookie/`, { withCredentials: true });
 
         setId(authResponse.data.id);
         setRole(authResponse.data.role);
 
-        // Handle different user roles
         if (authResponse.data.role === "Customer") {
           setUserLoggedIn(true);
           try {
-            // Fetch cart data for authenticated customer
             const cartResponse = await axios.get<CartResponse>(`${BASE_URL}/cart/${authResponse.data.id}`);
-            
             setCart(cartResponse.data.cart);
             setProductsDetail(cartResponse.data.products);
             setNumberOfCartItems(cartResponse.data.cart.products.length);
@@ -115,10 +114,14 @@ const CheckoutPage: React.FC = () => {
     fetchUserData();
   }, [router]);
 
-  // Handle checkout process
+  // Handle checkout
   const handleCheckout = async (): Promise<void> => {
     try {
-      const response = await axios.post(`${BASE_URL}/orders/checkout`, { cart }, { withCredentials: true });
+      const response = await axios.post(
+        `${BASE_URL}/orders/checkout`,
+        { cart, paymentMethod },
+        { withCredentials: true }
+      );
       if (response.status === 200) {
         router.push("/order-confirmation");
       }
@@ -132,7 +135,7 @@ const CheckoutPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col items-center text-black">
       <Navigation
         numberOfCartItems={numberOfCartItems}
         productsDetail={productsDetail}
@@ -141,19 +144,21 @@ const CheckoutPage: React.FC = () => {
         userLoggedIn={userLoggedIn}
       />
 
-      <main className="flex-grow pt-20">
+      <main className="flex-grow pt-23 ">
         <div className="container mx-auto px-4 py-8">
           {/* Advertisement Banner */}
           {advertisement.length > 0 && (
-            <div className="bg-gray-100 rounded-lg p-6 mb-8 flex flex-col md:flex-row items-center">
+            <div className="bg-gray-100 px-[20px] ring-[1px] ring-gray-500 rounded-[15px] p-6 mb-8 flex flex-row items-center">
               <div className="md:w-2/3 mb-4 md:mb-0">
-                <h2 className="text-2xl font-bold mb-2">{advertisement[0].title}</h2>
+                <h2 className="text-[30px] font-bold mb-2">{advertisement[0].title}</h2>
                 <p className="text-gray-600">{advertisement[0].description}</p>
               </div>
-              <div className="md:w-1/3 flex justify-center">
-                <img 
-                  src={advertisement[0].imageUrl} 
-                  alt="Advertisement" 
+              <div className="md:w-1/4 flex justify-center">
+                <Image
+                  src={advertisement[0].imageUrl}
+                  alt="Advertisement"
+                  width={200}
+                  height={200}
                   className="rounded-lg max-h-40"
                 />
               </div>
@@ -163,7 +168,7 @@ const CheckoutPage: React.FC = () => {
           {/* Checkout Content */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h1 className="text-3xl font-bold mb-6">Checkout</h1>
-            
+
             {cart.products.length > 0 ? (
               <div className="space-y-6">
                 {/* Order Summary */}
@@ -173,20 +178,25 @@ const CheckoutPage: React.FC = () => {
                     {cart.products.map(item => {
                       const product = productsDetail.find(p => p._id === item.productId);
                       return product ? (
-                        <div key={item._id} className="flex items-center justify-between border-b pb-3">
-                          <div className="flex items-center space-x-4">
-                            <img 
-                              src={product.imageUrl} 
-                              alt={product.name} 
-                              className="w-16 h-16 object-cover rounded"
+                        <div
+                          key={item._id}
+                          className="flex rounded-[10px] items-center justify-between ring-[0.5px] ring-gray-500 pb-2"
+                        >
+                          <div className="flex p-2 items-center space-x-4">
+                            <Image
+                              width={50}
+                              height={50}
+                              src={product.imageUrl}
+                              alt={product.name}
+                              className="w-15 h-12 object-cover rounded"
                             />
                             <div>
                               <h3 className="font-medium">{product.name}</h3>
                               <p className="text-sm text-gray-500">{product.subtitle}</p>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p>${(item.unitPrice * item.quantity).toFixed(2)}</p>
+                          <div className="text-right pr-[20px] flex flex-col pt-[1px] justify-center">
+                            <p>Rs. {(product.unitPrice * item.quantity).toFixed(2)}</p>
                             <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                           </div>
                         </div>
@@ -198,8 +208,73 @@ const CheckoutPage: React.FC = () => {
                 {/* Payment Information */}
                 <section>
                   <h2 className="text-xl font-semibold mb-4">Payment Information</h2>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-gray-600">Payment methods will be displayed here</p>
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="COD"
+                        checked={paymentMethod === "COD"}
+                        onChange={() => setPaymentMethod("COD")}
+                      />
+                      <span>Cash on Delivery</span>
+                    </label>
+
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="Card"
+                        checked={paymentMethod === "Card"}
+                        onChange={() => setPaymentMethod("Card")}
+                      />
+                      <span>Visa / MasterCard</span>
+                    </label>
+
+                    {paymentMethod === "Card" && (
+                      <div className="mt-2 space-y-2">
+                        <input
+                          type="text"
+                          placeholder="Card Number"
+                          className="w-full border p-2 rounded"
+                        />
+                        <div className="flex space-x-2">
+                          <input
+                            type="text"
+                            placeholder="MM/YY"
+                            className="w-1/2 border p-2 rounded"
+                          />
+                          <input
+                            type="text"
+                            placeholder="CVV"
+                            className="w-1/2 border p-2 rounded"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="QR"
+                        checked={paymentMethod === "QR"}
+                        onChange={() => setPaymentMethod("QR")}
+                      />
+                      <span>QR Code Payment</span>
+                    </label>
+
+                    {paymentMethod === "QR" && (
+                      <div className="flex justify-center mt-4">
+                        <Image
+                          src="/qr-placeholder.png"
+                          alt="QR Code"
+                          width={150}
+                          height={150}
+                          className="border p-2 rounded"
+                        />
+                      </div>
+                    )}
                   </div>
                 </section>
 
@@ -207,15 +282,15 @@ const CheckoutPage: React.FC = () => {
                 <section className="border-t pt-4">
                   <div className="flex justify-between mb-2">
                     <span>Subtotal:</span>
-                    <span>${cart.totalAmount.toFixed(2)}</span>
+                    <span>Rs. {cart.totalAmount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between mb-2">
                     <span>Shipping:</span>
-                    <span>$5.00</span>
+                    <span>Rs. 500.00</span>
                   </div>
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total:</span>
-                    <span>${(cart.totalAmount + 5).toFixed(2)}</span>
+                    <span>Rs. {(cart.totalAmount + 500).toFixed(2)}</span>
                   </div>
                 </section>
 

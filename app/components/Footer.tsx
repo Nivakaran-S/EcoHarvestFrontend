@@ -4,7 +4,7 @@ import EcoHarvest from "../images/ecoHarvestNavLogo2.png";
 
 const Footer = () => {
   return (
-    <footer className="bg-gradient-to-b from-[#101010] to-[#000000] text-white relative overflow-hidden">
+    <footer className="bg-gradient-to-b w-[99vw] overflow-x-hidden from-[#101010] to-[#000000] text-white relative overflow-hidden">
       {/* Decorative background elements */}
       
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2">

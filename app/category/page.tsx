@@ -20,8 +20,12 @@ interface Product {
   imageUrl: string;
   unitPrice: number;
   rating?: number;
+  averageRating?: number; // Added based on your schema
   category?: string;
+  productCategory_id?: string; // Added based on your schema
   brand?: string;
+  MRP?: number; // Added based on your schema
+  numberOfReviews?: number; // Added based on your schema
 }
 
 interface CartItem {
@@ -121,13 +125,21 @@ const CategoryPage: React.FC = () => {
     fetchCart();
   }, [id, userLoggedIn]);
 
-  // --- Fetch products ---
+  // --- Fetch products (FIXED) ---
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get<Product[]>(
-          `${BASE_URL}/products?category=${categoryId}`
-        );
+        let url;
+        
+        // If categoryId is provided, use the category-specific endpoint
+        if (categoryId && categoryId !== "") {
+          url = `${BASE_URL}/products/category/${categoryId}`;
+        } else {
+          // For "All Categories", use the general products endpoint
+          url = `${BASE_URL}/products`;
+        }
+        
+        const response = await axios.get<Product[]>(url);
         setProducts(response.data);
 
         // Price range setup
@@ -161,14 +173,14 @@ const CategoryPage: React.FC = () => {
     fetchDiscounts();
   }, []);
 
-  // --- Filtering + Sorting ---
+  // --- Filtering + Sorting (UPDATED to use averageRating) ---
   useEffect(() => {
     const filtered = products.filter(
       (p) =>
         p.unitPrice >= priceRange[0] &&
         p.unitPrice <= priceRange[1] &&
         (!selectedBrands.length || selectedBrands.includes(p.brand || "")) &&
-        (p.rating || 0) >= minRating
+        (p.averageRating || p.rating || 0) >= minRating // Use averageRating first, fallback to rating
     );
 
     switch (sortOption) {
@@ -179,7 +191,7 @@ const CategoryPage: React.FC = () => {
         filtered.sort((a, b) => b.unitPrice - a.unitPrice);
         break;
       case "Highly Rated":
-        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        filtered.sort((a, b) => (b.averageRating || b.rating || 0) - (a.averageRating || a.rating || 0));
         break;
     }
 

@@ -38,7 +38,7 @@ const Category: React.FC<CategoryProps> = ({ title, id, image }) => {
         />
       </div>
       <div className="absolute bg-white py-[5px] w-[100%]">
-        <p className="text-[20px] px-[20px] text-center select-none leading-[25px]">
+        <p className="text-[20px]  px-[20px] text-center select-none leading-[25px]">
           {title}
         </p>
       </div>

@@ -94,7 +94,7 @@ const ProductCard: React.FC<ProductProps> = ({
   return (
     <div
       onClick={handleProductClick}
-      className={`relative bg-white ring-gray-300 ring-[0.5px] drop-shadow-lg rounded-[10px] flex flex-col items-center justify-between p-[10px] w-[14vw] mt-[10px] transition-all ${
+      className={`relative bg-white ring-gray-500 ring-[0.5px] drop-shadow-lg overflow-hidden h-[45vh] rounded-[10px] flex flex-col items-center justify-between p-[10px] w-[14vw] mt-[10px] transition-all ${
         isOutOfStock 
           ? 'opacity-60 cursor-not-allowed' 
           : 'cursor-pointer hover:drop-shadow-2xl hover:scale-105'
@@ -117,7 +117,7 @@ const ProductCard: React.FC<ProductProps> = ({
       )}
 
       {/* Product Image */}
-      <div className="py-[15px] relative">
+      <div className="py-[15px] flex items-center justify-center h-[65%] relative">
         <Image
           src={imageUrl}
           className="select-none object-contain"
@@ -133,7 +133,7 @@ const ProductCard: React.FC<ProductProps> = ({
       </div>
 
       {/* Product Info */}
-      <div className="leading-[22px] select-none text-left w-full">
+      <div className="leading-[22px] h-[50%] flex flex-col justify-end select-none text-left w-full">
         {/* Product Name */}
         <p className="text-[16px] leading-[21px] font-medium line-clamp-2 min-h-[42px]">
           {productName}

@@ -378,16 +378,16 @@ const CategoryPage: React.FC = () => {
 
           {/* Products Grid */}
           <div className="w-5/6 pl-4 border-l border-gray-300">
-            <div className="flex justify-between items-center bg-gray-100 rounded px-4 py-2 mb-4">
+            <div className="flex justify-between items-center bg-gray-200 ring-[1px] ring-gray-400 rounded px-4 py-2 mb-4">
               <p className="text-sm">
                 Showing {sortedProducts.length} results for {categoryName}
               </p>
               <div className="flex items-center space-x-2">
-                <span className="text-sm">Sort by:</span>
+                <span className="text-sm text-gray-800 ">Sort by:</span>
                 <select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value)}
-                  className="bg-transparent border rounded px-2 py-1 focus:outline-none cursor-pointer"
+                  className="bg-transparent border border-gray-800 text-gray-800 rounded  px-2 py-1 focus:outline-none cursor-pointer"
                 >
                   <option>Featured</option>
                   <option>Price: Low to High</option>

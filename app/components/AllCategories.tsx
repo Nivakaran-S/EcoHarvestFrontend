@@ -84,7 +84,7 @@ const AllCategories: React.FC = () => {
                   className="rounded-[10px] h-[100%] object-cover"
                   onError={() => handleImageError(category._id)}
                 />
-                <p className="absolute px-3 py-1 text-center text-[23px] text-white leading-[27px] w-full h-[45%] flex items-center justify-center bg-white/20 backdrop-blur-sm">
+                <p className="absolute  px-3 py-1 text-center text-[23px] text-black leading-[27px] w-full h-[45%] flex items-center justify-center bg-white/20 backdrop-blur-sm">
                   {category.name}
                 </p>
               </div>

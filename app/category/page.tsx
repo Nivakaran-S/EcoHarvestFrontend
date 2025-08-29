@@ -34,6 +34,12 @@ interface Category {
   // Add other category fields as needed
 }
 
+interface ProductCategory {
+  _id: string;
+  name: string;
+  // Add other fields based on your ProductCategory model
+}
+
 interface CartItem {
   _id: string;
   productId: string;
@@ -69,7 +75,7 @@ const CategoryPage: React.FC = () => {
   // State
   const [products, setProducts] = useState<Product[]>([]);
   const [sortedProducts, setSortedProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]); // Added for dynamic categories
+  const [productCategories, setProductCategories] = useState<ProductCategory[]>([]); // Updated
   const [loading, setLoading] = useState<boolean>(true);
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(true); // Added
   const [discounts, setDiscounts] = useState<Discount[]>([]);
@@ -137,8 +143,9 @@ const CategoryPage: React.FC = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get<Category[]>(`${BASE_URL}/categories`);
-        setCategories(response.data);
+        const response = await axios.get<ProductCategory[]>(`${BASE_URL}/productcategories/`);
+        setProductCategories(response.data);
+        console.log(response.data);
       } catch (error) {
         console.error("Error fetching categories:", error);
       } finally {
@@ -269,7 +276,7 @@ const CategoryPage: React.FC = () => {
                       {/* All Categories option */}
                       <p
                         className={`cursor-pointer ${
-                          categoryName === "All Categories" ? "text-[#FDAA1C] font-semibold" : "hover:text-gray-500"
+                          (!categoryId || categoryName === "All Categories") ? "text-[#FDAA1C] font-semibold" : "hover:text-gray-500"
                         }`}
                         onClick={handleAllCategoriesClick}
                       >
@@ -277,7 +284,7 @@ const CategoryPage: React.FC = () => {
                       </p>
                       
                       {/* Dynamic categories */}
-                      {categories.map((category) => (
+                      {productCategories.map((category) => (
                         <p
                           key={category._id}
                           className={`cursor-pointer ${

@@ -1,13 +1,10 @@
 'use client';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ANavCategory from './ANavCategory';
-import Bakery from '../images/bakeryFoodAndPastries.jpg';
-import Rice from '../images/RiceGrainsNoodles.jpg';
-import SideDishes from '../images/sideDishes.jpg';
-import Desserts from '../images/Desserts.jpg';
-import MainCourses from '../images/maincourses.jpg';
-import Meat from '../images/meatAndSeaFood.jpg';
-import RecycleProduct from '../images/recycleProduct.jpg';
+import Image from 'next/image';
+import axios from 'axios';
+
+// Import static images
 import mainMealsWallpaper from '../images/mainMealsWallpaper.jpg';
 import bakedFood from '../images/backedFood.jpg';
 import sideDishes from '../images/sideDishes.jpg';
@@ -16,16 +13,26 @@ import dairyProducts from '../images/Desserts.jpg';
 import riceAndGrains from '../images/RiceGrainsNoodles.jpg';
 import Beverages from '../images/beverages.jpg';
 import Sauces from '../images/Sauces.jpg';
-import Image from 'next/image';
-import { useState, useEffect } from 'react';
-import axios from 'axios';
 
-// Define interface for product category
+// Interface for backend categories
 interface ProductCategory {
   _id: string;
   name: string;
   imageUrl: string;
 }
+
+// Map category names to static images
+const categoryImageMap: Record<string, any> = {
+  'Meals & Main Courses': mainMealsWallpaper,
+  'Baked Goods & Pastries': bakedFood,
+  'Appetizer & Side Dishes': sideDishes,
+  'Meat & Seafood': meatSeaFood,
+  'Dairy Products & Desserts': dairyProducts,
+  'Rice, Grains & Noodles': riceAndGrains,
+  'Beverages': Beverages,
+  'Fruits & Vegetables': bakedFood, // placeholder
+  'Sauces, Condiments & Seasonings': Sauces,
+};
 
 const AllNavCategories: React.FC = () => {
   const [productCategories, setProductCategories] = useState<ProductCategory[]>([]);
@@ -35,66 +42,55 @@ const AllNavCategories: React.FC = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get<ProductCategory[]>("https://eco-harvest-backend.vercel.app/productcategories/");
+        const response = await axios.get<ProductCategory[]>(
+          'https://eco-harvest-backend.vercel.app/productcategories/'
+        );
         setProductCategories(response.data);
-        console.log(response.data);
       } catch (error) {
-        console.error("Error fetching categories:", error);
+        console.error('Error fetching categories:', error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchCategories();
   }, []);
 
-  const handleCategoryHover = (val: string) => {
-    setNavCategorySelect(val);
-    console.log('mouse entered', val);
-  };
-
   return (
-    <div className="flex flex-row w-[100%] h-[100%]">
-      <div className="flex flex-col w-[50%]">
-        {productCategories.map((category) => (
-          <ANavCategory
-            onMouseEnter={() => handleCategoryHover(category.name)}
-            key={category._id}
-            title={category.name}
-            id={category._id}
-            image={category.imageUrl}
-          />
-        ))}
+    <div className="flex w-full h-[500px] bg-white shadow-md rounded-2xl overflow-hidden">
+      {/* Category list */}
+      <div className="flex flex-col w-1/2 bg-gray-50 border-r overflow-y-auto">
+        {loading ? (
+          <div className="p-4 text-gray-500">Loading categories…</div>
+        ) : (
+          productCategories.map((category) => (
+            <ANavCategory
+              key={category._id}
+              onMouseEnter={() => setNavCategorySelect(category.name)}
+              title={category.name}
+              id={category._id}
+              image={category.imageUrl}
+            />
+          ))
+        )}
       </div>
 
-      <div className="w-[100%] h-[100%] overflow-hidden">
-        {navCategorySelect === 'Meals & Main Courses' && (
-          <Image className="flex translate-y-[-10%]" src={mainMealsWallpaper} alt="Meals & Main Courses" />
+      {/* Preview panel */}
+      <div className="relative w-1/2 h-full">
+        {categoryImageMap[navCategorySelect] ? (
+          <Image
+            src={categoryImageMap[navCategorySelect]}
+            alt={navCategorySelect}
+            fill
+            className="object-cover transition-transform duration-500 ease-in-out hover:scale-105"
+          />
+        ) : (
+          <div className="flex items-center justify-center w-full h-full text-gray-400">
+            No preview available
+          </div>
         )}
-        {navCategorySelect === 'Baked Goods & Pastries' && (
-          <Image className="flex translate-y-[-20%] h-[140%] w-[100%]" src={bakedFood} alt="Baked Goods & Pastries" />
-        )}
-        {navCategorySelect === 'Appetizer & Side Dishes' && (
-          <Image className="flex translate-y-[-35%] h-[350%] w-[100%]" src={sideDishes} alt="Appetizer & Side Dishes" />
-        )}
-        {navCategorySelect === 'Meat & Seafood' && (
-          <Image className="flex translate-y-[-20%] h-[140%] w-[100%]" src={meatSeaFood} alt="Meat & Seafood" />
-        )}
-        {navCategorySelect === 'Dairy Products & Desserts' && (
-          <Image className="flex translate-y-[-20%] h-[140%] w-[100%]" src={dairyProducts} alt="Dairy Products & Desserts" />
-        )}
-        {navCategorySelect === 'Rice, Grains & Noodles' && (
-          <Image className="flex translate-y-[-20%] h-[140%] w-[100%]" src={riceAndGrains} alt="Rice, Grains & Noodles" />
-        )}
-        {navCategorySelect === 'Beverages' && (
-          <Image className="flex translate-y-[-20%] h-[140%] w-[100%]" src={Beverages} alt="Beverages" />
-        )}
-        {navCategorySelect === 'Fruits & Vegetables' && (
-          <Image className="flex translate-y-[-20%] h-[140%] w-[100%]" src={bakedFood} alt="Fruits & Vegetables" />
-        )}
-        {navCategorySelect === 'Sauces, Condiments & Seasonings' && (
-          <Image className="flex translate-y-[-20%] h-[140%] w-[100%]" src={Sauces} alt="Sauces, Condiments & Seasonings" />
-        )}
+        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/60 to-transparent p-4">
+          <h2 className="text-lg font-semibold text-white">{navCategorySelect}</h2>
+        </div>
       </div>
     </div>
   );

@@ -32,6 +32,35 @@ interface Notification {
   [key: string]: any;
 }
 
+interface VendorStats {
+  totalSales: number;
+  totalOrders: number;
+  activeProducts: number;
+  totalRevenue: number;
+  pendingOrders: number;
+  completedOrders: number;
+  totalProductsSold: number;
+  averageRating: number;
+}
+
+interface Product {
+  _id: string;
+  name: string;
+  unitPrice: number;
+  quantity: number;
+  status: string;
+  [key: string]: any;
+}
+
+interface Order {
+  _id: string;
+  totalAmount: number;
+  status: string;
+  createdAt: string;
+  products: any[];
+  [key: string]: any;
+}
+
 export default function Dashboard() {
   const router = useRouter();
 
@@ -41,6 +70,22 @@ export default function Dashboard() {
 
   const [userInformation, setUserInformation] = useState<UserInformation[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  
+  // New state for real dashboard data
+  const [vendorStats, setVendorStats] = useState<VendorStats>({
+    totalSales: 0,
+    totalOrders: 0,
+    activeProducts: 0,
+    totalRevenue: 0,
+    pendingOrders: 0,
+    completedOrders: 0,
+    totalProductsSold: 0,
+    averageRating: 0,
+  });
+  
+  const [vendorProducts, setVendorProducts] = useState<Product[]>([]);
+  const [vendorOrders, setVendorOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchCookies = async () => {
@@ -62,42 +107,190 @@ export default function Dashboard() {
           setIsLoggedIn(true);
         }
 
+        // Fetch user information
         try {
           const userInfoResponse = await axios.get(`${BASE_URL}/vendors/${userId}`);
           setUserInformation(userInfoResponse.data);
 
+          // Fetch notifications
           try {
             const notificationsResponse = await axios.get(`${BASE_URL}/notification/${userId}`);
             setNotifications(notificationsResponse.data);
           } catch (err) {
             console.error("Error fetching notifications:", err);
           }
+          
+          // Fetch vendor-specific data
+          await fetchVendorData(userId);
+          
         } catch (err) {
           console.error("Error fetching user information:", err);
         }
       } catch (error) {
         console.error("Error fetching cookies:", error);
         router.push("/login");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchCookies();
   }, [router]);
 
+  // Fetch vendor-specific dashboard data
+  const fetchVendorData = async (vendorId: string) => {
+    try {
+      // Fetch vendor products
+      const productsResponse = await axios.get(`${BASE_URL}/products/vendor/${vendorId}`);
+      const products = productsResponse.data;
+      setVendorProducts(products);
+
+      // Fetch vendor orders
+      const ordersResponse = await axios.get(`${BASE_URL}/orders/vendor/${vendorId}`);
+      const orders = ordersResponse.data;
+      setVendorOrders(orders);
+
+      // Calculate statistics
+      const stats = calculateVendorStats(products, orders);
+      setVendorStats(stats);
+
+    } catch (error) {
+      console.error("Error fetching vendor data:", error);
+    }
+  };
+
+  // Calculate real statistics from fetched data
+  const calculateVendorStats = (products: Product[], orders: Order[]): VendorStats => {
+    const activeProducts = products.filter(p => p.status === "In Stock").length;
+    const totalOrders = orders.length;
+    const pendingOrders = orders.filter(o => o.status === "Pending").length;
+    const completedOrders = orders.filter(o => o.status === "Completed" || o.status === "Delivered").length;
+    
+    const totalRevenue = orders
+      .filter(o => o.status === "Completed" || o.status === "Delivered")
+      .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    
+    const totalProductsSold = orders
+      .filter(o => o.status === "Completed" || o.status === "Delivered")
+      .reduce((sum, order) => {
+        return sum + (order.products?.reduce((productSum, product) => productSum + (product.quantity || 0), 0) || 0);
+      }, 0);
+
+    // Calculate average rating from products
+    const productsWithRating = products.filter(p => p.averageRating && p.averageRating > 0);
+    const averageRating = productsWithRating.length > 0 
+      ? productsWithRating.reduce((sum, p) => sum + (p.averageRating || 0), 0) / productsWithRating.length
+      : 0;
+
+    return {
+      totalSales: totalProductsSold,
+      totalOrders,
+      activeProducts,
+      totalRevenue,
+      pendingOrders,
+      completedOrders,
+      totalProductsSold,
+      averageRating,
+    };
+  };
+
+  // Calculate percentage changes (you can enhance this with historical data)
+  const getPercentageChange = (current: number, previous: number = 0): string => {
+    if (previous === 0) return "+0%";
+    const change = ((current - previous) / previous) * 100;
+    return `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading dashboard...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="text-black flex">
       <Sidebar />
       <div className="flex-1 p-6 bg-gray-100">
         <Navbar />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-          <Card title="Total Sales" value="$12,458" percentage="+12.5%" imageSrc={sales} />
-          <Card title="Food Saved" value="2,345 kg" percentage="+8.1%" imageSrc={saved} />
-          <Card title="Active Orders" value="48" percentage="+2.4%" imageSrc={orders} />
-          <Card title="CO2 Reduced" value="1,234 kg" percentage="+15.2%" imageSrc={reduced} />
+        
+        {/* Welcome Message */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">
+            Welcome back, {userInformation[0]?.name || 'Vendor'}!
+          </h1>
+          <p className="text-gray-600">Here's your business overview</p>
         </div>
-        <div className="mt-6">
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+          <Card 
+            title="Total Revenue" 
+            value={`Rs. ${vendorStats.totalRevenue.toLocaleString()}`} 
+            percentage={getPercentageChange(vendorStats.totalRevenue)}
+            imageSrc={sales} 
+          />
+          <Card 
+            title="Products Sold" 
+            value={vendorStats.totalProductsSold.toLocaleString()} 
+            percentage={getPercentageChange(vendorStats.totalProductsSold)}
+            imageSrc={saved} 
+          />
+          <Card 
+            title="Total Orders" 
+            value={vendorStats.totalOrders.toString()} 
+            percentage={getPercentageChange(vendorStats.totalOrders)}
+            imageSrc={orders} 
+          />
+          <Card 
+            title="Active Products" 
+            value={vendorStats.activeProducts.toString()} 
+            percentage={getPercentageChange(vendorStats.activeProducts)}
+            imageSrc={reduced} 
+          />
+        </div>
+
+        {/* Secondary Statistics */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6">
+          <div className="p-4 bg-white rounded-lg shadow-md">
+            <h3 className="text-gray-600 text-sm">Pending Orders</h3>
+            <p className="text-2xl font-bold text-orange-600">{vendorStats.pendingOrders}</p>
+          </div>
+          <div className="p-4 bg-white rounded-lg shadow-md">
+            <h3 className="text-gray-600 text-sm">Completed Orders</h3>
+            <p className="text-2xl font-bold text-green-600">{vendorStats.completedOrders}</p>
+          </div>
+          <div className="p-4 bg-white rounded-lg shadow-md">
+            <h3 className="text-gray-600 text-sm">Average Rating</h3>
+            <p className="text-2xl font-bold text-blue-600">
+              {vendorStats.averageRating > 0 ? vendorStats.averageRating.toFixed(1) : 'N/A'}
+              {vendorStats.averageRating > 0 && <span className="text-sm text-gray-500">/5</span>}
+            </p>
+          </div>
+        </div>
+
+        {/* Recent Orders Section */}
+        <div className="mt-8">
           <RecentOrders />
         </div>
+
+        {/* Recent Notifications */}
+        {notifications.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-xl font-bold mb-4">Recent Notifications</h2>
+            <div className="bg-white rounded-lg shadow-md p-4">
+              {notifications.slice(0, 5).map((notification) => (
+                <div key={notification._id} className="border-b border-gray-200 last:border-b-0 py-2">
+                  <p className="text-gray-800">{notification.message}</p>
+                  <p className="text-sm text-gray-500">
+                    {new Date(notification.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -211,7 +211,7 @@ const Navigation: React.FC<NavigationProps> = ({
             <p className="text-[#FFCC29] absolute top-[-19.5px] font-bold right-[11px] text-[33px]">
               {numberOfCartItems}
             </p>
-            <div className="w-[50vh] bg-[#F5F5F5] hidden group-hover:block p-[10px] absolute right-[2%] top-[6.4vh] drop-shadow-sm rounded-[10px] ring-gray-800 ring-[0.5px]">
+            <div className="w-[50vh] bg-[#F5F5F5] hidden group-hover:block p-[10px] absolute right-[2%] top-[4.5vh] drop-shadow-sm rounded-[10px] ring-gray-800 ring-[0.5px]">
               {cart && cart.products && cart.products.length > 0 ? (
                 cart.products.map((item) =>
                   productsDetail.map((product) => (

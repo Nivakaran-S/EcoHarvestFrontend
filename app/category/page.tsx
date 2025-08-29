@@ -28,6 +28,12 @@ interface Product {
   numberOfReviews?: number; // Added based on your schema
 }
 
+interface Category {
+  _id: string;
+  name: string;
+  // Add other category fields as needed
+}
+
 interface CartItem {
   _id: string;
   productId: string;
@@ -63,7 +69,9 @@ const CategoryPage: React.FC = () => {
   // State
   const [products, setProducts] = useState<Product[]>([]);
   const [sortedProducts, setSortedProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]); // Added for dynamic categories
   const [loading, setLoading] = useState<boolean>(true);
+  const [categoriesLoading, setCategoriesLoading] = useState<boolean>(true); // Added
   const [discounts, setDiscounts] = useState<Discount[]>([]);
 
   // Filters
@@ -124,6 +132,21 @@ const CategoryPage: React.FC = () => {
     };
     fetchCart();
   }, [id, userLoggedIn]);
+
+  // --- Fetch categories ---
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get<Category[]>(`${BASE_URL}/categories`);
+        setCategories(response.data);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // --- Fetch products (FIXED) ---
   useEffect(() => {
@@ -205,6 +228,17 @@ const CategoryPage: React.FC = () => {
     );
   };
 
+  // Handle category selection
+  const handleCategoryClick = (selectedCategoryId: string, selectedCategoryName: string) => {
+    // Update URL with new category parameters
+    router.push(`/category?categoryId=${selectedCategoryId}&categoryName=${encodeURIComponent(selectedCategoryName)}`);
+  };
+
+  const handleAllCategoriesClick = () => {
+    // Update URL to show all categories
+    router.push(`/category?categoryName=All%20Categories`);
+  };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -228,20 +262,33 @@ const CategoryPage: React.FC = () => {
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">Category</h3>
                 <div className="mt-2 space-y-2">
-                  {["All Categories", "Daily Grocery", "Drinks", "Tea and Coffee"].map(
-                    (category) => (
+                  {categoriesLoading ? (
+                    <div className="text-gray-500">Loading categories...</div>
+                  ) : (
+                    <>
+                      {/* All Categories option */}
                       <p
-                        key={category}
                         className={`cursor-pointer ${
-                          category === categoryName ? "text-[#FDAA1C]" : "hover:text-gray-500"
+                          categoryName === "All Categories" ? "text-[#FDAA1C] font-semibold" : "hover:text-gray-500"
                         }`}
-                        onClick={() =>
-                          router.push(`/category?categoryName=${encodeURIComponent(category)}`)
-                        }
+                        onClick={handleAllCategoriesClick}
                       >
-                        {category}
+                        All Categories
                       </p>
-                    )
+                      
+                      {/* Dynamic categories */}
+                      {categories.map((category) => (
+                        <p
+                          key={category._id}
+                          className={`cursor-pointer ${
+                            categoryId === category._id ? "text-[#FDAA1C] font-semibold" : "hover:text-gray-500"
+                          }`}
+                          onClick={() => handleCategoryClick(category._id, category.name)}
+                        >
+                          {category.name}
+                        </p>
+                      ))}
+                    </>
                   )}
                 </div>
               </div>

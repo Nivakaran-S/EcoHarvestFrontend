@@ -357,11 +357,9 @@ const ProductPageComponent = () => {
           return { products: newProducts };
         });
         
-        // Clear any previous errors
-        setError(null);
-      } else {
-        setError(response.data.message || "Failed to add product to cart");
-      }
+        
+      } 
+      window.location.reload()
     } catch (err: any) {
       console.error("Error adding product to cart:", err);
       setError(err.response?.data?.message || "Failed to add product to cart");
@@ -376,10 +374,6 @@ const ProductPageComponent = () => {
     
     await addToCart();
     
-    // Only redirect if there's no error
-    if (!error) {
-      router.push("/cart");
-    }
   };
 
   // ====== Review Handler ======

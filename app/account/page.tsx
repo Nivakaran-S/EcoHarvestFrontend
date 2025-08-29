@@ -23,14 +23,13 @@ interface Product {
   imageUrl: string;
   unitPrice: number;
   rating?: number;
-  averageRating?: number; // Added based on your schema
+  averageRating?: number;
   category?: string;
-  productCategory_id?: string; // Added based on your schema
+  productCategory_id?: string;
   brand?: string;
-  MRP?: number; // Added based on your schema
-  numberOfReviews?: number; // Added based on your schema
+  MRP?: number;
+  numberOfReviews?: number;
 }
-
 
 interface CartItem {
   _id: string;
@@ -87,6 +86,7 @@ export default function AccountManagement() {
   const [editProfile, setEditProfile] = useState<boolean>(false);
   const [userInformation, setUserInformation] = useState<UserInformation | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   
   // Profile editing state
   const [firstName, setFirstName] = useState<string>("");
@@ -103,6 +103,7 @@ export default function AccountManagement() {
   useEffect(() => {
     const fetchCookies = async () => {
       try {
+        setLoading(true);
         const response = await axios.get<{ id: string; role: string }>(
           `${BASE_URL}/check-cookie/`,
           { withCredentials: true }
@@ -158,6 +159,8 @@ export default function AccountManagement() {
         }
       } catch {
         router.push("/login");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -217,8 +220,40 @@ export default function AccountManagement() {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  };
+
+  if (loading) {
+    return (
+      <div>
+        <Navigation
+          numberOfCartItems={numberOfCartItems}
+          productsDetail={productsDetail}
+          cart={cart}
+          id={id}
+          userLoggedIn={userLoggedIn}
+        />
+        <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-emerald-500"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       <Navigation
         numberOfCartItems={numberOfCartItems}
         productsDetail={productsDetail}
@@ -227,216 +262,373 @@ export default function AccountManagement() {
         userLoggedIn={userLoggedIn}
       />
 
-      <div className="flex flex-col items-center justify-center text-black min-h-screen bg-gray-100">
-        <div className="w-[90vw] flex pb-[5vh] flex-row min-h-[90vh] mt-[18vh]">
-          <div className="w-[70vw] pt-[20px]">
-            <p className="leading-[35px] text-[30px]">Account Management</p>
-            <p>Manage your account details</p>
-
-            {userInformation && (
-              <div className="pr-[30px]">
-                <p className="text-[45px] leading-[50px]">
-                  {userInformation.firstName} {userInformation.lastName}
-                </p>
-                <p className="text-[13px] text-gray-500">
-                  Member since{" "}
-                  {new Date(userInformation.createdTimestamp).toLocaleDateString(
-                    "en-US",
-                    { year: "numeric", month: "long", day: "numeric" }
-                  )}
-                </p>
-
-                <div className="flex flex-row space-x-[20px] w-fit justify-between mt-[5px]">
-                  <p className="bg-yellow-500 px-[20px] py-[2px] rounded-[5px] ring-yellow-800 ring-[0.5px]">
-                    {userInformation.type}
-                  </p>
-                  <p className="bg-orange-500 px-[20px] py-[2px] rounded-[5px] ring-orange-800 ring-[0.5px]">
-                    {userInformation.role}
-                  </p>
-                </div>
-
-                <div className="flex flex-row space-x-[20px] justify-between mt-[20px]">
-                  <div className="w-[50%]">
-                    <p>First name</p>
-                    <input
-                      type="text"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      disabled={!editProfile}
-                      placeholder={userInformation.firstName}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-[100%] mt-[5px]"
-                    />
-                  </div>
-                  <div className="w-[50%]">
-                    <p>Last name</p>
-                    <input
-                      type="text"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      disabled={!editProfile}
-                      placeholder={userInformation.lastName}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-[100%] mt-[5px]"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-row space-x-[20px] justify-between mt-[20px]">
-                  <div className="w-[50%]">
-                    <p>Date of birth</p>
-                    <input
-                      type="date"
-                      value={dateOfBirth}
-                      onChange={(e) => setDateOfBirth(e.target.value)}
-                      disabled={!editProfile}
-                      placeholder={userInformation.dateOfBirth}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-[100%] mt-[5px]"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-row space-x-[20px] justify-between mt-[20px]">
-                  <div className="w-[50%]">
-                    <p>Email</p>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={!editProfile}
-                      placeholder={userInformation.email}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-[100%] mt-[5px]"
-                    />
-                  </div>
-                  <div className="w-[50%]">
-                    <p>Phone number</p>
-                    <input
-                      type="tel"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      disabled={!editProfile}
-                      placeholder={userInformation.phoneNumber}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-[100%] mt-[5px]"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-row space-x-[20px] justify-between mt-[20px]">
-                  <div className="w-[50%]">
-                    <p>Address</p>
-                    <input
-                      type="text"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      disabled={!editProfile}
-                      placeholder={userInformation.address}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-[100%] mt-[5px]"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-row space-x-[20px] justify-between mt-[20px]">
-                  <div className="w-[50%]">
-                    <p>Username</p>
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      disabled={!editProfile}
-                      placeholder={userInformation.username}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-[100%] mt-[5px]"
-                    />
-                  </div>
-                  <div className="w-[50%]">
-                    <p>Password</p>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={!editProfile}
-                      placeholder="******"
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-[100%] mt-[5px]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  {!editProfile ? (
-                    <div className="flex flex-row space-x-[20px] justify-end mt-[20px]">
-                      <div
-                        onClick={() => setEditProfile(true)}
-                        className="bg-orange-500 w-fit px-[20px] py-[5px] rounded-[5px] ring-orange-800 ring-[0.5px] cursor-pointer mt-[20px]"
-                      >
-                        <p>Edit Profile</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-row space-x-[20px] justify-end mt-[20px]">
-                      <div
-                        className="bg-gray-500 px-[20px] py-[5px] rounded-[5px] ring-gray-800 ring-[0.5px] cursor-pointer"
-                        onClick={() => {
-                          setEditProfile(false);
-                          setFirstName(userInformation.firstName);
-                          setLastName(userInformation.lastName);
-                          setEmail(userInformation.email);
-                          setPhoneNumber(userInformation.phoneNumber);
-                          setAddress(userInformation.address);
-                          setDateOfBirth(userInformation.dateOfBirth);
-                          setUsername(userInformation.username);
-                          setPassword("");
-                        }}
-                      >
-                        <p>Cancel</p>
-                      </div>
-                      <div
-                        onClick={handleUpdateProfile}
-                        className="bg-orange-500 px-[20px] py-[5px] rounded-[5px] ring-orange-800 ring-[0.5px] cursor-pointer"
-                      >
-                        <p>Confirm</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+      <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header Section */}
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-4">
+              Account Management
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Manage your personal information and stay updated with notifications
+            </p>
           </div>
 
-          <div className="w-[30vw] h-[90vh] py-[15px] px-[20px] bg-gray-300 rounded-[15px] ring-[0.5px] ring-gray-800">
-            <p className="text-[20px]">Notifications</p>
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Profile Section */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                {userInformation && (
+                  <div>
+                    {/* Profile Header */}
+                    <div className="bg-gradient-to-r from-emerald-500 to-teal-500 px-8 py-10 text-white relative overflow-hidden">
+                      <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+                      <div className="relative z-10">
+                        <div className="flex items-center space-x-4 mb-6">
+                          <div className="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-3xl font-bold backdrop-blur-sm">
+                            {userInformation.firstName[0]}{userInformation.lastName[0]}
+                          </div>
+                          <div>
+                            <h2 className="text-3xl font-bold mb-2">
+                              {userInformation.firstName} {userInformation.lastName}
+                            </h2>
+                            <p className="text-emerald-100 text-sm">
+                              Member since {formatDate(userInformation.createdTimestamp)}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-3">
+                          <span className="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
+                            {userInformation.type}
+                          </span>
+                          <span className="bg-orange-400 text-orange-900 px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
+                            {userInformation.role}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
 
-            {notifications && notifications.length > 0 ? (
-              <div>
-                {notifications.map((notification) => (
-                  <div
-                    key={notification._id}
-                    className="bg-white p-[10px] rounded-[5px] mt-[10px]"
-                  >
-                    <p>{notification.title}</p>
-                    <p className="text-[14px]">{notification.message}</p>
-                    <div className="flex flex-row justify-between pr-[10px]">
-                      <p className="text-gray-500 text-[12px]">
-                        {new Date(notification.createdAt).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          }
+                    {/* Profile Form */}
+                    <div className="p-8">
+                      <div className="grid md:grid-cols-2 gap-6">
+                        {/* First Name */}
+                        <div className="group">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            First Name
+                          </label>
+                          <input
+                            type="text"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            disabled={!editProfile}
+                            placeholder={userInformation.firstName}
+                            className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 focus:outline-none ${
+                              editProfile 
+                                ? 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 bg-white' 
+                                : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                            }`}
+                          />
+                        </div>
+
+                        {/* Last Name */}
+                        <div className="group">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Last Name
+                          </label>
+                          <input
+                            type="text"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            disabled={!editProfile}
+                            placeholder={userInformation.lastName}
+                            className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 focus:outline-none ${
+                              editProfile 
+                                ? 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 bg-white' 
+                                : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                            }`}
+                          />
+                        </div>
+
+                        {/* Email */}
+                        <div className="group">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Email Address
+                          </label>
+                          <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            disabled={!editProfile}
+                            placeholder={userInformation.email}
+                            className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 focus:outline-none ${
+                              editProfile 
+                                ? 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 bg-white' 
+                                : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                            }`}
+                          />
+                        </div>
+
+                        {/* Phone Number */}
+                        <div className="group">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Phone Number
+                          </label>
+                          <input
+                            type="tel"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            disabled={!editProfile}
+                            placeholder={userInformation.phoneNumber}
+                            className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 focus:outline-none ${
+                              editProfile 
+                                ? 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 bg-white' 
+                                : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                            }`}
+                          />
+                        </div>
+
+                        {/* Username */}
+                        <div className="group">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Username
+                          </label>
+                          <input
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            disabled={!editProfile}
+                            placeholder={userInformation.username}
+                            className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 focus:outline-none ${
+                              editProfile 
+                                ? 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 bg-white' 
+                                : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                            }`}
+                          />
+                        </div>
+
+                        {/* Date of Birth */}
+                        <div className="group">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Date of Birth
+                          </label>
+                          <input
+                            type="date"
+                            value={dateOfBirth}
+                            onChange={(e) => setDateOfBirth(e.target.value)}
+                            disabled={!editProfile}
+                            className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 focus:outline-none ${
+                              editProfile 
+                                ? 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 bg-white' 
+                                : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                            }`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Address - Full Width */}
+                      <div className="mt-6 group">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Address
+                        </label>
+                        <input
+                          type="text"
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          disabled={!editProfile}
+                          placeholder={userInformation.address}
+                          className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 focus:outline-none ${
+                            editProfile 
+                              ? 'border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 bg-white' 
+                              : 'border-gray-200 bg-gray-50 cursor-not-allowed'
+                          }`}
+                        />
+                      </div>
+
+                      {/* Password - Only show when editing */}
+                      {editProfile && (
+                        <div className="mt-6 group">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            New Password (optional)
+                          </label>
+                          <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Enter new password"
+                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl transition-all duration-300 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 bg-white"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Leave empty to keep current password
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="mt-8 flex justify-end space-x-4">
+                        {!editProfile ? (
+                          <button
+                            onClick={() => setEditProfile(true)}
+                            className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-emerald-200"
+                          >
+                            ✏️ Edit Profile
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => {
+                                setEditProfile(false);
+                                setFirstName(userInformation.firstName);
+                                setLastName(userInformation.lastName);
+                                setEmail(userInformation.email);
+                                setPhoneNumber(userInformation.phoneNumber);
+                                setAddress(userInformation.address);
+                                setDateOfBirth(userInformation.dateOfBirth);
+                                setUsername(userInformation.username);
+                                setPassword("");
+                              }}
+                              className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-gray-300"
+                            >
+                              ❌ Cancel
+                            </button>
+                            <button
+                              onClick={handleUpdateProfile}
+                              className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-emerald-200"
+                            >
+                              ✅ Save Changes
+                            </button>
+                          </>
                         )}
-                      </p>
-                      <p className="text-gray-500 text-[12px]">
-                        {new Date(notification.createdAt).toLocaleTimeString()}
-                      </p>
+                      </div>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
-            ) : (
-              <div>
-                <p>No notifications</p>
+            </div>
+
+            {/* Notifications Panel */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 h-fit">
+                {/* Notifications Header */}
+                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-6 text-white">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                      🔔
+                    </div>
+                    <h3 className="text-xl font-bold">Notifications</h3>
+                  </div>
+                  {notifications.length > 0 && (
+                    <div className="mt-2">
+                      <span className="bg-white bg-opacity-20 text-xs px-3 py-1 rounded-full backdrop-blur-sm">
+                        {notifications.length} new
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Notifications Content */}
+                <div className="p-6 max-h-96 overflow-y-auto custom-scrollbar">
+                  {notifications && notifications.length > 0 ? (
+                    <div className="space-y-4">
+                      {notifications.map((notification, index) => (
+                        <div
+                          key={notification._id}
+                          className="bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-xl border border-gray-200 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <h4 className="font-semibold text-gray-800 text-sm leading-tight">
+                              {notification.title}
+                            </h4>
+                            <span className="bg-indigo-100 text-indigo-600 text-xs px-2 py-1 rounded-full flex-shrink-0 ml-2">
+                              New
+                            </span>
+                          </div>
+                          
+                          <p className="text-gray-600 text-sm mb-3 leading-relaxed">
+                            {notification.message}
+                          </p>
+                          
+                          <div className="flex justify-between items-center text-xs text-gray-500">
+                            <span className="bg-gray-100 px-2 py-1 rounded-md">
+                              📅 {formatDate(notification.createdAt)}
+                            </span>
+                            <span className="bg-gray-100 px-2 py-1 rounded-md">
+                              🕐 {formatTime(notification.createdAt)}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        🔔
+                      </div>
+                      <p className="text-gray-500 text-lg font-medium mb-2">No notifications yet</p>
+                      <p className="text-gray-400 text-sm">
+                        You'll see important updates here when they arrive
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
+
+              {/* Quick Stats Card */}
+              <div className="mt-6 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                  <span className="mr-2">📊</span>
+                  Account Overview
+                </h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-emerald-50 rounded-lg">
+                    <span className="text-gray-600 text-sm">Cart Items</span>
+                    <span className="bg-emerald-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                      {numberOfCartItems}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                    <span className="text-gray-600 text-sm">Notifications</span>
+                    <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                      {notifications.length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                    <span className="text-gray-600 text-sm">Account Type</span>
+                    <span className="text-purple-600 text-sm font-semibold">
+                      {userInformation?.type || 'Standard'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #d1d5db #f9fafb;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f9fafb;
+          border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #d1d5db;
+          border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #9ca3af;
+        }
+      `}</style>
 
       <Max />
       <Footer />

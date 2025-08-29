@@ -318,17 +318,6 @@ const OrderHistory: React.FC = () => {
                     <p>Rs. 500</p>
                   </div>
                 </div>
-                <div className="h-[0.5px] w-[100%] bg-black"></div>
-                <div className="flex flex-row justify-between my-[18px]">
-                  <input
-                    className="border-[0.5px] w-[250px] rounded-[5px] px-[10px] focus:outline-none"
-                    placeholder="Enter coupon number"
-                  />
-                  <div className="bg-gray-500 rounded-[5px] py-[5px] px-[10px] text-[15px] cursor-pointer flex items-center justify-center">
-                    <p>Apply Coupon</p>
-                  </div>
-                </div>
-                <div className="h-[0.5px] w-[100%] bg-black"></div>
                 <div>
                   <div className="flex flex-row justify-between text-[20px] mt-[10px]">
                     <p>Grand total</p>

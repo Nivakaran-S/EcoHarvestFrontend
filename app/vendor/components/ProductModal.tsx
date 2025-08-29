@@ -13,8 +13,8 @@ interface ProductFormData {
   imageUrl: string;
   status: string;
   MRP: string;
-  predictedFoodName: string; // Predicted food name from API
-  predictedFoodCategory: string; // Predicted food category from API
+  predictedFoodName: string;
+  predictedFoodCategory: string;
 }
 
 interface ProductCategory {
@@ -36,7 +36,7 @@ interface PredictionResponse {
   output_image?: string; // Optional base64 image
 }
 
-// ===== Base URL =====
+// ===== Base URLs =====
 const BASE_URL = "https://eco-harvest-backend.vercel.app";
 const PREDICTION_URL = "https://nivakaran-food-classification.hf.space";
 
@@ -64,15 +64,13 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const [productCategories, setProductCategories] = useState<ProductCategory[]>([]);
   const [isPredicting, setIsPredicting] = useState(false);
   const [predictionError, setPredictionError] = useState<string>("");
-  const [tempImageUrl, setTempImageUrl] = useState<string>(""); // Temporary URL input
+  const [tempImageUrl, setTempImageUrl] = useState<string>("");
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await fetch(`${BASE_URL}/productcategories`);
-        if (!res.ok) {
-          throw new Error("Failed to fetch categories");
-        }
+        if (!res.ok) throw new Error("Failed to fetch categories");
         const data: ProductCategory[] = await res.json();
         setProductCategories(data);
       } catch (err) {
@@ -82,7 +80,6 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
     if (isOpen) {
       fetchCategories();
-      // Reset errors when modal opens
       setPredictionError("");
     }
   }, [isOpen]);
@@ -106,21 +103,14 @@ const ProductModal: React.FC<ProductModalProps> = ({
     onSubmit(formData, resetForm);
   };
 
-  // Function to convert Google Drive share link to direct download link
+  // Convert Google Drive share link to direct download link
   const convertGoogleDriveUrl = (url: string): string => {
-    // Check if it's a Google Drive share URL
     const driveShareMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9-_]+)/);
     if (driveShareMatch) {
       const fileId = driveShareMatch[1];
       return `https://drive.google.com/uc?id=${fileId}&export=download`;
     }
-    
-    // Check if it's already a direct download link
-    if (url.includes('drive.google.com/uc?id=')) {
-      return url;
-    }
-    
-    // Return original URL if not a Google Drive link
+    if (url.includes("drive.google.com/uc?id=")) return url;
     return url;
   };
 
@@ -130,39 +120,23 @@ const ProductModal: React.FC<ProductModalProps> = ({
       return;
     }
 
-    // Reset errors
     setPredictionError("");
     setIsPredicting(true);
 
     try {
-      // Convert Google Drive share link to direct download link
       const directUrl = convertGoogleDriveUrl(tempImageUrl.trim());
-      
-      // First, try to fetch the image from the URL to validate it
-      const imageResponse = await fetch(directUrl, {
-        method: 'HEAD', // Just check if the image exists
-      });
 
-      if (!imageResponse.ok) {
-        throw new Error("Cannot access the image from the provided URL. Please ensure it's a publicly accessible Google Drive link.");
-      }
+      // Fetch the image blob
+      const imageResponse = await fetch(directUrl);
+      if (!imageResponse.ok) throw new Error("Failed to fetch image from URL");
+      const imageBlob = await imageResponse.blob();
 
-      // Download the image and convert to blob for prediction
-      const imageDataResponse = await fetch(directUrl);
-      if (!imageDataResponse.ok) {
-        throw new Error("Failed to download image from URL");
-      }
+      const formDataAI = new FormData();
+      formDataAI.append("file", imageBlob, "image.jpg");
 
-      const imageBlob = await imageDataResponse.blob();
-      
-      // Create FormData for the prediction API
-      const formData = new FormData();
-      formData.append("file", imageBlob, "image.jpg");
-
-      // Send to AI prediction
       const res = await fetch(`${PREDICTION_URL}/predict`, {
         method: "POST",
-        body: formData,
+        body: formDataAI,
       });
 
       if (!res.ok) {
@@ -171,41 +145,32 @@ const ProductModal: React.FC<ProductModalProps> = ({
       }
 
       const data: PredictionResponse = await res.json();
-      
-      // Update form with predicted food name and category
-      setFormData((prev) => ({
+
+      setFormData(prev => ({
         ...prev,
         predictedFoodName: data.label || "Unknown",
         predictedFoodCategory: data.category || "Uncategorized",
-        // Pre-fill the product name with predicted food name
         name: data.label || "",
-        // Set the image URL
         imageUrl: tempImageUrl.trim(),
       }));
 
-      // Try to match predicted category with existing product categories
+      // Match predicted category with existing categories
       const matchingCategory = productCategories.find(
-        cat => cat.name.toLowerCase().includes(data.category.toLowerCase()) ||
-               data.category.toLowerCase().includes(cat.name.toLowerCase())
+        cat =>
+          cat.name.toLowerCase().includes(data.category.toLowerCase()) ||
+          data.category.toLowerCase().includes(cat.name.toLowerCase())
       );
 
       if (matchingCategory) {
-        setFormData(prev => ({
-          ...prev,
-          productCategory_id: matchingCategory._id
-        }));
+        setFormData(prev => ({ ...prev, productCategory_id: matchingCategory._id }));
       }
 
-      // Clear the temporary URL input
       setTempImageUrl("");
-
     } catch (err) {
       console.error("Prediction error:", err);
       const errorMessage = err instanceof Error ? err.message : "Prediction failed";
       setPredictionError(errorMessage);
-      
-      // Clear prediction fields on error
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         predictedFoodName: "",
         predictedFoodCategory: "",
@@ -229,7 +194,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Google Drive URL section - FIRST */}
+          {/* Google Drive URL section */}
           <div className="space-y-2 bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
             <label className="block text-lg font-semibold text-blue-800">
               🍎 Step 1: Provide Google Drive Image Link for AI Classification
@@ -255,197 +220,77 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 {isPredicting ? "Analyzing Image..." : "Predict Food Category"}
               </button>
             </div>
-            
-            {/* AI Prediction Loading */}
+
             {isPredicting && (
               <div className="flex items-center space-x-2 text-green-600">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
                 <span className="text-sm">Analyzing food image with AI...</span>
               </div>
             )}
-            
-            {/* Prediction Error message */}
+
             {predictionError && (
               <div className="text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200">
                 AI Prediction Error: {predictionError}
               </div>
             )}
 
-            {/* Success message when prediction completes */}
             {formData.predictedFoodName && !isPredicting && !predictionError && (
               <div className="text-sm text-green-600 bg-green-50 p-2 rounded border border-green-200">
                 ✅ Food identified successfully! Product details auto-filled below.
               </div>
             )}
 
-            {/* Instructions for Google Drive links */}
             <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-              <strong>Note:</strong> Make sure your Google Drive image is set to "Anyone with the link can view" for the AI to access it.
+              <strong>Note:</strong> Make sure your Google Drive image is set to "Anyone with the link can view".
             </div>
           </div>
 
           {/* Predicted Results Section */}
           {(formData.predictedFoodName || formData.predictedFoodCategory) && (
             <div className="space-y-3 bg-green-50 p-4 rounded-lg border border-green-200">
-              <h3 className="text-lg font-semibold text-green-800">
-                🤖 AI Prediction Results
-              </h3>
-              
-              {/* Predicted Food Name Display */}
+              <h3 className="text-lg font-semibold text-green-800">🤖 AI Prediction Results</h3>
               <div className="space-y-1">
-                <label className="block text-sm font-medium text-green-700">
-                  Identified Food Item
-                </label>
-                <input
-                  type="text"
-                  name="predictedFoodName"
-                  value={formData.predictedFoodName}
-                  placeholder="AI will identify the food item"
-                  className="w-full p-2 border rounded bg-white"
-                  readOnly
-                />
+                <label className="block text-sm font-medium text-green-700">Identified Food Item</label>
+                <input type="text" name="predictedFoodName" value={formData.predictedFoodName} readOnly className="w-full p-2 border rounded bg-white"/>
               </div>
-
-              {/* Predicted Food Category Display */}
               <div className="space-y-1">
-                <label className="block text-sm font-medium text-green-700">
-                  Food Category
-                </label>
-                <input
-                  type="text"
-                  name="predictedFoodCategory"
-                  value={formData.predictedFoodCategory}
-                  placeholder="AI will categorize the food type"
-                  className="w-full p-2 border rounded bg-white"
-                  readOnly
-                />
+                <label className="block text-sm font-medium text-green-700">Food Category</label>
+                <input type="text" name="predictedFoodCategory" value={formData.predictedFoodCategory} readOnly className="w-full p-2 border rounded bg-white"/>
               </div>
             </div>
           )}
 
-          {/* Divider */}
           <div className="border-t pt-4">
-            <h3 className="text-lg font-semibold text-gray-700 mb-3">
-              📝 Step 2: Complete Product Details
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-700 mb-3">📝 Step 2: Complete Product Details</h3>
           </div>
 
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            placeholder="Product Name"
-            className="w-full p-2 border rounded"
-            onChange={handleChange}
-            required
-          />
+          <input type="text" name="name" value={formData.name} placeholder="Product Name" className="w-full p-2 border rounded" onChange={handleChange} required />
+          <input type="text" name="subtitle" value={formData.subtitle} placeholder="Subtitle" className="w-full p-2 border rounded" onChange={handleChange} required />
+          <input type="number" name="quantity" value={formData.quantity} placeholder="Quantity" className="w-full p-2 border rounded" onChange={handleChange} required min="0"/>
+          <input type="number" name="unitPrice" value={formData.unitPrice} placeholder="Unit Price" className="w-full p-2 border rounded" onChange={handleChange} required min="0" step="0.01"/>
           
-          <input
-            type="text"
-            name="subtitle"
-            value={formData.subtitle}
-            placeholder="Subtitle"
-            className="w-full p-2 border rounded"
-            onChange={handleChange}
-            required
-          />
-          
-          <input
-            type="number"
-            name="quantity"
-            value={formData.quantity}
-            placeholder="Quantity"
-            className="w-full p-2 border rounded"
-            onChange={handleChange}
-            required
-            min="0"
-          />
-          
-          <input
-            type="number"
-            name="unitPrice"
-            value={formData.unitPrice}
-            placeholder="Unit Price"
-            className="w-full p-2 border rounded"
-            onChange={handleChange}
-            required
-            min="0"
-            step="0.01"
-          />
-          
-          <select
-            name="category"
-            value={formData.category}
-            className="w-full p-2 border rounded"
-            onChange={handleChange}
-            required
-          >
+          <select name="category" value={formData.category} className="w-full p-2 border rounded" onChange={handleChange} required>
             <option value="Resell">Resell</option>
             <option value="Recycling">Recycling</option>
             <option value="Fertilizer">Fertilizer</option>
           </select>
 
-          <select
-            name="productCategory_id"
-            value={formData.productCategory_id}
-            onChange={handleChange}
-            className="w-full p-2 border rounded"
-            required
-          >
+          <select name="productCategory_id" value={formData.productCategory_id} onChange={handleChange} className="w-full p-2 border rounded" required>
             <option value="">Select Product Category</option>
-            {productCategories.map((cat) => (
-              <option key={cat._id} value={cat._id}>
-                {cat.name}
-              </option>
-            ))}
+            {productCategories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
           </select>
-          
+
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Image URL (Auto-filled from Google Drive link)
-            </label>
-            <input
-              type="url"
-              name="imageUrl"
-              value={formData.imageUrl}
-              placeholder="Will be auto-filled after image prediction"
-              className={`w-full p-2 border rounded ${formData.imageUrl ? 'bg-gray-50' : ''}`}
-              onChange={handleChange}
-              readOnly={!!formData.imageUrl} // Make read-only if URL is auto-filled
-            />
-            {formData.imageUrl && (
-              <p className="text-xs text-gray-500">
-                ℹ️ This URL was automatically set from your Google Drive link
-              </p>
-            )}
+            <label className="block text-sm font-medium text-gray-700">Image URL (Auto-filled)</label>
+            <input type="url" name="imageUrl" value={formData.imageUrl} className={`w-full p-2 border rounded ${formData.imageUrl ? "bg-gray-50" : ""}`} onChange={handleChange} readOnly={!!formData.imageUrl}/>
+            {formData.imageUrl && <p className="text-xs text-gray-500">ℹ️ Automatically set from your Google Drive link</p>}
           </div>
-          
-          <input
-            type="number"
-            name="MRP"
-            value={formData.MRP}
-            placeholder="MRP"
-            className="w-full p-2 border rounded"
-            onChange={handleChange}
-            required
-            min="0"
-            step="0.01"
-          />
+
+          <input type="number" name="MRP" value={formData.MRP} placeholder="MRP" className="w-full p-2 border rounded" onChange={handleChange} required min="0" step="0.01"/>
 
           <div className="flex justify-between pt-4">
-            <button
-              type="button"
-              className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition-colors"
-              onClick={onClose}
-              disabled={isPredicting}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-              disabled={isPredicting}
-            >
+            <button type="button" className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition-colors" onClick={onClose} disabled={isPredicting}>Cancel</button>
+            <button type="submit" className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed" disabled={isPredicting}>
               {isPredicting ? "Processing..." : "Add Product"}
             </button>
           </div>

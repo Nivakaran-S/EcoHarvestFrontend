@@ -143,7 +143,7 @@ export default function UserManagement() {
   };
 
   return (
-    <div className="flex border-t-[1px] border-gray-500 flex-row">
+    <div className="flex  flex-row">
       {/* Left Panel - Users & Vendor Registration */}
       <div className="w-[75%] text-black h-[90vh] py-[20px] overflow-y-scroll px-[25px] bg-gray-100 flex flex-col">
         <p className="text-black text-[21px]">User Management System</p>
@@ -153,7 +153,7 @@ export default function UserManagement() {
           <p className="text-[35px]">Vendor Registration</p>
           <div className="flex flex-col space-y-[20px]">
             <div>
-              <p className="text-[20px]">Business Information</p>
+              <p className="text-[20px] mb-[15px]">Business Information</p>
               <div className="flex flex-row space-x-[20px] w-[100%]">
                 <div className="w-[100%]">
                   <p>First name</p>
@@ -280,7 +280,7 @@ export default function UserManagement() {
       </div>
 
       {/* Right Panel - Admin Registration */}
-      <div className="w-[25%] py-[10px] px-[15px] h-[100vh] bg-gray-300 flex flex-col text-black">
+      <div className="w-[25%]  py-[10px] px-[15px] h-[90vh]  bg-gray-300 flex flex-col text-black">
         <p className="text-[25px]">Admin Registration</p>
         <div className="mt-[5px]">
           <p className="text-[15px]">First name</p>

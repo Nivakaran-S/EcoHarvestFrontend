@@ -8,6 +8,7 @@ import Image from "next/image";
 import Star from "../images/log.png";
 import { useSearchParams, useRouter } from "next/navigation";
 import axios from "axios";
+import Loading from "../components/Loading";
 
 // API base
 const BASE_URL = "https://eco-harvest-backend.vercel.app";
@@ -247,11 +248,11 @@ const CategoryPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <Loading/>;
   }
 
   return (
-    <div>
+    <div className="bg-white flex flex-col items-center justify-center">
       <Navigation
         numberOfCartItems={numberOfCartItems}
         productsDetail={productsDetail}
@@ -260,15 +261,15 @@ const CategoryPage: React.FC = () => {
         userLoggedIn={userLoggedIn}
       />
 
-      <div className="pt-[15vh] bg-white w-full flex justify-center text-black">
+      <div className="pt-[15vh] bg-white w-[94vw] flex justify-center text-black">
         <div className="w-[95%] flex flex-row py-4">
           {/* Sidebar Filters */}
           <div className="w-1/6 pr-4">
             <div className="sticky top-24 space-y-6">
               {/* Category */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-800">Category</h3>
-                <div className="mt-2 space-y-2">
+                <h3 className="text-2xl font-semibold text-gray-800">Category</h3>
+                <div className="mt-2 space-y-[5px]">
                   {categoriesLoading ? (
                     <div className="text-gray-500">Loading categories...</div>
                   ) : (
@@ -288,7 +289,7 @@ const CategoryPage: React.FC = () => {
                         <p
                           key={category._id}
                           className={`cursor-pointer ${
-                            categoryId === category._id ? "text-[#FDAA1C] font-semibold" : "hover:text-gray-500"
+                            categoryId === category._id ? "text-[#FDAA1C]  " : "hover:text-gray-500"
                           }`}
                           onClick={() => handleCategoryClick(category._id, category.name)}
                         >
@@ -331,23 +332,7 @@ const CategoryPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Brands */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">Brands</h3>
-                <div className="mt-2 space-y-2">
-                  {["Anchor", "Nestle", "Ambewela", "Elephant House"].map((brand) => (
-                    <div key={brand} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedBrands.includes(brand)}
-                        className="accent-[#FDAA1C] cursor-pointer"
-                        onChange={() => toggleBrand(brand)}
-                      />
-                      <span>{brand}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              
 
               {/* Ratings */}
               <div>

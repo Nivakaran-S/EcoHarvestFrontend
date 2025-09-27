@@ -68,7 +68,7 @@ const ProfileManagement: React.FC<ProfileManagementProps> = ({ userInformation, 
   }
 
   return (
-    <div className="border-t-[1px] border-gray-400 text-black flex flex-row w-[100%] h-[100vh] bg-gray-100">
+    <div className="border-t-[1px] border-gray-400 text-black flex flex-row w-[100%] overflow-y-hidden h-[100vh] bg-gray-100">
       
       {/* Left panel - profile */}
       <div className="flex flex-col px-[20px] py-[10px] w-[75%]">

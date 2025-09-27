@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -6,6 +7,16 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Select, { SingleValue } from "react-select";
 import Swal from "sweetalert2";
+import { 
+  PencilIcon, 
+  TrashIcon, 
+  DocumentArrowDownIcon,
+  MagnifyingGlassIcon,
+  CheckIcon,
+  XMarkIcon,
+  TagIcon,
+  PlusIcon
+} from '@heroicons/react/24/outline';
 
 // ===== Base URL =====
 const BASE_URL = "https://eco-harvest-backend.vercel.app";
@@ -39,7 +50,7 @@ interface SelectedColumns {
   status: boolean;
 }
 
-export default function Discount() {
+const DiscountsPage: React.FC = () => {
   const [discountPercentage, setDiscountPercentage] = useState<number>(0);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [status, setStatus] = useState<boolean>(true);
@@ -48,6 +59,7 @@ export default function Discount() {
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [showReportModal, setShowReportModal] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedColumns, setSelectedColumns] = useState<SelectedColumns>({
     productName: true,
     category: true,
@@ -58,7 +70,7 @@ export default function Discount() {
   });
 
   // PDF generation
-  const generatePDF = () => {
+  const generatePDF = (): void => {
     const doc = new jsPDF();
     const tableColumn: string[] = [];
     if (selectedColumns.productName) tableColumn.push("Product Name");
@@ -81,9 +93,9 @@ export default function Discount() {
 
       if (selectedColumns.productName) row.push(item.productId.name);
       if (selectedColumns.category) row.push(item.productId.category);
-      if (selectedColumns.originalPrice) row.push(`$${originalPrice}`);
+      if (selectedColumns.originalPrice) row.push(`Rs. ${originalPrice}`);
       if (selectedColumns.discount) row.push(`${item.percentage}%`);
-      if (selectedColumns.currentPrice) row.push(`$${currentPrice.toFixed(2)}`);
+      if (selectedColumns.currentPrice) row.push(`Rs. ${currentPrice.toFixed(2)}`);
       if (selectedColumns.status) row.push(item.status ? "Available" : "Not Available");
 
       return row;
@@ -104,7 +116,7 @@ export default function Discount() {
 
   // Fetch products
   useEffect(() => {
-    const getRecycleProducts = async () => {
+    const getRecycleProducts = async (): Promise<void> => {
       try {
         const response = await axios.get<Product[]>(`${BASE_URL}/products/read`);
         setProducts(response.data);
@@ -117,7 +129,7 @@ export default function Discount() {
 
   // Fetch discounts
   useEffect(() => {
-    const fetchDiscounts = async () => {
+    const fetchDiscounts = async (): Promise<void> => {
       try {
         const response = await axios.get<Discount[]>(`${BASE_URL}/api/discount/`);
         setDiscounts(response.data);
@@ -129,32 +141,38 @@ export default function Discount() {
   }, []);
 
   // Submit discount
-  const handleSubmit = async () => {
+  const handleSubmit = async (): Promise<void> => {
     try {
       const existingDiscount = discounts.find(
         (discount) => discount.productId._id === selectedProductId && discount.status === true
       );
 
-      if (existingDiscount)
-        return Swal.fire({
+      if (existingDiscount) {
+        Swal.fire({
           icon: "error",
           title: "Error",
           text: "This product already has an active discount.",
         });
+        return;
+      }
 
-      if (!selectedProductId)
-        return Swal.fire({
+      if (!selectedProductId) {
+        Swal.fire({
           icon: "error",
           title: "Error",
           text: "Product isn't selected.",
         });
+        return;
+      }
 
-      if (discountPercentage <= 0 || discountPercentage >= 100)
-        return Swal.fire({
+      if (discountPercentage <= 0 || discountPercentage >= 100) {
+        Swal.fire({
           icon: "error",
           title: "Error",
           text: "Discount percentage should be between 1 to 99.",
         });
+        return;
+      }
 
       const response = await axios.post(`${BASE_URL}/api/discount/create`, {
         productId: selectedProductId,
@@ -177,6 +195,11 @@ export default function Discount() {
           status,
         },
       ]);
+
+      // Reset form
+      setDiscountPercentage(0);
+      setSelectedProductId('');
+      setStatus(true);
     } catch (err) {
       console.error("Error submitting:", err);
       Swal.fire({
@@ -188,7 +211,7 @@ export default function Discount() {
   };
 
   // Delete discount
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string): Promise<void> => {
     try {
       const confirmDelete = window.confirm("Are you sure you want to delete this discount?");
       if (!confirmDelete) return;
@@ -208,7 +231,7 @@ export default function Discount() {
   };
 
   // Edit discount
-  const handleEdit = (discount: Discount) => {
+  const handleEdit = (discount: Discount): void => {
     setDiscountPercentage(discount.percentage);
     setStatus(discount.status);
     setEditId(discount._id);
@@ -216,7 +239,7 @@ export default function Discount() {
   };
 
   // Update discount
-  const handleUpdate = async () => {
+  const handleUpdate = async (): Promise<void> => {
     if (!editId) return;
 
     try {
@@ -247,181 +270,342 @@ export default function Discount() {
     }
   };
 
+  // Calculate stats
+  const calculateStats = () => {
+    const activeDiscounts = discounts.filter(d => d.status).length;
+    const totalSavings = discounts.reduce((sum, discount) => {
+      if (discount.status) {
+        const saving = (discount.productId.unitPrice * discount.percentage) / 100;
+        return sum + saving;
+      }
+      return sum;
+    }, 0);
+    const avgDiscount = discounts.length > 0 
+      ? discounts.reduce((sum, d) => sum + d.percentage, 0) / discounts.length 
+      : 0;
+
+    return { activeDiscounts, totalSavings, avgDiscount };
+  };
+
+  const stats = calculateStats();
+  
+  // Filter discounts based on search
+  const filteredDiscounts = discounts.filter(discount =>
+    discount.productId.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    discount.productId.category.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="min-h-screen w-full overflow-auto p-4">
-      {/* Add Discount Section */}
-      <div>
-        <p className="text-[50px] text-center mb-8">Add Discount</p>
-
-        <div className="flex flex-col mb-[15px] space-y-[5px]">
-          <p className="text-[20px] mb-8">
-            Available Product
-            <Select
-              options={products.map((product) => ({ value: product._id, label: product.name }))}
-              onChange={(selectedOption: SingleValue<SelectOption>) =>
-                setSelectedProductId(selectedOption ? selectedOption.value : "")
-              }
-              value={
-                products
-                  .map((product) => ({ value: product._id, label: product.name }))
-                  .find((option) => option.value === selectedProductId) || null
-              }
-              placeholder="Select a product..."
-              isClearable
-              className="w-full"
-            />
-          </p>
-        </div>
-
-        <div className="flex flex-col space-y-[2px]">
-          <div className="mb-8 ">
-            <p className="text-[20px]">Discount percentage: {discountPercentage}%</p>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={discountPercentage}
-              onChange={(e) => setDiscountPercentage(Number(e.target.value))}
-              className="w-[98%] accent-[#FDAA1C] h-[5px] focus:outline-none cursor-pointer"
-            />
-            <div className="flex flex-row justify-between w-[98%] text-[15px]">
-              <p>Min: 0%</p>
-              <p>Max: 100%</p>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Discount Management</h1>
+              <p className="text-gray-600 mt-2">Create and manage product discounts and promotions</p>
             </div>
-          </div>
-
-          <div className="flex items-center justify-between mb-10">
-            <p className="text-[20px]">Status: {status ? "Available" : "Not Available"}</p>
-            <div
-              onClick={() => setStatus(!status)}
-              className={`w-14 h-7 flex items-center bg-gray-300 rounded-full p-1 cursor-pointer ${
-                status ? "bg-green-500" : "bg-gray-400"
-              }`}
+            <button 
+              onClick={() => setShowReportModal(true)}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition-colors shadow-lg"
             >
-              <div
-                className={`bg-white w-5 h-5 rounded-full shadow-md transform duration-300 ${
-                  status ? "translate-x-7" : ""
-                }`}
-              />
+              <DocumentArrowDownIcon className="w-5 h-5" />
+              <span>Generate Report</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Discounts</p>
+                <p className="text-3xl font-bold text-green-600">{stats.activeDiscounts}</p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-lg">
+                <TagIcon className="w-6 h-6 text-green-600" />
+              </div>
             </div>
           </div>
-
-          <div className="flex px-[20px] pb-[10px] mb-8 mt-10 text-[20px]">
-            <div
-              className="bg-blue-500 cursor-pointer w-fit px-[15px] py-[5px] rounded mb-8 mt-10 text-center mx-auto text-white"
-              onClick={handleSubmit}
-            >
-              Submit
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Savings</p>
+                <p className="text-3xl font-bold text-blue-600">Rs. {stats.totalSavings.toFixed(2)}</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <div className="w-6 h-6 bg-blue-600 rounded"></div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Avg Discount</p>
+                <p className="text-3xl font-bold text-yellow-600">{stats.avgDiscount.toFixed(1)}%</p>
+              </div>
+              <div className="p-3 bg-yellow-100 rounded-lg">
+                <div className="w-6 h-6 bg-yellow-600 rounded"></div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Discounts</p>
+                <p className="text-3xl font-bold text-purple-600">{discounts.length}</p>
+              </div>
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <div className="w-6 h-6 bg-purple-600 rounded"></div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Available Discounts Table */}
-      <div>
-        <p className="text-[30px] text-center mb-8">Available discounts</p>
-        <div className="flex px-[20px] pb-[10px] mb-8 mt-10 text-[20px]">
-          <p
-            onClick={() => setShowReportModal(true)}
-            className="bg-gray-500 cursor-pointer w-fit px-[15px] py-[5px] rounded mb-8 mt-10 text-right ml-auto text-white"
-          >
-            Generate Report
-          </p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Add Discount Form */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center space-x-2 mb-6">
+                <PlusIcon className="w-6 h-6 text-blue-600" />
+                <h2 className="text-xl font-bold text-gray-900">Add New Discount</h2>
+              </div>
+              
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Select Product</label>
+                  <Select
+                    options={products.map((product) => ({ value: product._id, label: `${product.name} - Rs. ${product.unitPrice}` }))}
+                    onChange={(selectedOption: SingleValue<SelectOption>) =>
+                      setSelectedProductId(selectedOption ? selectedOption.value : "")
+                    }
+                    value={
+                      products
+                        .map((product) => ({ value: product._id, label: `${product.name} - Rs. ${product.unitPrice}` }))
+                        .find((option) => option.value === selectedProductId) || null
+                    }
+                    placeholder="Select a product..."
+                    isClearable
+                    className="w-full"
+                    classNamePrefix="react-select"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Discount Percentage: {discountPercentage}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="99"
+                    value={discountPercentage}
+                    onChange={(e) => setDiscountPercentage(Number(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  />
+                  <div className="flex justify-between text-sm text-gray-500 mt-1">
+                    <span>0%</span>
+                    <span>99%</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium text-gray-700">Status</label>
+                    <span className="text-sm text-gray-600">
+                      {status ? 'Available' : 'Not Available'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setStatus(!status)}
+                    className={`w-14 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
+                      status ? 'bg-green-500' : 'bg-gray-300'
+                    }`}
+                  >
+                    <div
+                      className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform ${
+                        status ? 'translate-x-7' : ''
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                <button
+                  onClick={handleSubmit}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+                >
+                  Add Discount
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Discounts List */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-gray-900">Available Discounts</h2>
+                </div>
+                <div className="relative">
+                  <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search discounts..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Original Price</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Final Price</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredDiscounts.map((item) => {
+                      const originalPrice = item.productId.unitPrice;
+                      const discountAmount = (originalPrice * item.percentage) / 100;
+                      const currentPrice = originalPrice - discountAmount;
+                      
+                      return (
+                        <tr key={item._id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4">
+                            <div>
+                              <div className="font-medium text-gray-900">{item.productId.name}</div>
+                              <div className="text-sm text-gray-500">{item.productId.category}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">Rs. {originalPrice}</td>
+                          <td className="px-6 py-4">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              -{item.percentage}%
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm font-medium text-green-600">Rs. {currentPrice.toFixed(2)}</td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              item.status 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {item.status ? 'Available' : 'Not Available'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => handleEdit(item)}
+                                className="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors"
+                              >
+                                <PencilIcon className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(item._id)}
+                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                {filteredDiscounts.length === 0 && (
+                  <div className="text-center py-12">
+                    <TagIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg">No discounts found</p>
+                    <p className="text-gray-400">
+                      {searchTerm ? 'Try adjusting your search terms' : 'Create your first discount to get started'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-
-        <table className="table-auto border-collapse border border-gray-300 w-full">
-          <thead>
-            <tr>
-              <th className="border px-4 py-2">Product Name</th>
-              <th className="border px-4 py-2">Category</th>
-              <th className="border px-4 py-2">Original Price</th>
-              <th className="border px-4 py-2">Discount (%)</th>
-              <th className="border px-4 py-2">Current Price</th>
-              <th className="border px-4 py-2">Status</th>
-              <th className="border px-4 py-2">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {discounts.map((item) => {
-              const originalPrice = item.productId.unitPrice;
-              const discountAmount = (originalPrice * item.percentage) / 100;
-              const currentPrice = originalPrice - discountAmount;
-
-              return (
-                <tr key={item._id}>
-                  <td className="border px-4 py-2">{item.productId.name}</td>
-                  <td className="border px-4 py-2">{item.productId.category}</td>
-                  <td className="border px-4 py-2">${originalPrice}</td>
-                  <td className="border px-4 py-2">{item.percentage}%</td>
-                  <td className="border px-4 py-2">${currentPrice.toFixed(2)}</td>
-                  <td className="border px-4 py-2">{item.status ? "Available" : "Not Available"}</td>
-                  <td className="border px-4 py-2">
-                    <div className="flex gap-4 justify-center">
-                      <button
-                        onClick={() => handleDelete(item._id)}
-                        className="bg-red-500 text-white w-24 px-4 py-2 rounded hover:bg-red-600"
-                      >
-                        Delete
-                      </button>
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="bg-yellow-500 text-white w-24 px-4 py-2 rounded hover:bg-yellow-600"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
       </div>
 
       {/* Edit Modal */}
       {showEditModal && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-[90%] md:w-[400px] shadow-lg relative">
-            <h2 className="text-xl font-bold mb-4 text-center">Edit Discount</h2>
-
-            <p className="mb-2 text-sm">Discount: {discountPercentage}%</p>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={discountPercentage}
-              onChange={(e) => setDiscountPercentage(Number(e.target.value))}
-              className="w-full accent-[#FDAA1C] mb-4"
-            />
-
-            <div className="flex items-center justify-between mb-4">
-              <p>Status: {status ? "Available" : "Not Available"}</p>
-              <div
-                onClick={() => setStatus(!status)}
-                className={`w-14 h-7 flex items-center bg-gray-300 rounded-full p-1 cursor-pointer ${
-                  status ? "bg-green-500" : "bg-gray-400"
-                }`}
-              >
-                <div
-                  className={`bg-white w-5 h-5 rounded-full shadow-md transform duration-300 ${
-                    status ? "translate-x-7" : ""
-                  }`}
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-between">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Edit Discount</h2>
               <button
                 onClick={() => setShowEditModal(false)}
-                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Discount Percentage: {discountPercentage}%
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="99"
+                  value={discountPercentage}
+                  onChange={(e) => setDiscountPercentage(Number(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+                <div className="flex justify-between text-sm text-gray-500 mt-1">
+                  <span>0%</span>
+                  <span>99%</span>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-700">Status</label>
+                  <span className="text-sm text-gray-600">
+                    {status ? 'Available' : 'Not Available'}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setStatus(!status)}
+                  className={`w-14 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
+                    status ? 'bg-green-500' : 'bg-gray-300'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform ${
+                      status ? 'translate-x-7' : ''
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpdate}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
               >
-                Update
+                Update Discount
               </button>
             </div>
           </div>
@@ -430,36 +614,44 @@ export default function Discount() {
 
       {/* Report Modal */}
       {showReportModal && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-[90%] md:w-[400px] shadow-lg relative">
-            <h2 className="text-xl font-bold mb-4 text-center">Generate Discounts Report</h2>
-            <p className="mb-6 text-center">
-              Select the columns you want to include in the report:
-            </p>
-
-            <div className="space-y-3 mb-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Generate Discounts Report</h2>
+              <button
+                onClick={() => setShowReportModal(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4 mb-6">
+              <p className="text-gray-600 mb-4">Select the columns you want to include in the report:</p>
               {Object.keys(selectedColumns).map((key) => (
-                <label key={key} className="flex items-center">
+                <label key={key} className="flex items-center space-x-3">
                   <input
                     type="checkbox"
                     checked={selectedColumns[key as keyof SelectedColumns]}
                     onChange={() =>
-                      setSelectedColumns({
-                        ...selectedColumns,
-                        [key]: !selectedColumns[key as keyof SelectedColumns],
-                      })
+                      setSelectedColumns(prev => ({
+                        ...prev,
+                        [key]: !prev[key as keyof SelectedColumns]
+                      }))
                     }
-                    className="mr-2"
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  {key.charAt(0).toUpperCase() + key.slice(1)}
+                  <span className="text-sm text-gray-700 capitalize">
+                    {key.replace(/([A-Z])/g, ' $1').trim()}
+                  </span>
                 </label>
               ))}
             </div>
-
-            <div className="flex justify-between">
+            
+            <div className="flex space-x-3">
               <button
                 onClick={() => setShowReportModal(false)}
-                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 Cancel
               </button>
@@ -468,9 +660,9 @@ export default function Discount() {
                   generatePDF();
                   setShowReportModal(false);
                 }}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
               >
-                Confirm
+                Generate PDF
               </button>
             </div>
           </div>
@@ -478,4 +670,6 @@ export default function Discount() {
       )}
     </div>
   );
-}
+};
+
+export default DiscountsPage;

@@ -44,11 +44,13 @@ export default function InventoryPage() {
       try {
         // Fetch products
         const prodRes = await INVENTORY.LIST();
-        const products: InventoryItem[] = prodRes.data || [];
+        const products: InventoryItem[] = Array.isArray(prodRes?.data) ? prodRes.data : [];
 
         // Fetch vehicles
         const vehRes = await VEHICLE.LIST();
-        const vehicles: VehicleType[] = vehRes.data.map((v: any) => ({
+        const rawVehicles = Array.isArray(vehRes?.data) ? vehRes.data : [];
+
+        const vehicles: VehicleType[] = rawVehicles.map((v: any) => ({
           _id: v._id,
           plateNumber: v.plateNumber,
           type: v.type || 'Unknown',
@@ -104,14 +106,18 @@ export default function InventoryPage() {
   // Auto-assign vehicle based on quantity
   const autoAssignVehicle = (vehicles: VehicleType[], quantity: number) => {
     if (quantity < 100) {
-      return vehicles.find((v) => v.type.toLowerCase() === 'van' && v.status.toLowerCase() === 'available');
+      return vehicles.find(
+        (v) => v.type.toLowerCase() === 'van' && v.status.toLowerCase() === 'available'
+      );
     } else {
-      return vehicles.find((v) => v.type.toLowerCase() === 'truck' && v.status.toLowerCase() === 'available');
+      return vehicles.find(
+        (v) => v.type.toLowerCase() === 'truck' && v.status.toLowerCase() === 'available'
+      );
     }
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gray-50">
+    <div className="flex-1 h-[100%] text-black overflow-y-auto bg-gray-50">
       {/* Header Section */}
       <div className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

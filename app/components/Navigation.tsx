@@ -118,7 +118,7 @@ const Navigation: React.FC<NavigationProps> = ({
   };
 
   return (
-    <div className="flex flex-col justify-center fixed z-[100] w-full items-center">
+    <div className="flex flex-col justify-center fixed top-0 z-[100] w-full items-center">
       <nav className="bg-white w-[95vw] drop-shadow-md ring-gray-600 ring-[0.5px] mt-[5px] h-[14vh] rounded-[10px]">
         <div className="flex px-[30px] rounded-t-[10px] space-x-[10px] text-white bg-[#0A0A0A] justify-between items-center h-[67%]">
           <div className="cursor-pointer" onClick={() => router.push("/")}>

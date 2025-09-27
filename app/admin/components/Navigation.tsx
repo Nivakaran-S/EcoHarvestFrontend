@@ -12,7 +12,6 @@ const Navigation: React.FC<NavigationProps> = ({ handleNavClick, navClick }) => 
     "Inventory",
     "Discount",
     "Payment",
-    "Reports",
     "User Management",
     "Order Management",
     "Advertisements",

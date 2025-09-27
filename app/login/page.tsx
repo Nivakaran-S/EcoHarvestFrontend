@@ -291,6 +291,23 @@ const Login: React.FC = () => {
               <p>Invalid Username or Password</p>
             </div>
           )}
+          <div>
+            <div>
+              <p>Customer</p>
+              <p>Username: aaa</p>
+              <p>Password: aaa</p>
+            </div>
+            <div>
+              <p>Vendor</p>
+              <p>Username: test</p>
+              <p>Password: test</p>
+            </div>
+            <div>
+              <p>Admin</p>
+              <p>Username: tony</p>
+              <p>Password: tony</p>
+            </div>
+          </div>
         </div>
       </div>
       <div className="w-[23.6%] h-[100%] bg-gray-200 flex ring-[0.5px] ring-gray-500 items-center justify-center"></div>

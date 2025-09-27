@@ -13,7 +13,6 @@ import Advertisements from "./pages/Advertisements";
 import Inventory from "./pages/Inventory";
 import Discount from "./pages/Discount";
 import Payment from "./pages/Payment";
-import Reports from "./pages/Reports";
 import UserManagement from "./pages/UserManagement";
 import ProfileManagement from "./pages/ProfileManagement";
 import { Notification } from "./components/types";
@@ -126,8 +125,6 @@ export default function AdminDashboard() {
         return <Discount />;
       case "Payment":
         return <Payment />;
-      case "Reports":
-        return <Reports />;
       case "User Management":
         return <UserManagement />;
       case "Advertisements":

@@ -23,12 +23,15 @@ export default function Vehicle() {
   });
 
   const load = async (): Promise<void> => {
-    const { data } = await VEHICLE.LIST();
-    // data is already VehicleType[]
-    setVehicles(data as VehicleType[]);
-    setFilteredVehicles(data as VehicleType[]);
+    try {
+      const { data } = await VEHICLE.LIST();
+      const vehicleData = data as VehicleType[];
+      setVehicles(vehicleData);
+      setFilteredVehicles(vehicleData);
+    } catch (error) {
+      console.error('Failed to fetch vehicles:', error);
+    }
   };
-
 
   useEffect(() => {
     load();
@@ -47,8 +50,12 @@ export default function Vehicle() {
 
   const handleConfirmDelete = async (): Promise<void> => {
     if (confirmDialog.id) {
-      await VEHICLE.DELETE(confirmDialog.id);
-      load();
+      try {
+        await VEHICLE.DELETE(confirmDialog.id);
+        await load();
+      } catch (error) {
+        console.error('Failed to delete vehicle:', error);
+      }
     }
     setConfirmDialog({ open: false, id: null });
   };
@@ -63,6 +70,7 @@ export default function Vehicle() {
 
   return (
     <>
+      {/* External libs for PDF export */}
       <Script
         src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
         strategy="beforeInteractive"
@@ -72,7 +80,8 @@ export default function Vehicle() {
         strategy="beforeInteractive"
       />
 
-      <div className="mb-4 flex justify-between">
+      {/* Header */}
+      <div className="mb-4 flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Vehicles</h1>
         <div className="flex gap-2">
           <button
@@ -91,47 +100,58 @@ export default function Vehicle() {
         </div>
       </div>
 
+      {/* Search */}
       <SearchBar placeholder="Search by plate number..." onSearch={handleSearch} />
 
+      {/* Table */}
       <div className="overflow-x-auto">
         <table id="Vehicle-table" className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-50">
             <tr>
-              {['Plate', 'Make', 'Model', 'Year', 'Status', ''].map((h) => (
-                <th key={h} className="px-4 py-2 text-left font-medium">
+              {['Plate', 'Make', 'Model', 'Year', 'Status', 'Actions'].map((h) => (
+                <th key={h} className="px-4 py-2 text-left font-medium text-gray-700">
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y">
-            {filteredVehicles.map((v) => (
-              <tr key={v._id} className="hover:bg-gray-50">
-                <td className="px-4 py-2">{v.plateNumber}</td>
-                <td className="px-4 py-2">{v.make}</td>
-                <td className="px-4 py-2">{v.model}</td>
-                <td className="px-4 py-2">{v.year}</td>
-                <td className="px-4 py-2">{v.status}</td>
-                <td className="px-4 py-2 flex gap-2 no-print">
-                  <button
-                    onClick={() => setPopup({ open: true, initial: v })}
-                    className="text-blue-600 hover:underline"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => remove(v._id)}
-                    className="text-red-600 hover:underline"
-                  >
-                    Delete
-                  </button>
+            {filteredVehicles.length > 0 ? (
+              filteredVehicles.map((v) => (
+                <tr key={v._id} className="hover:bg-gray-50">
+                  <td className="px-4 py-2">{v.plateNumber}</td>
+                  <td className="px-4 py-2">{v.make}</td>
+                  <td className="px-4 py-2">{v.model}</td>
+                  <td className="px-4 py-2">{v.year}</td>
+                  <td className="px-4 py-2">{v.status}</td>
+                  <td className="px-4 py-2 flex gap-3 no-print">
+                    <button
+                      onClick={() => setPopup({ open: true, initial: v })}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => remove(v._id)}
+                      className="text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
+                  No vehicles found.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
 
+      {/* Popup for Add/Edit */}
       <VehiclePopup
         open={popup.open}
         onClose={() => setPopup({ open: false, initial: null })}
@@ -139,6 +159,7 @@ export default function Vehicle() {
         initial={popup.initial}
       />
 
+      {/* Confirmation dialog */}
       <ConfirmDialog
         open={confirmDialog.open}
         onClose={handleCancelDelete}

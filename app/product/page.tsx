@@ -10,6 +10,7 @@ import Image from "next/image";
 import ProductImage2 from "../images/product.png";
 import { useSearchParams, useRouter } from "next/navigation";
 import axios from "axios";
+import Loading from "../components/Loading";
 
 // ====== Base URL ======
 const BASE_URL = "https://eco-harvest-backend.vercel.app";
@@ -431,11 +432,7 @@ const ProductPageComponent = () => {
   // ====== Loading State ======
   if (loading) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen bg-[#F5F5F5]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FDAA1C] mb-4"></div>
-        <p className="text-lg text-gray-600">Loading product details...</p>
-        <p className="text-sm text-gray-500 mt-2">Product ID: {productId}</p>
-      </div>
+      <Loading/>
     );
   }
 
@@ -487,7 +484,7 @@ const ProductPageComponent = () => {
   }
 
   return (
-    <div>
+    <div className="bg-gradient-to-b from-gray-400 to-[#F5F5F5] overflow-x-hidden flex flex-col items-center justify-center">
       <Navigation
         cart={cart}
         id={id}
@@ -504,9 +501,9 @@ const ProductPageComponent = () => {
       )}
 
       {/* Product Section */}
-      <div className="text-black bg-[#F5F5F5] w-full flex flex-col items-center space-y-10">
-        <div className="bg-gradient-to-b pt-[16vh] flex flex-col items-center justify-center from-gray-400 to-[#F5F5F5] w-full h-full">
-          <div className="w-[94vw] flex justify-center items-center rounded-[15px] overflow-hidden">
+      <div className="text-black bg-[#F5F5F5] w-[100vw] flex flex-col items-center space-y-10">
+        <div className=" pt-[16vh] flex flex-col items-center justify-center bg-gradient-to-b from-gray-400 to-[#F5F5F5] w-full h-full">
+          <div className="w-[80vw] flex justify-center items-center rounded-[15px] overflow-hidden">
             {/* Product Info */}
             <div className="w-[38.2%] ml-[10px] border-[0.5px] border-gray-500 rounded-[10px] bg-[#F5F5F5] h-[70vh] mb-[40px] p-[20px] relative">
               {!!discountPercentage && (
@@ -631,7 +628,7 @@ const ProductPageComponent = () => {
         </div>
 
         {/* Reviews Section */}
-        <div className="w-[94vw] pb-[50px] flex flex-col">
+        <div className="w-[70vw] pb-[50px] flex flex-col">
           <div className="bg-white py-[20px] px-[25px] ring-[0.5px] ring-gray-500 rounded-[15px] mt-[10px] w-full">
             <p className="text-[25px]">Reviews & Ratings</p>
             <div className="flex flex-col space-y-[10px]">

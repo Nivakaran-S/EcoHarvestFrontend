@@ -176,7 +176,7 @@ const OrdersDashboard: React.FC = () => {
               <p className="text-[25px]">Orders Summary</p>
               <button
                 onClick={() => setShowModal(true)}
-                className="bg-[#FDAA1C] ring-yellow-800 ring-[0.5px] py-[5px] px-[20px] rounded-[5px] text-[15px]"
+                className="bg-[#FDAA1C] cursor-pointer ring-yellow-800 ring-[0.5px] py-[5px] px-[20px] rounded-[5px] text-[15px]"
               >
                 Export Report
               </button>
@@ -217,8 +217,11 @@ const OrdersDashboard: React.FC = () => {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white text-black p-[20px] rounded-[10px] w-[500px]">
+        <div className="fixed inset-0  flex items-center justify-center">
+          <div onClick={() => setShowModal(false)} className="bg-black h-[100vh] w-[100vw] opacity-50">
+
+          </div>
+          <div className="bg-white absolute text-black p-[20px] rounded-[10px] w-[500px]">
             <h2 className="text-[20px] mb-[15px]">Customize Report</h2>
             <div className="mb-[15px]">
               <label className="block text-[15px] mb-[5px]">Report Title</label>

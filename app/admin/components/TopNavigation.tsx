@@ -49,7 +49,7 @@ const TopNavigation: React.FC<TopNavigationProps> = ({
   };
 
   return (
-    <div className="w-full text-black h-[10vh] flex items-center justify-between px-[30px] bg-white">
+    <div className="w-full text-black  h-[10vh] flex items-center justify-between px-[30px] bg-white border-b-[1px] border-gray-400">
       <div className="flex items-center space-x-4">
         {/* Notifications */}
         <div className="relative group">

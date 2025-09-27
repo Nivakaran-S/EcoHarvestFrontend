@@ -24,10 +24,12 @@ export default function Products() {
 
   // Load inventory from API
   const load = async (): Promise<void> => {
-    const { data } = await INVENTORY.LIST();
-    setItems(data as InventoryItem[]);
-    setFilteredItems(data as InventoryItem[]);
-  };
+  const { data } = await INVENTORY.LIST();
+  const itemsArray = Array.isArray(data) ? data : [];
+  setItems(itemsArray as InventoryItem[]);
+  setFilteredItems(itemsArray as InventoryItem[]);
+};
+
 
   useEffect(() => {
     load();

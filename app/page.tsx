@@ -87,7 +87,7 @@ export default function CustomerHome() {
   }, [id, userLoggedIn]);
 
   return (
-    <div className="text-black">
+    <div className="text-black overflow-x-hidden">
       <Navigation
         numberOfCartItems={numberOfCartItems}
         productsDetail={productsDetail}

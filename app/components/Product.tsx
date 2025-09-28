@@ -94,7 +94,12 @@ const ProductCard: React.FC<ProductProps> = ({
   return (
     <div
       onClick={handleProductClick}
-      className={`relative bg-white ring-gray-500 ring-[0.5px] drop-shadow-lg overflow-hidden h-[45vh] rounded-[10px] flex flex-col items-center justify-between p-[10px] w-[14vw] mt-[10px] transition-all ${
+      className={`relative bg-white ring-gray-500 ring-[0.5px] drop-shadow-lg overflow-hidden 
+        h-[300px] sm:h-[350px] md:h-[400px] lg:h-[45vh] 
+        rounded-[10px] flex flex-col items-center justify-between 
+        p-2 sm:p-3 md:p-[10px] 
+        w-[200px] sm:w-[45vw] md:w-[30vw] lg:w-[22vw] xl:w-[18vw] 2xl:w-[14vw] 
+        mt-2 sm:mt-[10px] transition-all ${
         isOutOfStock 
           ? 'opacity-60 cursor-not-allowed' 
           : 'cursor-pointer hover:drop-shadow-2xl hover:scale-105'
@@ -103,7 +108,7 @@ const ProductCard: React.FC<ProductProps> = ({
       {/* Out of Stock Overlay */}
       {isOutOfStock && (
         <div className="absolute inset-0 bg-black bg-opacity-40 rounded-[10px] flex items-center justify-center z-20">
-          <span className="text-white font-bold text-lg bg-red-600 px-3 py-1 rounded">
+          <span className="text-white font-bold text-sm sm:text-base md:text-lg bg-red-600 px-2 sm:px-3 py-1 rounded">
             OUT OF STOCK
           </span>
         </div>
@@ -111,19 +116,24 @@ const ProductCard: React.FC<ProductProps> = ({
 
       {/* Discount Badge */}
       {!!discount && !isOutOfStock && (
-        <div className="absolute top-0 right-0 bg-red-500 text-white text-[12px] px-3 py-[3px] rounded-bl-lg font-semibold shadow-md z-10">
+        <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] sm:text-[12px] px-2 sm:px-3 py-1 sm:py-[3px] rounded-bl-lg font-semibold shadow-md z-10">
           -{discount.percentage}%
         </div>
       )}
 
       {/* Product Image */}
-      <div className="py-[15px] flex items-center justify-center h-[65%] relative">
+      <div className="py-2 sm:py-3 md:py-[15px] flex items-center justify-center h-[60%] sm:h-[65%] relative">
         <Image
           src={imageUrl}
           className="select-none object-contain"
           alt={`${productName} - ${subtitle}`}
-          width={145}
-          height={145}
+          width={100}
+          height={100}
+          sizes="(max-width: 640px) 100px, (max-width: 768px) 120px, 145px"
+          style={{
+            width: '100px',
+            height: '100px',
+          }}
           onError={(e) => {
             console.warn(`Failed to load image for product ${productId}:`, imageUrl);
             // You can set a fallback image here if needed
@@ -133,40 +143,40 @@ const ProductCard: React.FC<ProductProps> = ({
       </div>
 
       {/* Product Info */}
-      <div className="leading-[22px] h-[50%] flex flex-col justify-end select-none text-left w-full">
+      <div className="leading-tight sm:leading-[22px] h-[40%] sm:h-[50%] flex flex-col justify-end select-none text-left w-full">
         {/* Product Name */}
-        <p className="text-[16px] leading-[21px] font-medium line-clamp-2 min-h-[42px]">
+        <p className="text-sm sm:text-[15px] md:text-[16px] leading-tight sm:leading-[21px] font-medium line-clamp-2 min-h-[36px] sm:min-h-[42px]">
           {productName}
         </p>
         
         {/* Product Subtitle */}
-        <p className="text-[15px] px-[7px] leading-[17px] mb-[3px] text-[#E08E26] line-clamp-1">
+        <p className="text-xs sm:text-[13px] md:text-[15px] px-1 sm:px-[7px] leading-tight mb-1 sm:mb-[3px] text-[#E08E26] line-clamp-1">
           {subtitle}
         </p>
 
         {/* Price Section */}
         <div>
           {!!discountPrice ? (
-            <div className="text-[23px] mt-[5px]">
-              <p className="line-through text-gray-400 text-[16px]">
+            <div className="text-lg sm:text-xl md:text-[23px] mt-1 sm:mt-[5px]">
+              <p className="line-through text-gray-400 text-sm sm:text-[14px] md:text-[16px]">
                 Rs. {unitPrice}
               </p>
               <p className="font-semibold text-green-600">
                 Rs. {discountPrice}
               </p>
               {MRP && MRP > unitPrice && (
-                <p className="line-through text-gray-300 text-[14px]">
+                <p className="line-through text-gray-300 text-xs sm:text-[12px] md:text-[14px]">
                   MRP: Rs. {MRP}
                 </p>
               )}
             </div>
           ) : (
             <div>
-              <p className="text-[23px] mt-[5px] font-semibold">
+              <p className="text-lg sm:text-xl md:text-[23px] mt-1 sm:mt-[5px] font-semibold">
                 Rs. {unitPrice}
               </p>
               {MRP && MRP > unitPrice && (
-                <p className="line-through text-gray-400 text-[16px]">
+                <p className="line-through text-gray-400 text-sm sm:text-[14px] md:text-[16px]">
                   MRP: Rs. {MRP}
                 </p>
               )}
@@ -174,9 +184,9 @@ const ProductCard: React.FC<ProductProps> = ({
           )}
 
           {/* Rating Section */}
-          <div className="flex flex-row items-center space-x-[5px] mt-1">
-            <Image src={Star} alt="Star" className="h-[15px] w-[15px]" />
-            <p className="text-gray-700 text-[15px]">
+          <div className="flex flex-row items-center space-x-1 sm:space-x-[5px] mt-1">
+            <Image src={Star} alt="Star" className="h-3 w-3 sm:h-[13px] sm:w-[13px] md:h-[15px] md:w-[15px]" />
+            <p className="text-gray-700 text-xs sm:text-[13px] md:text-[15px]">
               {averageRating > 0 ? averageRating.toFixed(1) : "0.0"} ({actualReviewCount})
             </p>
           </div>
@@ -184,7 +194,7 @@ const ProductCard: React.FC<ProductProps> = ({
           {/* Stock Status */}
           {status && (
             <div className="mt-1">
-              <p className={`text-[13px] font-medium ${
+              <p className={`text-xs sm:text-[11px] md:text-[13px] font-medium ${
                 status === "In Stock" 
                   ? "text-green-600" 
                   : status === "Low Stock" 

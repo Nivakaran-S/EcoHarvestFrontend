@@ -81,6 +81,9 @@ const CategoryPage: React.FC = () => {
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(true); // Added
   const [discounts, setDiscounts] = useState<Discount[]>([]);
 
+  // Mobile filters state
+  const [showMobileFilters, setShowMobileFilters] = useState<boolean>(false);
+
   // Filters
   const [minPrice, setMinPrice] = useState<number>(0);
   const [maxPrice, setMaxPrice] = useState<number>(0);
@@ -240,19 +243,137 @@ const CategoryPage: React.FC = () => {
   const handleCategoryClick = (selectedCategoryId: string, selectedCategoryName: string) => {
     // Update URL with new category parameters
     router.push(`/category?categoryId=${selectedCategoryId}&categoryName=${encodeURIComponent(selectedCategoryName)}`);
+    setShowMobileFilters(false); // Close mobile filters
   };
 
   const handleAllCategoriesClick = () => {
     // Update URL to show all categories
     router.push(`/category?categoryName=All%20Categories`);
+    setShowMobileFilters(false); // Close mobile filters
   };
+
+  // Mobile filter toggle
+  const toggleMobileFilters = () => {
+    setShowMobileFilters(!showMobileFilters);
+  };
+
+  // Filter component (reusable for both desktop and mobile)
+  const FiltersContent = () => (
+    <div className="mt-[15px] space-y-6">
+      {/* Category */}
+      <div>
+        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-3">Category</h3>
+        <div className="space-y-2">
+          {categoriesLoading ? (
+            <div className="text-gray-500 text-sm">Loading categories...</div>
+          ) : (
+            <>
+              {/* All Categories option */}
+              <p
+                className={`cursor-pointer text-sm md:text-base py-1 px-2 rounded transition-colors ${
+                  (!categoryId || categoryName === "All Categories") 
+                    ? "text-[#FDAA1C] font-semibold bg-orange-50" 
+                    : "hover:text-gray-500 hover:bg-gray-50"
+                }`}
+                onClick={handleAllCategoriesClick}
+              >
+                All Categories
+              </p>
+              
+              {/* Dynamic categories */}
+              {productCategories.map((category) => (
+                <p
+                  key={category._id}
+                  className={`cursor-pointer text-sm md:text-base py-1 px-2 rounded transition-colors ${
+                    categoryId === category._id 
+                      ? "text-[#FDAA1C] font-semibold bg-orange-50" 
+                      : "hover:text-gray-500 hover:bg-gray-50"
+                  }`}
+                  onClick={() => handleCategoryClick(category._id, category.name)}
+                >
+                  {category.name}
+                </p>
+              ))}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Price Range */}
+      <div>
+        <h3 className="text-lg font-semibold text-gray-800 mb-3">Price</h3>
+        <div className="space-y-3">
+          <div>
+            <label className="text-sm text-gray-600 mb-1 block">Min Price</label>
+            <input
+              type="range"
+              min={minPrice}
+              max={maxPrice}
+              value={priceRange[0]}
+              onChange={(e) =>
+                setPriceRange([Number(e.target.value), priceRange[1]])
+              }
+              className="w-full accent-[#FDAA1C] h-2 cursor-pointer"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-gray-600 mb-1 block">Max Price</label>
+            <input
+              type="range"
+              min={minPrice}
+              max={maxPrice}
+              value={priceRange[1]}
+              onChange={(e) =>
+                setPriceRange([priceRange[0], Number(e.target.value)])
+              }
+              className="w-full accent-[#FDAA1C] h-2 cursor-pointer"
+            />
+          </div>
+          <div className="flex justify-between text-sm font-medium bg-gray-100 p-2 rounded">
+            <span>Rs. {priceRange[0]}</span>
+            <span>Rs. {priceRange[1]}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Ratings */}
+      <div>
+        <h3 className="text-lg font-semibold text-gray-800 mb-3">Customer Reviews</h3>
+        <div className="space-y-2">
+          {[5, 4, 3, 2, 1].map((star) => (
+            <div
+              key={star}
+              className={`flex items-center cursor-pointer p-2 rounded transition-colors ${
+                minRating === star ? 'bg-orange-50 border border-[#FDAA1C]' : 'hover:bg-gray-50'
+              }`}
+              onClick={() => setMinRating(minRating === star ? 0 : star)}
+            >
+              <div className="flex items-center">
+                {Array.from({ length: star }).map((_, idx) => (
+                  <Image
+                    key={idx}
+                    src={Star}
+                    alt="Star"
+                    width={12}
+                    height={12}
+                    className="md:w-4 md:h-4"
+                  />
+                ))}
+                <span className="ml-2 text-sm">& Up</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   if (loading) {
     return <Loading/>;
   }
 
   return (
-    <div className="bg-white flex flex-col items-center justify-center">
+    <div className="bg-white flex text-black overflow-x-hidden flex-col items-center justify-center">
       <Navigation
         numberOfCartItems={numberOfCartItems}
         productsDetail={productsDetail}
@@ -261,118 +382,64 @@ const CategoryPage: React.FC = () => {
         userLoggedIn={userLoggedIn}
       />
 
-      <div className="pt-[15vh] bg-white w-[94vw] flex justify-center text-black">
-        <div className="w-[95%] flex flex-row py-4">
-          {/* Sidebar Filters */}
-          <div className="w-1/6 pr-4">
-            <div className="sticky top-24 space-y-6">
-              {/* Category */}
-              <div>
-                <h3 className="text-2xl font-semibold text-gray-800">Category</h3>
-                <div className="mt-2 space-y-[5px]">
-                  {categoriesLoading ? (
-                    <div className="text-gray-500">Loading categories...</div>
-                  ) : (
-                    <>
-                      {/* All Categories option */}
-                      <p
-                        className={`cursor-pointer ${
-                          (!categoryId || categoryName === "All Categories") ? "text-[#FDAA1C] font-semibold" : "hover:text-gray-500"
-                        }`}
-                        onClick={handleAllCategoriesClick}
-                      >
-                        All Categories
-                      </p>
-                      
-                      {/* Dynamic categories */}
-                      {productCategories.map((category) => (
-                        <p
-                          key={category._id}
-                          className={`cursor-pointer ${
-                            categoryId === category._id ? "text-[#FDAA1C]  " : "hover:text-gray-500"
-                          }`}
-                          onClick={() => handleCategoryClick(category._id, category.name)}
-                        >
-                          {category.name}
-                        </p>
-                      ))}
-                    </>
-                  )}
-                </div>
+      {/* Mobile Filter Overlay */}
+      {showMobileFilters && (
+        <div className="fixed inset-0  z-50 md:hidden">
+          <div onClick={() => setShowMobileFilters(false)} className="bg-black h-[100%] opacity-50"></div>
+          <div className="fixed left-0 top-0 h-full w-80 bg-white shadow-lg z-51 overflow-y-auto">
+            <div className="p-4">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl cursor-pointer font-semibold">Filters</h2>
+                <button
+                  onClick={toggleMobileFilters}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
+              <FiltersContent />
+            </div>
+          </div>
+        </div>
+      )}
 
-              {/* Price Range */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">Price</h3>
-                <div className="mt-2 space-y-2">
-                  <input
-                    type="range"
-                    min={minPrice}
-                    max={maxPrice}
-                    value={priceRange[0]}
-                    onChange={(e) =>
-                      setPriceRange([Number(e.target.value), priceRange[1]])
-                    }
-                    className="w-full accent-[#FDAA1C] h-1.5 cursor-pointer"
-                  />
-                  <input
-                    type="range"
-                    min={minPrice}
-                    max={maxPrice}
-                    value={priceRange[1]}
-                    onChange={(e) =>
-                      setPriceRange([priceRange[0], Number(e.target.value)])
-                    }
-                    className="w-full accent-[#FDAA1C] h-1.5 cursor-pointer"
-                  />
-                  <div className="flex justify-between text-sm mt-1">
-                    <span>Rs. {priceRange[0]}</span>
-                    <span>Rs. {priceRange[1]}</span>
-                  </div>
-                </div>
-              </div>
-
-              
-
-              {/* Ratings */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">Customer Reviews</h3>
-                <div className="space-y-2 mt-2">
-                  {[5, 4, 3, 2, 1].map((star) => (
-                    <div
-                      key={star}
-                      className="flex items-center cursor-pointer"
-                      onClick={() => setMinRating(star)}
-                    >
-                      {Array.from({ length: star }).map((_, idx) => (
-                        <Image
-                          key={idx}
-                          src={Star}
-                          alt="Star"
-                          width={15}
-                          height={15}
-                        />
-                      ))}
-                      <span className="ml-1 text-sm">& Up</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+      <div className="pt-[12vh] md:pt-[15vh] bg-white w-full px-3 md:w-[94vw] flex justify-center text-black">
+        <div className="w-full max-w-7xl flex flex-col md:flex-row py-4 gap-4">
+          
+          {/* Desktop Sidebar Filters */}
+          <div className="hidden md:block md:w-1/6 pr-4">
+            <div className="sticky top-24">
+              <FiltersContent />
             </div>
           </div>
 
-          {/* Products Grid */}
-          <div className="w-5/6 pl-4 border-l border-gray-300">
-            <div className="flex justify-between items-center bg-gray-200 ring-[1px] ring-gray-400 rounded px-4 py-2 mb-4">
-              <p className="text-sm">
-                Showing {sortedProducts.length} results for {categoryName}
-              </p>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-800 ">Sort by:</span>
+          {/* Products Section */}
+          <div className="w-full mt-[20px] md:w-5/6 md:pl-4 md:border-l md:border-gray-300">
+            
+            {/* Header with Filter Button and Sort */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-100 border border-gray-300 rounded-lg px-4 py-3 mb-4 gap-3">
+              <div className="flex items-center justify-between w-full sm:w-auto">
+                <p className="text-sm font-medium">
+                  {sortedProducts.length} results for <span className="font-semibold">{categoryName}</span>
+                </p>
+                
+                {/* Mobile Filter Button */}
+                <button
+                  onClick={toggleMobileFilters}
+                  className="md:hidden bg-[#FDAA1C] cursor-pointer text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-[#e6941a] transition-colors"
+                >
+                  Filters
+                </button>
+              </div>
+              
+              <div className="flex items-center space-x-2 w-full sm:w-auto">
+                <span className="text-sm text-gray-700 font-medium">Sort by:</span>
                 <select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value)}
-                  className="bg-transparent border border-gray-800 text-gray-800 rounded  px-2 py-1 focus:outline-none cursor-pointer"
+                  className="bg-white border border-gray-400 text-gray-800 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FDAA1C] cursor-pointer min-w-0 flex-1 sm:flex-none"
                 >
                   <option>Featured</option>
                   <option>Price: Low to High</option>
@@ -382,9 +449,13 @@ const CategoryPage: React.FC = () => {
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold mb-6">Results for {categoryName}</h2>
+            {/* Results Title */}
+            <h2 className="text-xl  md:text-2xl font-bold mb-6 px-1">
+              Results for <span className="text-[#FDAA1C]">{categoryName}</span>
+            </h2>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {/* Products Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 md:gap-4">
               {sortedProducts.length > 0 ? (
                 sortedProducts.map((product) => (
                   <Product
@@ -398,8 +469,14 @@ const CategoryPage: React.FC = () => {
                   />
                 ))
               ) : (
-                <div className="col-span-full text-center py-10">
-                  <p className="text-gray-600">No products match your filters.</p>
+                <div className="col-span-full text-center py-12">
+                  <div className="text-gray-400 mb-4">
+                    <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    </svg>
+                  </div>
+                  <p className="text-lg text-gray-600 font-medium">No products found</p>
+                  <p className="text-sm text-gray-500 mt-2">Try adjusting your filters or search criteria</p>
                 </div>
               )}
             </div>

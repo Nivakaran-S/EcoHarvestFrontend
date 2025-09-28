@@ -69,7 +69,7 @@ const AllCategories: React.FC = () => {
         </div>
 
         <div className="flex items-center justify-center">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 w-[91%] gap-[15px] pt-[15px] pb-[45px]">
+          <div className="grid grid-cols-2 flex  items-center sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 w-[90%] gap-[15px] pt-[15px] pb-[45px]">
             {productCategories.map((category) => (
               <div
                 key={category._id}

@@ -56,9 +56,9 @@ const AllNavCategories: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex w-full h-[500px] bg-white shadow-md rounded-2xl overflow-hidden">
+    <div className="flex w-full sm:h-[500px] bg-white shadow-md rounded-2xl overflow-hidden">
       {/* Category list */}
-      <div className="flex flex-col w-1/2 bg-gray-50 border-r overflow-y-auto">
+      <div className="flex flex-col  sm:w-1/2 bg-gray-50 sm:border-r overflow-y-auto">
         {loading ? (
           <div className="p-4 text-gray-500">Loading categories…</div>
         ) : (
@@ -75,7 +75,7 @@ const AllNavCategories: React.FC = () => {
       </div>
 
       {/* Preview panel */}
-      <div className="relative w-1/2 h-full">
+      <div className="relative hidden sm:flex w-1/2 h-full">
         {categoryImageMap[navCategorySelect] ? (
           <Image
             src={categoryImageMap[navCategorySelect]}

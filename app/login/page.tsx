@@ -55,7 +55,6 @@ const Login: React.FC = () => {
   const handleLoginClick = (): void => {
     setLoginClick(!loginClick);
   };
-  
 
   const handleLoginSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
@@ -162,19 +161,6 @@ const Login: React.FC = () => {
     }
 
     if (!comUserName || !comPassword || !comRepeatPassword) {
-      console.log(
-        comFirstName,
-        comLastName,
-        comAddress,
-        comDateOfBirth,
-        comGender,
-        comEmail,
-        comPhoneNumber,
-        comUserName,
-        comPassword,
-        comCompanyName,
-        comCategory
-      );
       setRegistrationError(true);
       return;
     }
@@ -203,26 +189,24 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleRegistrationOne = (): void => {
-    setRegistrationPage(1);
-  };
-
-  const handleRegistrationTwo = (): void => {
-    setRegistrationPage(2);
-  };
-
   return (
-    <div className="w-[100%] flex items-center justify-center h-[100vh] text-black">
-      <div className="w-[38.2%] h-[100%] bg-gray-200 flex ring-[0.5px] ring-gray-500 items-center justify-center">
-        <div className="w-[43%]">
-          <p className="text-[35px] mb-[20px]">Login</p>
-          <div className="flex flex-col space-y-[17px]">
+    <div className="w-full flex flex-col lg:flex-row items-center justify-center min-h-screen text-black bg-gray-100 lg:bg-white relative overflow-hidden">
+      {/* Mobile Header Logo */}
+      <div className="lg:hidden w-full flex items-center justify-center py-6 bg-[#101010]">
+        <Image height={120} width={200} src={EcoHarvest} alt="EcoHarvest Logo" />
+      </div>
+
+      {/* Login Section */}
+      <div className={`w-full lg:w-[38.2%] h-auto lg:h-[100vh] bg-gray-200 flex ring-0 lg:ring-[0.5px] ring-gray-500 items-center justify-center py-6 lg:py-0 ${loginClick ? 'hidden lg:flex' : 'flex'}`}>
+        <div className="w-[90%] sm:w-[70%] lg:w-[43%] px-4 lg:px-0">
+          <p className="text-2xl sm:text-3xl lg:text-[35px] mb-4 lg:mb-[20px] text-center lg:text-left">Login</p>
+          <div className="flex flex-col space-y-4 lg:space-y-[17px]">
             <div className="flex relative flex-col">
               <input
                 value={username}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
                 type="text"
-                className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                 placeholder=" "
               />
               <label
@@ -231,12 +215,12 @@ const Login: React.FC = () => {
                     peer-placeholder-shown:top-1/2              
                     peer-placeholder-shown:translate-y-[-50%]   
                     peer-focus:top-0                            
-                    peer-focus:text-[13px]
+                    peer-focus:text-[11px] lg:peer-focus:text-[13px]
                     peer-focus:text-blue-500
                     peer-focus:bg-gray-200
                     peer-not-placeholder-shown:top-0            
                     top-0                                       
-                    text-[13px]
+                    text-[11px] lg:text-[13px]
                     pointer-events-none"
               >
                 Username
@@ -248,7 +232,7 @@ const Login: React.FC = () => {
                 value={password}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                 type="password"
-                className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                 placeholder=" "
               />
               <label
@@ -257,12 +241,12 @@ const Login: React.FC = () => {
                     peer-placeholder-shown:top-1/2              
                     peer-placeholder-shown:translate-y-[-50%]   
                     peer-focus:top-0                            
-                    peer-focus:text-[13px]
+                    peer-focus:text-[11px] lg:peer-focus:text-[13px]
                     peer-focus:text-blue-500
                     peer-focus:bg-gray-200
                     peer-not-placeholder-shown:top-0            
                     top-0                                       
-                    text-[13px]
+                    text-[11px] lg:text-[13px]
                     pointer-events-none"
               >
                 Password
@@ -272,11 +256,11 @@ const Login: React.FC = () => {
           <div className="flex flex-col items-center justify-center">
             <div
               onClick={handleLoginSubmit}
-              className="flex mt-[19px] ring-yellow-700 ring-[0.5px] flex-col items-center justify-center w-[100%] bg-[#FDAA1C] text-[15px] cursor-pointer py-[4px] rounded-[3px]"
+              className="flex mt-4 lg:mt-[19px] ring-yellow-700 ring-[0.5px] flex-col items-center justify-center w-full bg-[#FDAA1C] text-sm lg:text-[15px] cursor-pointer py-3 lg:py-[4px] rounded-[3px] hover:bg-yellow-500 transition-colors"
             >
-              <p>Login</p>
+              <p>{isLoading ? 'Logging in...' : 'Login'}</p>
             </div>
-            <p className="mt-[2px] text-[13px]">
+            <p className="mt-2 lg:mt-[2px] text-xs lg:text-[13px] text-center">
               Don&apos;t have an account?
               <span
                 onClick={handleLoginClick}
@@ -287,40 +271,44 @@ const Login: React.FC = () => {
             </p>
           </div>
           {loginError && (
-            <div className="relative flex mt-[10px] items-center justify-center text-red-900 text-[13px] py-[3px] rounded-[3px] ring-[0.5px] ring-red-900 bg-red-400">
+            <div className="relative flex mt-[10px] items-center justify-center text-red-900 text-xs lg:text-[13px] py-[3px] rounded-[3px] ring-[0.5px] ring-red-900 bg-red-400">
               <p>Invalid Username or Password</p>
             </div>
           )}
-          <div>
-            <div>
-              <p>Customer</p>
-              <p>Username: aaa</p>
-              <p>Password: aaa</p>
+          <div className="bg-white rounded-[10px] ring-[0.5px] ring-[#101010] px-3 lg:px-[15px] py-3 lg:py-[10px] mt-[10px]">
+            <div className="mb-2">
+              <p className="text-base lg:text-[20px] font-bold">Customer</p>
+              <p className="text-sm lg:text-base">Username: aaa</p>
+              <p className="text-sm lg:text-base">Password: aaa</p>
+            </div>
+            <div className="mb-2">
+              <p className="text-base lg:text-[20px] font-bold">Vendor</p>
+              <p className="text-sm lg:text-base">Username: test</p>
+              <p className="text-sm lg:text-base">Password: test</p>
             </div>
             <div>
-              <p>Vendor</p>
-              <p>Username: test</p>
-              <p>Password: test</p>
-            </div>
-            <div>
-              <p>Admin</p>
-              <p>Username: tony</p>
-              <p>Password: tony</p>
+              <p className="text-base lg:text-[20px] font-bold">Admin</p>
+              <p className="text-sm lg:text-base">Username: tony</p>
+              <p className="text-sm lg:text-base">Password: tony</p>
             </div>
           </div>
         </div>
       </div>
-      <div className="w-[23.6%] h-[100%] bg-gray-200 flex ring-[0.5px] ring-gray-500 items-center justify-center"></div>
-      <div className="w-[38.2%] h-[100%] bg-gray-200 flex ring-[0.5px] ring-gray-500 items-center justify-center">
-        <div className="w-[50%]">
-          <p className="text-[35px] mb-[20px]">Register</p>
-          <div className="flex flex-col space-y-[10px]">
-            <div className="flex relative mb-[5px] flex-row space-x-[3px] bg-gray-400 rounded-[10px] p-[3px] ring-[0.5px] ring-gray-600 items-center">
+
+      {/* Desktop Middle Section */}
+      <div className="hidden lg:flex w-[23.6%] h-full bg-gray-200 ring-[0.5px] ring-gray-500 items-center justify-center"></div>
+
+      {/* Register Section */}
+      <div className={`w-full lg:w-[38.2%] h-auto lg:h-[100vh] bg-gray-200 flex ring-0 lg:ring-[0.5px] ring-gray-500 items-center justify-center py-6 lg:py-0 ${!loginClick ? 'hidden lg:flex' : 'flex'}`}>
+        <div className="w-[90%] sm:w-[70%] lg:w-[50%] px-4 lg:px-0 max-h-screen overflow-y-auto">
+          <p className="text-2xl sm:text-3xl lg:text-[35px] mb-4 lg:mb-[20px] text-center lg:text-left">Register</p>
+          <div className="flex flex-col space-y-3 lg:space-y-[10px]">
+            <div className="flex relative mb-2 lg:mb-[5px] flex-row space-x-[3px] bg-gray-400 rounded-[10px] p-[3px] ring-[0.5px] ring-gray-600 items-center">
               <div
                 onClick={handleRegistrationTypeClick}
                 className={`${
                   registrationType === "Individual" ? "text-white" : ""
-                } py-[5px] z-[10] w-[50%] flex items-center justify-center cursor-pointer`}
+                } py-2 lg:py-[5px] z-[10] w-[50%] flex items-center justify-center cursor-pointer text-sm lg:text-base`}
               >
                 <p>Individual</p>
               </div>
@@ -328,21 +316,22 @@ const Login: React.FC = () => {
                 onClick={handleRegistrationTypeClick}
                 className={`${
                   registrationType === "Business" ? "text-white" : ""
-                } w-[50%] z-[10] flex items-center justify-center cursor-pointer`}
+                } w-[50%] z-[10] flex items-center justify-center cursor-pointer text-sm lg:text-base`}
               >
                 <p>Business</p>
               </div>
               <div
                 className={`${
                   registrationType === "Individual" ? "" : "right-[6px]"
-                } transition-transform animation duration-500 bg-gray-500 ring-[0.5px] ring-gray-700 absolute h-[30px] rounded-[5px] py-[5px] w-[50%] flex items-center justify-center cursor-pointer`}
+                } transition-transform animation duration-500 bg-gray-500 ring-[0.5px] ring-gray-700 absolute h-[30px] lg:h-[30px] rounded-[5px] py-[5px] w-[50%] flex items-center justify-center cursor-pointer`}
               ></div>
             </div>
 
-            <div className={`${registrationType === "Individual" ? "flex flex-col space-y-[10px]" : "hidden"}`}>
+            {/* Individual Registration */}
+            <div className={`${registrationType === "Individual" ? "flex flex-col space-y-3 lg:space-y-[10px]" : "hidden"}`}>
               {registrationPage === 1 ? (
                 <div>
-                  <div className="flex flex-row items-center justify-center">
+                  <div className="flex flex-row items-center justify-center mb-4">
                     <div className="flex items-center cursor-pointer justify-center w-[20px] pt-[1.5px] ring-[1px] ring-black text-[14px] h-[20px] rounded-full bg-yellow-500 z-[10]">
                       <p>1</p>
                     </div>
@@ -361,16 +350,16 @@ const Login: React.FC = () => {
                       <p>3</p>
                     </div>
                   </div>
-                  <div className="flex flex-col space-y-[15px]">
+                  <div className="flex flex-col space-y-3 lg:space-y-[15px]">
                     <div>
-                      <p>Personal Information</p>
+                      <p className="text-sm lg:text-base">Personal Information</p>
                     </div>
                     <div className="flex relative flex-col">
                       <input
                         type="text"
                         value={regFirstName}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegFirstName(e.target.value)}
-                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                         placeholder=" "
                       />
                       <label
@@ -379,12 +368,12 @@ const Login: React.FC = () => {
                             peer-placeholder-shown:top-1/2              
                             peer-placeholder-shown:translate-y-[-50%]   
                             peer-focus:top-0                            
-                            peer-focus:text-[13px]
+                            peer-focus:text-[11px] lg:peer-focus:text-[13px]
                             peer-focus:text-blue-500
                             peer-focus:bg-gray-200
                             peer-not-placeholder-shown:top-0            
                             top-0                                       
-                            text-[13px]
+                            text-[11px] lg:text-[13px]
                             pointer-events-none"
                       >
                         First name
@@ -396,7 +385,7 @@ const Login: React.FC = () => {
                         type="text"
                         value={regLastName}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegLastName(e.target.value)}
-                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                         placeholder=" "
                       />
                       <label
@@ -405,23 +394,24 @@ const Login: React.FC = () => {
                             peer-placeholder-shown:top-1/2              
                             peer-placeholder-shown:translate-y-[-50%]   
                             peer-focus:top-0                            
-                            peer-focus:text-[13px]
+                            peer-focus:text-[11px] lg:peer-focus:text-[13px]
                             peer-focus:text-blue-500
                             peer-focus:bg-gray-200
                             peer-not-placeholder-shown:top-0            
                             top-0                                       
-                            text-[13px]
+                            text-[11px] lg:text-[13px]
                             pointer-events-none"
                       >
                         Last name
                       </label>
                     </div>
+
                     <div className="flex relative flex-col">
                       <input
                         type="date"
                         value={regDateOfBirth}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegDateOfBirth(e.target.value)}
-                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                         placeholder=" "
                       />
                       <label
@@ -430,12 +420,12 @@ const Login: React.FC = () => {
                             peer-placeholder-shown:top-1/2              
                             peer-placeholder-shown:translate-y-[-50%]   
                             peer-focus:top-0                            
-                            peer-focus:text-[13px]
+                            peer-focus:text-[11px] lg:peer-focus:text-[13px]
                             peer-focus:text-blue-500
                             peer-focus:bg-gray-200
                             peer-not-placeholder-shown:top-0            
                             top-0                                       
-                            text-[13px]
+                            text-[11px] lg:text-[13px]
                             pointer-events-none"
                       >
                         Date of birth
@@ -443,13 +433,11 @@ const Login: React.FC = () => {
                     </div>
 
                     <div className="flex relative flex-col">
-                      <div
-                        className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none bg-white"
-                      >
+                      <div className="peer ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none bg-white">
                         <select
                           value={regGender}
                           onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setRegGender(e.target.value)}
-                          className="w-full focus:outline-none"
+                          className="w-full focus:outline-none text-sm lg:text-base"
                         >
                           <option value="" disabled>
                             Select Gender
@@ -465,7 +453,7 @@ const Login: React.FC = () => {
                         type="text"
                         value={regAddress}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegAddress(e.target.value)}
-                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                         placeholder=" "
                       />
                       <label
@@ -474,12 +462,12 @@ const Login: React.FC = () => {
                             peer-placeholder-shown:top-1/2              
                             peer-placeholder-shown:translate-y-[-50%]   
                             peer-focus:top-0                            
-                            peer-focus:text-[13px]
+                            peer-focus:text-[11px] lg:peer-focus:text-[13px]
                             peer-focus:text-blue-500
                             peer-focus:bg-gray-200
                             peer-not-placeholder-shown:top-0            
                             top-0                                       
-                            text-[13px]
+                            text-[11px] lg:text-[13px]
                             pointer-events-none"
                       >
                         Address
@@ -502,11 +490,11 @@ const Login: React.FC = () => {
                           setRegistrationError(true);
                         }
                       }}
-                      className="flex mt-[19px] ring-yellow-700 ring-[0.5px] flex-col items-center justify-center w-[100%] bg-[#FDAA1C] text-[15px] cursor-pointer py-[4px] rounded-[3px]"
+                      className="flex mt-4 lg:mt-[19px] ring-yellow-700 ring-[0.5px] flex-col items-center justify-center w-full bg-[#FDAA1C] text-sm lg:text-[15px] cursor-pointer py-3 lg:py-[4px] rounded-[3px] hover:bg-yellow-500 transition-colors"
                     >
                       <p>Continue</p>
                     </div>
-                    <p className="mt-[2px] text-[13px]">
+                    <p className="mt-2 lg:mt-[2px] text-xs lg:text-[13px] text-center">
                       Already have an account?
                       <span
                         onClick={handleLoginClick}
@@ -516,124 +504,15 @@ const Login: React.FC = () => {
                       </span>
                     </p>
                     {registrationError && (
-                      <div className="bg-red-300 mt-[5px] py-[3px] px-[20px] ring-[1px] ring-red-800 text-red-950 rounded-[5px]">
-                        <p>Please fill all the fields</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : registrationPage === 2 ? (
-                <div className="flex flex-col space-y-[13px]">
-                  <div className="flex flex-row items-center justify-center">
-                    <div
-                      onClick={() => setRegistrationPage(1)}
-                      className="flex items-center cursor-pointer justify-center w-[20px] pt-[1.5px] ring-[0.5px] ring-gray-600 text-[14px] h-[20px] rounded-full bg-gray-400"
-                    >
-                      <p>1</p>
-                    </div>
-                    <div className="w-[10px] h-[3px] bg-gray-600"></div>
-                    <div
-                      className="flex items-center cursor-pointer justify-center w-[20px] pt-[1.5px] ring-[1px] ring-black text-[14px] h-[20px] rounded-full bg-yellow-500 z-[10]"
-                    >
-                      <p>2</p>
-                    </div>
-                    <div className="w-[10px] h-[3px] bg-gray-600"></div>
-                    <div
-                      onClick={() => setRegistrationPage(3)}
-                      className="flex items-center cursor-pointer justify-center w-[20px] pt-[1.5px] ring-[0.5px] ring-gray-600 text-[14px] h-[20px] rounded-full bg-gray-400"
-                    >
-                      <p>3</p>
-                    </div>
-                  </div>
-                  <div>
-                    <p>Contact Information</p>
-                  </div>
-                  <div className="flex relative flex-col">
-                    <input
-                      type="text"
-                      value={regEmail}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegEmail(e.target.value)}
-                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
-                      placeholder=" "
-                    />
-                    <label
-                      className="absolute left-[10px] text-gray-500 rounded-[5px] px-[10px] bg-white transition-all duration-200 transform
-                          -translate-y-1/2                            
-                          peer-placeholder-shown:top-1/2              
-                          peer-placeholder-shown:translate-y-[-50%]   
-                          peer-focus:top-0                            
-                          peer-focus:text-[13px]
-                          peer-focus:text-blue-500
-                          peer-focus:bg-gray-200
-                          peer-not-placeholder-shown:top-0            
-                          top-0                                       
-                          text-[13px]
-                          pointer-events-none"
-                    >
-                      Email
-                    </label>
-                  </div>
-
-                  <div className="flex relative flex-col">
-                    <input
-                      type="text"
-                      value={regPhoneNumber}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegPhoneNumber(e.target.value)}
-                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
-                      placeholder=" "
-                    />
-                    <label
-                      className="absolute left-[10px] text-gray-500 rounded-[5px] px-[10px] bg-white transition-all duration-200 transform
-                          -translate-y-1/2                            
-                          peer-placeholder-shown:top-1/2              
-                          peer-placeholder-shown:translate-y-[-50%]   
-                          peer-focus:top-0                            
-                          peer-focus:text-[13px]
-                          peer-focus:text-blue-500
-                          peer-focus:bg-gray-200
-                          peer-not-placeholder-shown:top-0            
-                          top-0                                       
-                          text-[13px]
-                          pointer-events-none"
-                    >
-                      Phone number
-                    </label>
-                  </div>
-
-                  <div className="flex flex-col items-center justify-center">
-                    <div
-                      onClick={() => {
-                        if (regEmail && regPhoneNumber) {
-                          setRegistrationPage(3);
-                          setRegistrationError(false);
-                        } else {
-                          setRegistrationError(true);
-                        }
-                      }}
-                      className="flex mt-[19px] ring-yellow-700 ring-[0.5px] flex-col items-center justify-center w-[100%] bg-[#FDAA1C] text-[15px] cursor-pointer py-[4px] rounded-[3px]"
-                    >
-                      <p>Continue</p>
-                    </div>
-                    <p className="mt-[2px] text-[13px]">
-                      Already have an account?
-                      <span
-                        onClick={handleLoginClick}
-                        className="ml-[2px] text-blue-800 cursor-pointer"
-                      >
-                        Login
-                      </span>
-                    </p>
-
-                    {registrationError && (
-                      <div className="bg-red-300 mt-[5px] py-[3px] px-[20px] ring-[1px] ring-red-800 text-red-950 rounded-[5px]">
+                      <div className="bg-red-300 mt-[5px] py-[3px] px-4 lg:px-[20px] ring-[1px] ring-red-800 text-red-950 rounded-[5px] text-xs lg:text-sm">
                         <p>Please fill all the fields</p>
                       </div>
                     )}
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col space-y-[13px]">
-                  <div className="flex flex-row items-center justify-center">
+                <div className="flex flex-col space-y-3 lg:space-y-[13px]">
+                  <div className="flex flex-row items-center justify-center mb-4">
                     <div
                       onClick={() => setRegistrationPage(1)}
                       className="flex items-center cursor-pointer justify-center w-[20px] pt-[1.5px] ring-[0.5px] ring-gray-600 text-[14px] h-[20px] rounded-full bg-gray-400"
@@ -648,21 +527,19 @@ const Login: React.FC = () => {
                       <p>2</p>
                     </div>
                     <div className="w-[10px] h-[3px] bg-gray-600"></div>
-                    <div
-                      className="flex items-center cursor-pointer justify-center w-[20px] pt-[1.5px] ring-[1px] ring-black text-[14px] h-[20px] rounded-full bg-yellow-500 z-[10]"
-                    >
+                    <div className="flex items-center cursor-pointer justify-center w-[20px] pt-[1.5px] ring-[1px] ring-black text-[14px] h-[20px] rounded-full bg-yellow-500 z-[10]">
                       <p>3</p>
                     </div>
                   </div>
                   <div>
-                    <p>Account Information</p>
+                    <p className="text-sm lg:text-base">Account Information</p>
                   </div>
                   <div className="flex relative flex-col">
                     <input
                       type="text"
                       value={regUserName}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegUserName(e.target.value)}
-                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                       placeholder=" "
                     />
                     <label
@@ -671,12 +548,12 @@ const Login: React.FC = () => {
                           peer-placeholder-shown:top-1/2              
                           peer-placeholder-shown:translate-y-[-50%]   
                           peer-focus:top-0                            
-                          peer-focus:text-[13px]
+                          peer-focus:text-[11px] lg:peer-focus:text-[13px]
                           peer-focus:text-blue-500
                           peer-focus:bg-gray-200
                           peer-not-placeholder-shown:top-0            
                           top-0                                       
-                          text-[13px]
+                          text-[11px] lg:text-[13px]
                           pointer-events-none"
                     >
                       Username
@@ -688,7 +565,7 @@ const Login: React.FC = () => {
                       type="password"
                       value={regPassword}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegPassword(e.target.value)}
-                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                       placeholder=" "
                     />
                     <label
@@ -697,12 +574,12 @@ const Login: React.FC = () => {
                           peer-placeholder-shown:top-1/2              
                           peer-placeholder-shown:translate-y-[-50%]   
                           peer-focus:top-0                            
-                          peer-focus:text-[13px]
+                          peer-focus:text-[11px] lg:peer-focus:text-[13px]
                           peer-focus:text-blue-500
                           peer-focus:bg-gray-200
                           peer-not-placeholder-shown:top-0            
                           top-0                                       
-                          text-[13px]
+                          text-[11px] lg:text-[13px]
                           pointer-events-none"
                     >
                       Password
@@ -713,7 +590,7 @@ const Login: React.FC = () => {
                       type="password"
                       value={regRepeatPassword}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRegRepeatPassword(e.target.value)}
-                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                       placeholder=" "
                     />
                     <label
@@ -722,12 +599,12 @@ const Login: React.FC = () => {
                           peer-placeholder-shown:top-1/2              
                           peer-placeholder-shown:translate-y-[-50%]   
                           peer-focus:top-0                            
-                          peer-focus:text-[13px]
+                          peer-focus:text-[11px] lg:peer-focus:text-[13px]
                           peer-focus:text-blue-500
                           peer-focus:bg-gray-200
                           peer-not-placeholder-shown:top-0            
                           top-0                                       
-                          text-[13px]
+                          text-[11px] lg:text-[13px]
                           pointer-events-none"
                     >
                       Repeat password
@@ -737,11 +614,11 @@ const Login: React.FC = () => {
                   <div className="flex flex-col items-center justify-center">
                     <div
                       onClick={handleIndividualRegistration}
-                      className="flex mt-[19px] ring-yellow-700 ring-[0.5px] flex-col items-center justify-center w-[100%] bg-[#FDAA1C] text-[15px] cursor-pointer py-[4px] rounded-[3px]"
+                      className="flex mt-4 lg:mt-[19px] ring-yellow-700 ring-[0.5px] flex-col items-center justify-center w-full bg-[#FDAA1C] text-sm lg:text-[15px] cursor-pointer py-3 lg:py-[4px] rounded-[3px] hover:bg-yellow-500 transition-colors"
                     >
                       <p>Register</p>
                     </div>
-                    <p className="mt-[2px] text-[13px]">
+                    <p className="mt-2 lg:mt-[2px] text-xs lg:text-[13px] text-center">
                       Already have an account?
                       <span
                         onClick={handleLoginClick}
@@ -752,7 +629,7 @@ const Login: React.FC = () => {
                     </p>
 
                     {registrationError && (
-                      <div className="bg-red-300 mt-[5px] py-[3px] px-[20px] ring-[1px] ring-red-800 text-red-950 rounded-[5px]">
+                      <div className="bg-red-300 mt-[5px] py-[3px] px-4 lg:px-[20px] ring-[1px] ring-red-800 text-red-950 rounded-[5px] text-xs lg:text-sm">
                         <p>Please fill all the fields</p>
                       </div>
                     )}
@@ -760,13 +637,13 @@ const Login: React.FC = () => {
                 </div>
               )}
             </div>
-            <div className={`${registrationType === "Business" ? "flex flex-col space-y-[10px]" : "hidden"}`}>
+
+            {/* Business Registration */}
+            <div className={`${registrationType === "Business" ? "flex flex-col space-y-3 lg:space-y-[10px]" : "hidden"}`}>
               {registrationPage === 1 ? (
                 <div>
-                  <div className="flex flex-row items-center justify-center">
-                    <div
-                      className="flex items-center cursor-pointer justify-center w-[20px] pt-[1.5px] ring-[1px] ring-black text-[14px] h-[20px] rounded-full bg-yellow-500 z-[10]"
-                    >
+                  <div className="flex flex-row items-center justify-center mb-4">
+                    <div className="flex items-center cursor-pointer justify-center w-[20px] pt-[1.5px] ring-[1px] ring-black text-[14px] h-[20px] rounded-full bg-yellow-500 z-[10]">
                       <p>1</p>
                     </div>
                     <div className="w-[10px] h-[3px] bg-gray-600"></div>
@@ -784,16 +661,16 @@ const Login: React.FC = () => {
                       <p>3</p>
                     </div>
                   </div>
-                  <div className="flex flex-col space-y-[15px]">
+                  <div className="flex flex-col space-y-3 lg:space-y-[15px]">
                     <div>
-                      <p>Personal Information</p>
+                      <p className="text-sm lg:text-base">Business Information</p>
                     </div>
                     <div className="flex relative flex-col">
                       <input
                         type="text"
                         value={comCompanyName}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComCompanyName(e.target.value)}
-                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                         placeholder=" "
                       />
                       <label
@@ -802,12 +679,12 @@ const Login: React.FC = () => {
                             peer-placeholder-shown:top-1/2              
                             peer-placeholder-shown:translate-y-[-50%]   
                             peer-focus:top-0                            
-                            peer-focus:text-[13px]
+                            peer-focus:text-[11px] lg:peer-focus:text-[13px]
                             peer-focus:text-blue-500
                             peer-focus:bg-gray-200
                             peer-not-placeholder-shown:top-0            
                             top-0                                       
-                            text-[13px]
+                            text-[11px] lg:text-[13px]
                             pointer-events-none"
                       >
                         Company name
@@ -819,7 +696,7 @@ const Login: React.FC = () => {
                         type="text"
                         value={comFirstName}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComFirstName(e.target.value)}
-                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                         placeholder=" "
                       />
                       <label
@@ -828,12 +705,12 @@ const Login: React.FC = () => {
                             peer-placeholder-shown:top-1/2              
                             peer-placeholder-shown:translate-y-[-50%]   
                             peer-focus:top-0                            
-                            peer-focus:text-[13px]
+                            peer-focus:text-[11px] lg:peer-focus:text-[13px]
                             peer-focus:text-blue-500
                             peer-focus:bg-gray-200
                             peer-not-placeholder-shown:top-0            
                             top-0                                       
-                            text-[13px]
+                            text-[11px] lg:text-[13px]
                             pointer-events-none"
                       >
                         First name
@@ -845,7 +722,7 @@ const Login: React.FC = () => {
                         type="text"
                         value={comLastName}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComLastName(e.target.value)}
-                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                         placeholder=" "
                       />
                       <label
@@ -854,23 +731,24 @@ const Login: React.FC = () => {
                             peer-placeholder-shown:top-1/2              
                             peer-placeholder-shown:translate-y-[-50%]   
                             peer-focus:top-0                            
-                            peer-focus:text-[13px]
+                            peer-focus:text-[11px] lg:peer-focus:text-[13px]
                             peer-focus:text-blue-500
                             peer-focus:bg-gray-200
                             peer-not-placeholder-shown:top-0            
                             top-0                                       
-                            text-[13px]
+                            text-[11px] lg:text-[13px]
                             pointer-events-none"
                       >
                         Last name
                       </label>
                     </div>
+
                     <div className="flex relative flex-col">
                       <input
                         type="date"
                         value={comDateOfBirth}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComDateOfBirth(e.target.value)}
-                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                         placeholder=" "
                       />
                       <label
@@ -879,12 +757,12 @@ const Login: React.FC = () => {
                             peer-placeholder-shown:top-1/2              
                             peer-placeholder-shown:translate-y-[-50%]   
                             peer-focus:top-0                            
-                            peer-focus:text-[13px]
+                            peer-focus:text-[11px] lg:peer-focus:text-[13px]
                             peer-focus:text-blue-500
                             peer-focus:bg-gray-200
                             peer-not-placeholder-shown:top-0            
                             top-0                                       
-                            text-[13px]
+                            text-[11px] lg:text-[13px]
                             pointer-events-none"
                       >
                         Date of birth
@@ -892,13 +770,11 @@ const Login: React.FC = () => {
                     </div>
 
                     <div className="flex relative flex-col">
-                      <div
-                        className="peer ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none bg-white"
-                      >
+                      <div className="peer ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none bg-white">
                         <select
                           value={comGender}
                           onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setComGender(e.target.value)}
-                          className="w-full focus:outline-none"
+                          className="w-full focus:outline-none text-sm lg:text-base"
                         >
                           <option value="" disabled>
                             Select Gender
@@ -908,12 +784,13 @@ const Login: React.FC = () => {
                         </select>
                       </div>
                     </div>
+
                     <div className="flex relative flex-col">
                       <input
                         type="text"
                         value={comCategory}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComCategory(e.target.value)}
-                        className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                        className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                         placeholder=" "
                       />
                       <label
@@ -922,12 +799,12 @@ const Login: React.FC = () => {
                             peer-placeholder-shown:top-1/2              
                             peer-placeholder-shown:translate-y-[-50%]   
                             peer-focus:top-0                            
-                            peer-focus:text-[13px]
+                            peer-focus:text-[11px] lg:peer-focus:text-[13px]
                             peer-focus:text-blue-500
                             peer-focus:bg-gray-200
                             peer-not-placeholder-shown:top-0            
                             top-0                                       
-                            text-[13px]
+                            text-[11px] lg:text-[13px]
                             pointer-events-none"
                       >
                         Category
@@ -951,11 +828,11 @@ const Login: React.FC = () => {
                           setRegistrationError(true);
                         }
                       }}
-                      className="flex mt-[19px] ring-yellow-700 ring-[0.5px] flex-col items-center justify-center w-[100%] bg-[#FDAA1C] text-[15px] cursor-pointer py-[4px] rounded-[3px]"
+                      className="flex mt-4 lg:mt-[19px] ring-yellow-700 ring-[0.5px] flex-col items-center justify-center w-full bg-[#FDAA1C] text-sm lg:text-[15px] cursor-pointer py-3 lg:py-[4px] rounded-[3px] hover:bg-yellow-500 transition-colors"
                     >
                       <p>Continue</p>
                     </div>
-                    <p className="mt-[2px] text-[13px]">
+                    <p className="mt-2 lg:mt-[2px] text-xs lg:text-[13px] text-center">
                       Already have an account?
                       <span
                         onClick={handleLoginClick}
@@ -966,15 +843,15 @@ const Login: React.FC = () => {
                     </p>
 
                     {registrationError && (
-                      <div className="bg-red-300 mt-[5px] py-[3px] px-[20px] ring-[1px] ring-red-800 text-red-950 rounded-[5px]">
+                      <div className="bg-red-300 mt-[5px] py-[3px] px-4 lg:px-[20px] ring-[1px] ring-red-800 text-red-950 rounded-[5px] text-xs lg:text-sm">
                         <p>Please fill all the fields</p>
                       </div>
                     )}
                   </div>
                 </div>
               ) : registrationPage === 2 ? (
-                <div className="flex flex-col space-y-[13px]">
-                  <div className="flex flex-row items-center justify-center">
+                <div className="flex flex-col space-y-3 lg:space-y-[13px]">
+                  <div className="flex flex-row items-center justify-center mb-4">
                     <div
                       onClick={() => setRegistrationPage(1)}
                       className="flex items-center cursor-pointer justify-center w-[20px] pt-[1.5px] ring-[0.5px] ring-gray-600 text-[14px] h-[20px] rounded-full bg-gray-400"
@@ -982,9 +859,7 @@ const Login: React.FC = () => {
                       <p>1</p>
                     </div>
                     <div className="w-[10px] h-[3px] bg-gray-600"></div>
-                    <div
-                      className="flex items-center cursor-pointer justify-center w-[20px] pt-[1.5px] ring-[1px] ring-black text-[14px] h-[20px] rounded-full bg-yellow-500 z-[10]"
-                    >
+                    <div className="flex items-center cursor-pointer justify-center w-[20px] pt-[1.5px] ring-[1px] ring-black text-[14px] h-[20px] rounded-full bg-yellow-500 z-[10]">
                       <p>2</p>
                     </div>
                     <div className="w-[10px] h-[3px] bg-gray-600"></div>
@@ -996,14 +871,14 @@ const Login: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <p>Contact Information</p>
+                    <p className="text-sm lg:text-base">Contact Information</p>
                   </div>
                   <div className="flex relative flex-col">
                     <input
                       type="text"
                       value={comEmail}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComEmail(e.target.value)}
-                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                       placeholder=" "
                     />
                     <label
@@ -1012,12 +887,12 @@ const Login: React.FC = () => {
                           peer-placeholder-shown:top-1/2              
                           peer-placeholder-shown:translate-y-[-50%]   
                           peer-focus:top-0                            
-                          peer-focus:text-[13px]
+                          peer-focus:text-[11px] lg:peer-focus:text-[13px]
                           peer-focus:text-blue-500
                           peer-focus:bg-gray-200
                           peer-not-placeholder-shown:top-0            
                           top-0                                       
-                          text-[13px]
+                          text-[11px] lg:text-[13px]
                           pointer-events-none"
                     >
                       Email
@@ -1029,7 +904,7 @@ const Login: React.FC = () => {
                       type="text"
                       value={comAddress}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComAddress(e.target.value)}
-                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                       placeholder=" "
                     />
                     <label
@@ -1038,12 +913,12 @@ const Login: React.FC = () => {
                           peer-placeholder-shown:top-1/2              
                           peer-placeholder-shown:translate-y-[-50%]   
                           peer-focus:top-0                            
-                          peer-focus:text-[13px]
+                          peer-focus:text-[11px] lg:peer-focus:text-[13px]
                           peer-focus:text-blue-500
                           peer-focus:bg-gray-200
                           peer-not-placeholder-shown:top-0            
                           top-0                                       
-                          text-[13px]
+                          text-[11px] lg:text-[13px]
                           pointer-events-none"
                     >
                       Address
@@ -1055,7 +930,7 @@ const Login: React.FC = () => {
                       type="text"
                       value={comPhoneNumber}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComPhoneNumber(e.target.value)}
-                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                       placeholder=" "
                     />
                     <label
@@ -1064,12 +939,12 @@ const Login: React.FC = () => {
                           peer-placeholder-shown:top-1/2              
                           peer-placeholder-shown:translate-y-[-50%]   
                           peer-focus:top-0                            
-                          peer-focus:text-[13px]
+                          peer-focus:text-[11px] lg:peer-focus:text-[13px]
                           peer-focus:text-blue-500
                           peer-focus:bg-gray-200
                           peer-not-placeholder-shown:top-0            
                           top-0                                       
-                          text-[13px]
+                          text-[11px] lg:text-[13px]
                           pointer-events-none"
                     >
                       Phone number
@@ -1086,11 +961,11 @@ const Login: React.FC = () => {
                           setRegistrationError(true);
                         }
                       }}
-                      className="flex mt-[19px] ring-yellow-700 ring-[0.5px] flex-col items-center justify-center w-[100%] bg-[#FDAA1C] text-[15px] cursor-pointer py-[4px] rounded-[3px]"
+                      className="flex mt-4 lg:mt-[19px] ring-yellow-700 ring-[0.5px] flex-col items-center justify-center w-full bg-[#FDAA1C] text-sm lg:text-[15px] cursor-pointer py-3 lg:py-[4px] rounded-[3px] hover:bg-yellow-500 transition-colors"
                     >
                       <p>Continue</p>
                     </div>
-                    <p className="mt-[2px] text-[13px]">
+                    <p className="mt-2 lg:mt-[2px] text-xs lg:text-[13px] text-center">
                       Already have an account?
                       <span
                         onClick={handleLoginClick}
@@ -1101,15 +976,15 @@ const Login: React.FC = () => {
                     </p>
 
                     {registrationError && (
-                      <div className="bg-red-300 mt-[5px] py-[3px] px-[20px] ring-[1px] ring-red-800 text-red-950 rounded-[5px]">
+                      <div className="bg-red-300 mt-[5px] py-[3px] px-4 lg:px-[20px] ring-[1px] ring-red-800 text-red-950 rounded-[5px] text-xs lg:text-sm">
                         <p>Please fill all the fields</p>
                       </div>
                     )}
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col space-y-[13px]">
-                  <div className="flex flex-row items-center justify-center">
+                <div className="flex flex-col space-y-3 lg:space-y-[13px]">
+                  <div className="flex flex-row items-center justify-center mb-4">
                     <div
                       onClick={() => setRegistrationPage(1)}
                       className="flex items-center cursor-pointer justify-center w-[20px] pt-[1.5px] ring-[0.5px] ring-gray-600 text-[14px] h-[20px] rounded-full bg-gray-400"
@@ -1124,21 +999,19 @@ const Login: React.FC = () => {
                       <p>2</p>
                     </div>
                     <div className="w-[10px] h-[3px] bg-gray-600"></div>
-                    <div
-                      className="flex items-center cursor-pointer justify-center w-[20px] pt-[1.5px] ring-[1px] ring-black text-[14px] h-[20px] rounded-full bg-yellow-500 z-[10]"
-                    >
+                    <div className="flex items-center cursor-pointer justify-center w-[20px] pt-[1.5px] ring-[1px] ring-black text-[14px] h-[20px] rounded-full bg-yellow-500 z-[10]">
                       <p>3</p>
                     </div>
                   </div>
                   <div>
-                    <p>Account Information</p>
+                    <p className="text-sm lg:text-base">Account Information</p>
                   </div>
                   <div className="flex relative flex-col">
                     <input
                       type="text"
                       value={comUserName}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComUserName(e.target.value)}
-                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                       placeholder=" "
                     />
                     <label
@@ -1147,12 +1020,12 @@ const Login: React.FC = () => {
                           peer-placeholder-shown:top-1/2              
                           peer-placeholder-shown:translate-y-[-50%]   
                           peer-focus:top-0                            
-                          peer-focus:text-[13px]
+                          peer-focus:text-[11px] lg:peer-focus:text-[13px]
                           peer-focus:text-blue-500
                           peer-focus:bg-gray-200
                           peer-not-placeholder-shown:top-0            
                           top-0                                       
-                          text-[13px]
+                          text-[11px] lg:text-[13px]
                           pointer-events-none"
                     >
                       Username
@@ -1164,7 +1037,7 @@ const Login: React.FC = () => {
                       type="password"
                       value={comPassword}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComPassword(e.target.value)}
-                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                       placeholder=" "
                     />
                     <label
@@ -1173,12 +1046,12 @@ const Login: React.FC = () => {
                           peer-placeholder-shown:top-1/2              
                           peer-placeholder-shown:translate-y-[-50%]   
                           peer-focus:top-0                            
-                          peer-focus:text-[13px]
+                          peer-focus:text-[11px] lg:peer-focus:text-[13px]
                           peer-focus:text-blue-500
                           peer-focus:bg-gray-200
                           peer-not-placeholder-shown:top-0            
                           top-0                                       
-                          text-[13px]
+                          text-[11px] lg:text-[13px]
                           pointer-events-none"
                     >
                       Password
@@ -1189,7 +1062,7 @@ const Login: React.FC = () => {
                       type="password"
                       value={comRepeatPassword}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setComRepeatPassword(e.target.value)}
-                      className="peer bg-white ring-[0.5px] rounded-[5px] py-[5px] px-[10px] focus:outline-none placeholder-transparent"
+                      className="peer bg-white ring-[0.5px] rounded-[5px] py-3 lg:py-[5px] px-[10px] focus:outline-none placeholder-transparent text-sm lg:text-base"
                       placeholder=" "
                     />
                     <label
@@ -1198,12 +1071,12 @@ const Login: React.FC = () => {
                           peer-placeholder-shown:top-1/2              
                           peer-placeholder-shown:translate-y-[-50%]   
                           peer-focus:top-0                            
-                          peer-focus:text-[13px]
+                          peer-focus:text-[11px] lg:peer-focus:text-[13px]
                           peer-focus:text-blue-500
                           peer-focus:bg-gray-200
                           peer-not-placeholder-shown:top-0            
                           top-0                                       
-                          text-[13px]
+                          text-[11px] lg:text-[13px]
                           pointer-events-none"
                     >
                       Repeat password
@@ -1213,11 +1086,11 @@ const Login: React.FC = () => {
                   <div className="flex flex-col items-center justify-center">
                     <div
                       onClick={handleBusinessRegistration}
-                      className="flex mt-[19px] ring-yellow-700 ring-[0.5px] flex-col items-center justify-center w-[100%] bg-[#FDAA1C] text-[15px] cursor-pointer py-[4px] rounded-[3px]"
+                      className="flex mt-4 lg:mt-[19px] ring-yellow-700 ring-[0.5px] flex-col items-center justify-center w-full bg-[#FDAA1C] text-sm lg:text-[15px] cursor-pointer py-3 lg:py-[4px] rounded-[3px] hover:bg-yellow-500 transition-colors"
                     >
                       <p>Register</p>
                     </div>
-                    <p className="mt-[2px] text-[13px]">
+                    <p className="mt-2 lg:mt-[2px] text-xs lg:text-[13px] text-center">
                       Already have an account?
                       <span
                         onClick={handleLoginClick}
@@ -1228,7 +1101,7 @@ const Login: React.FC = () => {
                     </p>
 
                     {registrationError && (
-                      <div className="bg-red-300 mt-[5px] py-[3px] px-[20px] ring-[1px] ring-red-800 text-red-950 rounded-[5px]">
+                      <div className="bg-red-300 mt-[5px] py-[3px] px-4 lg:px-[20px] ring-[1px] ring-red-800 text-red-950 rounded-[5px] text-xs lg:text-sm">
                         <p>Please fill all the fields</p>
                       </div>
                     )}
@@ -1239,12 +1112,24 @@ const Login: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Desktop Sliding Logo Panel */}
       <div
         className={`${
           loginClick ? "translate-x-[-294px]" : "right-0"
-        } transition-transform z-[200] ease-out duration-500 w-[61.8%] absolute h-[100%] bg-[#101010] text-white flex ring-[0.5px] ring-gray-500 items-center justify-center`}
+        } hidden lg:flex transition-transform z-[200] ease-out duration-500 w-[61.8%] absolute h-full bg-[#101010] text-white ring-[0.5px] ring-gray-500 items-center justify-center`}
       >
         <Image height={280} src={EcoHarvest} alt="EcoHarvest Logo" />
+      </div>
+
+      {/* Mobile Toggle Button */}
+      <div className="lg:hidden fixed bottom-6 right-6 z-50">
+        <button
+          onClick={handleLoginClick}
+          className="bg-[#FDAA1C] text-black px-4 py-2 rounded-full shadow-lg hover:bg-yellow-500 transition-colors text-sm font-medium"
+        >
+          {loginClick ? 'Login' : 'Register'}
+        </button>
       </div>
     </div>
   );

@@ -507,7 +507,7 @@ const ProductPageComponent = () => {
             
             {/* Product Image - Mobile First */}
             <div className="w-full lg:w-[61.8%] flex flex-col items-center justify-center order-1 lg:order-2 h-[40vh] sm:h-[50vh] lg:h-[83vh] space-y-[20px] lg:space-y-[30px]">
-              <div className="w-full h-full relative flex justify-center items-center lg:items-end">
+              <div className="w-full h-full relative flex justify-center items-center lg:items-center">
                 <Image
                   alt={`${productDetails.name} - Product Image`}
                   src={productDetails.imageUrl || ProductImage2}

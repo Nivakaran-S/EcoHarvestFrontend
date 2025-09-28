@@ -699,4 +699,10 @@ const ProductPageComponent = () => {
   );
 };
 
-export default  ProductPageComponent;
+export default function ProductPage() {
+  return (
+    <Suspense>
+      <ProductPageComponent/>
+    </Suspense>
+  )
+}

@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+"use client";
+
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import { 
   PencilIcon, 
   TrashIcon, 
@@ -10,22 +12,28 @@ import {
   CheckIcon
 } from '@heroicons/react/24/outline';
 
-const AdvertisementsPage = () => {
-  const [advertisements, setAdvertisements] = useState([]);
+interface Advertisement {
+  _id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+}
+
+const AdvertisementsPage: React.FC = () => {
+  const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   const [isChanged, setIsChanged] = useState(false);
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
-  
-  // Form states
-  const [formData, setFormData] = useState({
+
+  const [formData, setFormData] = useState<Advertisement>({
+    _id: '',
     title: '',
     description: '',
     imageUrl: ''
   });
 
-  // Sample data for demonstration
-  const sampleAds = [
+  const sampleAds: Advertisement[] = [
     {
       _id: '1',
       title: 'Organic Fertilizer Sale',
@@ -45,17 +53,13 @@ const AdvertisementsPage = () => {
     setAdvertisements(sampleAds);
   }, [isChanged]);
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field: keyof Advertisement, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleEdit = (ad) => {
+  const handleEdit = (ad: Advertisement) => {
     setEditingId(ad._id);
-    setFormData({
-      title: ad.title,
-      description: ad.description,
-      imageUrl: ad.imageUrl
-    });
+    setFormData(ad);
   };
 
   const handleSave = async () => {
@@ -69,7 +73,7 @@ const AdvertisementsPage = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this advertisement?')) {
       try {
         // Replace with actual API call
@@ -85,12 +89,12 @@ const AdvertisementsPage = () => {
     try {
       // Replace with actual API call
       console.log('Adding new advertisement:', formData);
-      const newAd = {
+      const newAd: Advertisement = {
+        ...formData,
         _id: Date.now().toString(),
-        ...formData
       };
       setAdvertisements(prev => [...prev, newAd]);
-      setFormData({ title: '', description: '', imageUrl: '' });
+      setFormData({ _id: '', title: '', description: '', imageUrl: '' });
       setShowAddModal(false);
     } catch (error) {
       console.error('Error adding advertisement:', error);
@@ -106,97 +110,83 @@ const AdvertisementsPage = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Advertisements</h1>
-              <p className="text-gray-600 mt-2">Manage your promotional content and campaigns</p>
-            </div>
-            <button 
-              onClick={() => setShowAddModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition-colors shadow-lg"
-            >
-              <PlusIcon className="w-5 h-5" />
-              <span>Add Advertisement</span>
-            </button>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Advertisements</h1>
+            <p className="text-gray-600 mt-2">Manage your promotional content and campaigns</p>
           </div>
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition-colors shadow-lg"
+          >
+            <PlusIcon className="w-5 h-5" />
+            <span>Add Advertisement</span>
+          </button>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Ads</p>
-                <p className="text-3xl font-bold text-gray-900">{advertisements.length}</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <PhotoIcon className="w-6 h-6 text-blue-600" />
-              </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Ads</p>
+              <p className="text-3xl font-bold text-gray-900">{advertisements.length}</p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <PhotoIcon className="w-6 h-6 text-blue-600" />
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active</p>
-                <p className="text-3xl font-bold text-green-600">{advertisements.length}</p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckIcon className="w-6 h-6 text-green-600" />
-              </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Active</p>
+              <p className="text-3xl font-bold text-green-600">{advertisements.length}</p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-lg">
+              <CheckIcon className="w-6 h-6 text-green-600" />
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Views Today</p>
-                <p className="text-3xl font-bold text-purple-600">2.4k</p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <EyeIcon className="w-6 h-6 text-purple-600" />
-              </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Views Today</p>
+              <p className="text-3xl font-bold text-purple-600">2.4k</p>
+            </div>
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <EyeIcon className="w-6 h-6 text-purple-600" />
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Click Rate</p>
-                <p className="text-3xl font-bold text-yellow-600">12.5%</p>
-              </div>
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <div className="w-6 h-6 bg-yellow-600 rounded"></div>
-              </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Click Rate</p>
+              <p className="text-3xl font-bold text-yellow-600">12.5%</p>
+            </div>
+            <div className="p-3 bg-yellow-100 rounded-lg">
+              <div className="w-6 h-6 bg-yellow-600 rounded"></div>
             </div>
           </div>
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
-                <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search advertisements..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <select className="border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <option>All Status</option>
-                <option>Active</option>
-                <option>Inactive</option>
-                <option>Draft</option>
-              </select>
-            </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 p-6 border-b border-gray-200 flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search advertisements..."
+              value={searchTerm}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
+          <select className="border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <option>All Status</option>
+            <option>Active</option>
+            <option>Inactive</option>
+            <option>Draft</option>
+          </select>
         </div>
 
         {/* Advertisements Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredAds.map((ad) => (
+          {filteredAds.map(ad => (
             <div key={ad._id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
               <div className="aspect-w-16 aspect-h-9">
                 <img
@@ -212,13 +202,13 @@ const AdvertisementsPage = () => {
                     <input
                       type="text"
                       value={formData.title}
-                      onChange={(e) => handleInputChange('title', e.target.value)}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange('title', e.target.value)}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Title"
                     />
                     <textarea
                       value={formData.description}
-                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      onChange={(e: ChangeEvent<HTMLTextAreaElement>) => handleInputChange('description', e.target.value)}
                       rows={3}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Description"
@@ -226,7 +216,7 @@ const AdvertisementsPage = () => {
                     <input
                       type="url"
                       value={formData.imageUrl}
-                      onChange={(e) => handleInputChange('imageUrl', e.target.value)}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange('imageUrl', e.target.value)}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Image URL"
                     />
@@ -320,7 +310,7 @@ const AdvertisementsPage = () => {
                 <input
                   type="text"
                   value={formData.title}
-                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange('title', e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter advertisement title"
                 />
@@ -330,7 +320,7 @@ const AdvertisementsPage = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLTextAreaElement>) => handleInputChange('description', e.target.value)}
                   rows={3}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter advertisement description"
@@ -342,7 +332,7 @@ const AdvertisementsPage = () => {
                 <input
                   type="url"
                   value={formData.imageUrl}
-                  onChange={(e) => handleInputChange('imageUrl', e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => handleInputChange('imageUrl', e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter image URL"
                 />

@@ -193,7 +193,7 @@ const Navigation: React.FC<NavigationProps> = ({
       {/* Mobile Overlay */}
       {(isMobileMenuOpen || isMobileSearchOpen || isMobileCategoriesOpen) && (
         <div 
-          className="fixed inset-0 bg-black  opacity-50 z-[99] md:hidden"
+          className="fixed inset-0 bg-black   opacity-50 z-[99] md:hidden"
           onClick={closeMobileMenus}
           role="button"
           tabIndex={0}
@@ -280,7 +280,7 @@ const Navigation: React.FC<NavigationProps> = ({
             </div>
             
             {/* Desktop Search Bar */}
-            <div className="hidden md:flex flex-row ml-[10px] w-full max-w-[600px]">
+            <div className="hidden md:flex flex-row ml-[10px] w-full mx-[30px]">
               {/* Hidden width measurement elements */}
               <div className="absolute invisible pointer-events-none">
                 {productCategories.map((category, index) => (
@@ -326,7 +326,7 @@ const Navigation: React.FC<NavigationProps> = ({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="placeholder-gray-600 focus:outline-none w-full px-[18px] py-[12px] text-black text-[14px]"
+                  className="placeholder-gray-600  focus:outline-none w-full px-[18px] py-[12px] text-black text-[14px]"
                   placeholder="Search Anything"
                   aria-label="Search products"
                 />
@@ -404,7 +404,7 @@ const Navigation: React.FC<NavigationProps> = ({
                     alt=""
                     width={50}
                     height={50}
-                    className="w-[35px] h-[35px] md:w-[50px] md:h-[50px]"
+                    className="w-[35px] h-[35px] md:w-[110px] md:h-[45px]"
                   />
                   {numberOfCartItems > 0 && (
                     <span className="text-[#FFCC29] absolute -top-1 font-bold -right-1 bg-[#0A0A0A] rounded-full w-5 h-5 md:w-7 md:h-7 flex items-center justify-center text-[12px] md:text-[14px] ring-2 ring-[#0A0A0A]">
@@ -546,7 +546,7 @@ const Navigation: React.FC<NavigationProps> = ({
           </div>
 
           {/* Desktop Bottom Navigation */}
-          <div className="hidden md:flex rounded-b-[9px] flex-row items-center px-[20px] text-[14.5px] text-white bg-[#808080] space-x-[20px] w-full h-[40px]">
+          <div className="hidden  md:flex rounded-b-[9px] flex-row items-center px-[20px] text-[14.5px] text-black bg-[#808080] space-x-[20px] w-full h-[40px]">
             <button
               onMouseEnter={handleCategoryMouseEnter}
               onMouseLeave={handleCategoryMouseLeave}
@@ -565,7 +565,7 @@ const Navigation: React.FC<NavigationProps> = ({
             
             <button 
               onClick={() => router.push("/order-history")} 
-              className="cursor-pointer hover:text-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded px-2 py-1"
+              className="cursor-pointer hover:text-gray-200  transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded px-2 py-1"
             >
               Order History
             </button>

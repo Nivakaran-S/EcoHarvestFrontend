@@ -56,7 +56,7 @@ const AllNavCategories: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex w-full sm:h-[500px] bg-white shadow-md rounded-2xl overflow-hidden">
+    <div className="flex w-full  sm:h-[500px] bg-white shadow-md rounded-b-2xl overflow-hidden">
       {/* Category list */}
       <div className="flex flex-col  sm:w-1/2 bg-gray-50 sm:border-r overflow-y-auto">
         {loading ? (

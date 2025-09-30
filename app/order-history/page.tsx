@@ -11,6 +11,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import EmptyCart from "../images/emptyCart.png";
+import Loading from "../components/Loading";
 
 const API_BASE_URL = "https://eco-harvest-backend.vercel.app";
 
@@ -68,56 +69,60 @@ const OrderHistory: React.FC = () => {
   const [updateBtnVisible, setUpdateBtnVisible] = useState<boolean>(false);
   const [advertisement, setAdvertisement] = useState<Advertisement[]>([]);
   const [numberOfCartItems, setNumberOfCartItems] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const router = useRouter();
 
-  // Fetch advertisement
+  // Initial data fetch
   useEffect(() => {
-    const fetchAdvertisement = async (): Promise<void> => {
+    const fetchAll = async () => {
       try {
-        const response = await axios.get<Advertisement[]>(`${API_BASE_URL}/advertisement/`);
-        setAdvertisement(response.data);
-      } catch (error) {
-        console.error("Error fetching advertisement:", error);
-      }
-    };
-    fetchAdvertisement();
-  }, []);
-
-  // Check cookie and fetch cart
-  useEffect(() => {
-    const fetchCookies = async (): Promise<void> => {
-      try {
-        const response = await axios.get<{ id: string; role: string }>(
+        // Advertisement
+        const adPromise = axios.get<Advertisement[]>(`${API_BASE_URL}/advertisement/`);
+        // Cookie & cart
+        const cookiePromise = axios.get<{ id: string; role: string }>(
           `${API_BASE_URL}/check-cookie/`,
           { withCredentials: true }
         );
 
-        setId(response.data.id);
-        setRole(response.data.role);
+        const [adRes, cookieRes] = await Promise.all([adPromise, cookiePromise]);
+        setAdvertisement(adRes.data);
 
-        if (response.data.role === "Customer") {
+        const userId = cookieRes.data.id;
+        setId(userId);
+        setRole(cookieRes.data.role);
+
+        if (cookieRes.data.role === "Customer") {
           setUserLoggedIn(true);
           try {
-            const response2 = await axios.get<{ cart: Cart; products: Product[] }>(
-              `${API_BASE_URL}/cart/${response.data.id}`
+            const cartRes = await axios.get<{ cart: Cart; products: Product[] }>(
+              `${API_BASE_URL}/cart/${userId}`
             );
-            setCart(response2.data.cart);
-            setProductsDetail(response2.data.products);
-            setNumberOfCartItems(response2.data.cart.products.length);
-          } catch (err) {
+            setCart(cartRes.data.cart);
+            setProductsDetail(cartRes.data.products);
+            setNumberOfCartItems(cartRes.data.cart.products.length);
+          } catch {
             console.log("Cart Empty");
           }
-        } else if (response.data.role === "Vendor") {
+
+          try {
+            const orderRes = await axios.get<Order[]>(`${API_BASE_URL}/orders/history/${userId}`);
+            setOrderHistory(orderRes.data);
+          } catch {
+            console.log("No order history");
+          }
+        } else if (cookieRes.data.role === "Vendor") {
           router.push("/vendor");
-        } else if (response.data.role === "Admin") {
+        } else if (cookieRes.data.role === "Admin") {
           router.push("/admin");
         }
-      } catch (error) {
+        setLoading(false);
+      } catch (err) {
         router.push("/login");
-      }
+      } 
     };
-    fetchCookies();
+
+    fetchAll();
   }, [router]);
 
   const handleCheckout = async (): Promise<void> => {
@@ -167,37 +172,15 @@ const OrderHistory: React.FC = () => {
     setUpdateBtnVisible(true);
   };
 
-  // Fetch order history
-  useEffect(() => {
-    const fetchOrderHistory = async (): Promise<void> => {
-      if (!userLoggedIn) return;
-      try {
-        const response = await axios.get<Order[]>(`${API_BASE_URL}/orders/history/${id}`);
-        setOrderHistory(response.data);
-      } catch (err) {
-        console.log("No order history");
-      }
-    };
-    fetchOrderHistory();
-  }, [id, userLoggedIn]);
-
-  // Fetch cart again
-  useEffect(() => {
-    const fetchCart = async (): Promise<void> => {
-      if (!userLoggedIn) return;
-      try {
-        const response = await axios.get<{ cart: Cart; products: Product[] }>(
-          `${API_BASE_URL}/cart/${id}`
-        );
-        setCart(response.data.cart);
-        setProductsDetail(response.data.products);
-        setNumberOfCartItems(response.data.cart.products.length);
-      } catch (err) {
-        console.log("Cart Empty");
-      }
-    };
-    fetchCart();
-  }, [id, userLoggedIn]);
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="flex  flex-col items-center">
+            <Loading/>
+          </div>
+        </div>
+    );
+  }
 
   return (
     <div>
@@ -210,12 +193,17 @@ const OrderHistory: React.FC = () => {
       />
       <div className="pt-[12vh] sm:pt-[15vh] bg-white w-full flex items-center justify-center text-black">
         <div className="w-[95%] min-h-[100vh] flex flex-col lg:flex-row">
+          {/* Left Section */}
           <div className="w-full lg:w-[76.4%] lg:pr-[20px] h-full">
             <div className="w-full flex flex-col sm:flex-row h-auto sm:h-[150px] md:h-[200px] bg-gray-300 rounded-[10px] mt-[10px] ring-[0.5px] ring-gray-800 overflow-hidden">
               <div className="w-full sm:w-[60%] h-full flex flex-col items-center justify-center p-4">
                 <div className="w-full sm:w-[80%]">
-                  <p className="text-lg sm:text-xl md:text-[25px] leading-tight sm:leading-[30px]">{advertisement[0]?.title}</p>
-                  <p className="text-gray-600 text-sm sm:text-base leading-tight sm:leading-[20px] mt-[5px]">{advertisement[0]?.description}</p>
+                  <p className="text-lg sm:text-xl md:text-[25px] leading-tight sm:leading-[30px]">
+                    {advertisement[0]?.title}
+                  </p>
+                  <p className="text-gray-600 text-sm sm:text-base leading-tight sm:leading-[20px] mt-[5px]">
+                    {advertisement[0]?.description}
+                  </p>
                 </div>
               </div>
               <div className="w-full sm:w-[40%] h-[150px] sm:h-full flex items-center justify-center">
@@ -229,7 +217,11 @@ const OrderHistory: React.FC = () => {
                 />
               </div>
             </div>
-            <p className="text-2xl sm:text-3xl md:text-[35px] px-2 sm:px-[20px] mt-[10px] mb-[5px]">Order History</p>
+
+            <p className="text-2xl sm:text-3xl md:text-[35px] px-2 sm:px-[20px] mt-[10px] mb-[5px]">
+              Order History
+            </p>
+
             <div className="w-full mt-[10px] mb-[20px] h-full">
               <div className="flex flex-col space-y-[8px] w-full bg-gray-300 rounded-[10px] px-2 sm:px-[10px] py-[9px] ring-[0.5px] ring-gray-500">
                 {orderHistory.length > 0 ? (
@@ -253,7 +245,9 @@ const OrderHistory: React.FC = () => {
                           <div className="text-sm sm:text-base">Date: {date}</div>
                           <div className="text-sm sm:text-base">Time: {time}</div>
                         </div>
-                        <div className="px-2 sm:px-[10px] text-sm sm:text-base">Total amount: Rs. {item.totalAmount}</div>
+                        <div className="px-2 sm:px-[10px] text-sm sm:text-base">
+                          Total amount: Rs. {item.totalAmount}
+                        </div>
                         <div className="flex flex-col px-2 sm:px-[10px] bg-gray-200 py-[10px] mt-[5px] w-full rounded-[10px] ring-[0.5px] ring-gray-800">
                           {item.products.map((product) => (
                             <div
@@ -269,26 +263,40 @@ const OrderHistory: React.FC = () => {
                                 className="rounded-[10px] self-center sm:self-start"
                               />
                               <div className="flex flex-col w-full sm:w-[250px] md:w-[350px] text-center sm:text-left">
-                                <p className="text-base sm:text-lg md:text-[20px] leading-tight sm:leading-[20px]">{product.productId.name}</p>
-                                <p className="text-gray-600 text-sm sm:text-base md:text-[18px] sm:pl-[10px]">{product.productId.subtitle}</p>
-                                <p className="text-gray-600 text-sm sm:pl-[10px]">Rating: {product.productId.averageRating}</p>
+                                <p className="text-base sm:text-lg md:text-[20px] leading-tight sm:leading-[20px]">
+                                  {product.productId.name}
+                                </p>
+                                <p className="text-gray-600 text-sm sm:text-base md:text-[18px] sm:pl-[10px]">
+                                  {product.productId.subtitle}
+                                </p>
+                                <p className="text-gray-600 text-sm sm:pl-[10px]">
+                                  Rating: {product.productId.averageRating}
+                                </p>
                               </div>
                               <div className="grid grid-cols-2 sm:flex sm:flex-row gap-4 sm:gap-2 w-full sm:w-auto">
                                 <div className="flex flex-col w-full sm:w-[100px] md:w-[130px] text-center sm:text-left">
                                   <p className="text-sm sm:text-base">Total Amount</p>
-                                  <p className="text-gray-600 text-sm sm:text-base">Rs. {product.unitPrice * product.quantity}</p>
+                                  <p className="text-gray-600 text-sm sm:text-base">
+                                    Rs. {product.unitPrice * product.quantity}
+                                  </p>
                                 </div>
                                 <div className="flex flex-col w-full sm:w-[80px] md:w-[130px] text-center sm:text-left">
                                   <p className="text-sm sm:text-base">M.R.P.</p>
-                                  <p className="text-gray-600 text-sm sm:text-base">Rs. {product.productId.MRP}</p>
+                                  <p className="text-gray-600 text-sm sm:text-base">
+                                    Rs. {product.productId.MRP}
+                                  </p>
                                 </div>
                                 <div className="flex flex-col w-full sm:w-[90px] md:w-[130px] text-center sm:text-left">
                                   <p className="text-sm sm:text-base">Unit Price</p>
-                                  <p className="text-gray-600 text-sm sm:text-base">Rs. {product.productId.unitPrice}</p>
+                                  <p className="text-gray-600 text-sm sm:text-base">
+                                    Rs. {product.productId.unitPrice}
+                                  </p>
                                 </div>
                                 <div className="flex flex-col w-full sm:w-[80px] md:w-[130px] text-center sm:text-left">
                                   <p className="text-sm sm:text-base">Quantity</p>
-                                  <p className="text-gray-600 text-sm sm:text-base">{product.quantity}</p>
+                                  <p className="text-gray-600 text-sm sm:text-base">
+                                    {product.quantity}
+                                  </p>
                                 </div>
                               </div>
                             </div>
@@ -303,11 +311,13 @@ const OrderHistory: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Right Section - Cart */}
           {cart.products.length > 0 ? (
             <div className="w-full lg:w-[38%] h-auto lg:h-[100vh] py-[15px] mt-4 lg:mt-0">
               <div
                 ref={fixedRef}
-                className={`${isFixed && window.innerWidth >= 1024 ? "fixed w-[30%]" : "static w-full"} py-[10px] px-[15px] sm:px-[20px] rounded-[15px] ring-[0.5px] bg-gray-300 h-auto lg:h-[80%]`}
+                className={`${isFixed && typeof window !== "undefined" && window.innerWidth >= 1024 ? "fixed w-[30%]" : "static w-full"} py-[10px] px-[15px] sm:px-[20px] rounded-[15px] ring-[0.5px] bg-gray-300 h-auto lg:h-[80%]`}
               >
                 <p className="text-lg sm:text-[20px] text-gray-700">Shopping Cart</p>
                 <div className="h-[0.5px] w-full mt-[10px] bg-black"></div>

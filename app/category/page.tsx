@@ -284,9 +284,9 @@ const CategoryPage: React.FC = () => {
               {productCategories.map((category) => (
                 <p
                   key={category._id}
-                  className={`cursor-pointer text-sm md:text-base py-1 px-2 rounded transition-colors ${
+                  className={`cursor-pointer text-sm md:text-[15px] py-[4px] px-2 transition-colors ${
                     categoryId === category._id 
-                      ? "text-[#FDAA1C] font-semibold bg-orange-50" 
+                      ? "text-[#1D1D1D] font-bold bg-gray-100" 
                       : "hover:text-gray-500 hover:bg-gray-50"
                   }`}
                   onClick={() => handleCategoryClick(category._id, category.name)}
@@ -338,8 +338,8 @@ const CategoryPage: React.FC = () => {
 
       {/* Ratings */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">Customer Reviews</h3>
-        <div className="space-y-2">
+        <h3 className="text-lg font-semibold text-gray-800 mb-1">Customer Reviews</h3>
+        <div className="space-y-[0px]">
           {[5, 4, 3, 2, 1].map((star) => (
             <div
               key={star}
@@ -419,7 +419,7 @@ const CategoryPage: React.FC = () => {
           <div className="w-full mt-[20px] md:w-5/6 md:pl-4 md:border-l md:border-gray-300">
             
             {/* Header with Filter Button and Sort */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-100 border border-gray-300 rounded-lg px-4 py-3 mb-4 gap-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 mb-4 gap-3">
               <div className="flex items-center justify-between w-full sm:w-auto">
                 <p className="text-sm font-medium">
                   {sortedProducts.length} results for <span className="font-semibold">{categoryName}</span>
@@ -450,12 +450,12 @@ const CategoryPage: React.FC = () => {
             </div>
 
             {/* Results Title */}
-            <h2 className="text-xl  md:text-2xl font-bold mb-6 px-1">
-              Results for <span className="text-[#FDAA1C]">{categoryName}</span>
+            <h2 className="text-xl  md:text-3xl font-bold mb-4 px-1">
+              Results for <span className="text-[#808080]">{categoryName}</span>
             </h2>
 
             {/* Products Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:w-[93%] lg:pl-[35px] lg:grid-cols-4 xl:grid-cols-4 gap-3 md:gap-4">
               {sortedProducts.length > 0 ? (
                 sortedProducts.map((product) => (
                   <Product

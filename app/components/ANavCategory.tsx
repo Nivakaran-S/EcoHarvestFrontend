@@ -23,7 +23,7 @@ const ANavCategory: React.FC<ANavCategoryProps> = ({ title, id, image, onMouseEn
     <div
       onMouseEnter={onMouseEnter}
       onClick={handleCategoryClick}
-      className='bg-white border-t-[1px] border-gray-400 text-black cursor-pointer px-[40px] h-[100%] flex items-center'
+      className='bg-white  border-t-[1px] border-gray-400 text-black cursor-pointer px-[40px] h-[100%] flex items-center'
     >
       <p className='text-[18px] py-[10px]'>{title}</p>
     </div>

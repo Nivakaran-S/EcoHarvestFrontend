@@ -136,21 +136,20 @@ const ProductCard: React.FC<ProductProps> = ({
           }}
           onError={(e) => {
             console.warn(`Failed to load image for product ${productId}:`, imageUrl);
-            // You can set a fallback image here if needed
-            // e.currentTarget.src = '/path/to/fallback-image.png';
+      
           }}
         />
       </div>
 
       {/* Product Info */}
-      <div className="leading-tight sm:leading-[22px] h-[40%] sm:h-[50%] flex flex-col justify-end select-none text-left w-full">
+      <div className="leading-tight  sm:leading-[22px] h-[40%] sm:max-h-[50%] h-[100px] flex flex-col justify-end select-none text-left w-full">
         {/* Product Name */}
-        <p className="text-sm sm:text-[15px] md:text-[16px] leading-tight sm:leading-[21px] font-medium line-clamp-2 min-h-[36px] sm:min-h-[42px]">
+        <p className="text-sm sm:text-[15px] md:text-[18px] leading-tight sm:leading-[21px] font-medium line-clamp-2 min-h-[36px] sm:min-h-[42px]">
           {productName}
         </p>
         
         {/* Product Subtitle */}
-        <p className="text-xs sm:text-[13px] md:text-[15px] px-1 sm:px-[7px] leading-tight mb-1 sm:mb-[3px] text-[#E08E26] line-clamp-1">
+        <p className="text-xs  sm:text-[13px] md:text-[15px] px-1 sm:px-[7px] leading-tight mb-1 sm:mb-[3px] text-[#E08E26] line-clamp-1">
           {subtitle}
         </p>
 
@@ -158,21 +157,21 @@ const ProductCard: React.FC<ProductProps> = ({
         <div>
           {!!discountPrice ? (
             <div className="text-lg sm:text-xl md:text-[23px] mt-1 sm:mt-[5px]">
-              <p className="line-through text-gray-400 text-sm sm:text-[14px] md:text-[16px]">
+              <p className="line-through  text-gray-400 text-sm sm:text-[14px] md:text-[16px]">
                 Rs. {unitPrice}
               </p>
               <p className="font-semibold text-green-600">
                 Rs. {discountPrice}
               </p>
               {MRP && MRP > unitPrice && (
-                <p className="line-through text-gray-300 text-xs sm:text-[12px] md:text-[14px]">
+                <p className="line-through  text-gray-300 text-xs sm:text-[12px] md:text-[14px]">
                   MRP: Rs. {MRP}
                 </p>
               )}
             </div>
           ) : (
-            <div>
-              <p className="text-lg sm:text-xl md:text-[23px] mt-1 sm:mt-[5px] font-semibold">
+            <div className="flex flex-row justify-between">
+              <p className="text-lg  sm:text-xl md:text-[24px] mt-1 sm:mt-[5px] ">
                 Rs. {unitPrice}
               </p>
               {MRP && MRP > unitPrice && (
@@ -180,16 +179,17 @@ const ProductCard: React.FC<ProductProps> = ({
                   MRP: Rs. {MRP}
                 </p>
               )}
+              <div className="flex flex-row items-center space-x-1 sm:space-x-[5px] mt-1">
+                <Image src={Star} alt="Star" className="h-3 w-3 sm:h-[13px] sm:w-[13px] md:h-[15px] md:w-[15px]" />
+                <p className="text-gray-700 text-xs sm:text-[13px] md:text-[15px]">
+                  {averageRating > 0 ? averageRating.toFixed(1) : "0.0"} ({actualReviewCount})
+                </p>
+              </div>
             </div>
           )}
 
           {/* Rating Section */}
-          <div className="flex flex-row items-center space-x-1 sm:space-x-[5px] mt-1">
-            <Image src={Star} alt="Star" className="h-3 w-3 sm:h-[13px] sm:w-[13px] md:h-[15px] md:w-[15px]" />
-            <p className="text-gray-700 text-xs sm:text-[13px] md:text-[15px]">
-              {averageRating > 0 ? averageRating.toFixed(1) : "0.0"} ({actualReviewCount})
-            </p>
-          </div>
+          
 
           {/* Stock Status */}
           {status && (

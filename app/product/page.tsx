@@ -546,11 +546,7 @@ const ProductPageComponent = () => {
                   </div>
                 </div>
 
-                <div className="static sm:absolute sm:top-[10px] sm:right-0 flex flex-col items-center">
-                  <div className="rounded-full bg-[#FDAA1C] text-black ring-gray-800 ring-[0.5px] px-3 sm:px-[15px] py-1 sm:py-[0px] cursor-pointer">
-                    <p className="text-xs sm:text-[13px]">Ask Max</p>
-                  </div>
-                </div>
+                
               </div>
 
               {/* Pricing */}

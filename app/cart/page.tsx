@@ -9,11 +9,12 @@ import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-toastify";
+import Loading from "../components/Loading";
 
 // Base URL for API
 const BASE_URL = "https://eco-harvest-backend.vercel.app";
 
-// Define interfaces
+// Interfaces
 interface CartItem {
   _id: string;
   id: string;
@@ -55,26 +56,23 @@ const CartPage: React.FC = () => {
   const [id, setId] = useState<string>("");
   const [role, setRole] = useState<string>("");
   const [userLoggedIn, setUserLoggedIn] = useState<boolean>(false);
-  const [cart, setCart] = useState<Cart>({
-    _id: "",
-    products: [],
-    totalAmount: 0
-  });
+  const [cart, setCart] = useState<Cart>({ _id: "", products: [], totalAmount: 0 });
   const [productsDetail, setProductsDetail] = useState<ProductDetail[]>([]);
   const [updateBtnVisible, setUpdateBtnVisible] = useState<boolean>(false);
   const [advertisement, setAdvertisement] = useState<Advertisement[]>([]);
   const [numberOfCartItems, setNumberOfCartItems] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const router = useRouter();
 
   // Fetch advertisements
   useEffect(() => {
-    const fetchAdvertisement = async (): Promise<void> => {
+    const fetchAdvertisement = async () => {
       try {
         const response = await axios.get<Advertisement[]>(`${BASE_URL}/advertisement/`);
         setAdvertisement(response.data);
       } catch (error) {
-        console.error('Error fetching advertisement:', error);
+        console.error("Error fetching advertisement:", error);
       }
     };
     fetchAdvertisement();
@@ -82,13 +80,9 @@ const CartPage: React.FC = () => {
 
   // Check cookie and fetch cart
   useEffect(() => {
-    const fetchCookies = async (): Promise<void> => {
+    const fetchCookies = async () => {
       try {
-        const response = await axios.get<UserData>(
-          `${BASE_URL}/check-cookie/`,
-          { withCredentials: true }
-        );
-
+        const response = await axios.get<UserData>(`${BASE_URL}/check-cookie/`, { withCredentials: true });
         setId(response.data.id);
         setRole(response.data.role);
 
@@ -103,7 +97,7 @@ const CartPage: React.FC = () => {
             setNumberOfCartItems(cartResponse.data.cart.products.length);
           } catch (err) {
             setUserLoggedIn(false);
-            router.push('/');
+            router.push("/");
           }
         } else if (response.data.role === "Vendor") {
           router.push("/vendor");
@@ -112,14 +106,15 @@ const CartPage: React.FC = () => {
         }
       } catch (error) {
         router.push("/login");
+      } finally {
+        setLoading(false);
       }
     };
-
     fetchCookies();
   }, [router]);
 
   // Checkout
-  const handleCheckout = async (): Promise<void> => {
+  const handleCheckout = async () => {
     if (userLoggedIn) {
       try {
         await axios.post(`${BASE_URL}/orders/checkout`, { cart });
@@ -133,7 +128,7 @@ const CartPage: React.FC = () => {
   };
 
   // Update cart quantity
-  const handleUpdateCart = async (cartId: string, productId: string, quantity: number): Promise<void> => {
+  const handleUpdateCart = async (cartId: string, productId: string, quantity: number) => {
     try {
       await axios.post(`${BASE_URL}/cart/update/`, {
         cartId,
@@ -147,24 +142,24 @@ const CartPage: React.FC = () => {
     }
   };
 
-  // Delete a product from cart
-  const handleDeleteProduct = async (cartId: string, productId: string): Promise<void> => {
+  // Delete product
+  const handleDeleteProduct = async (cartId: string, productId: string) => {
     try {
       const response = await axios.delete(`${BASE_URL}/cart/delete/`, {
-        data: { cartId, productId }
+        data: { cartId, productId },
       });
 
       if (response.status === 200) {
-        setCart(prevCart => {
-          const newProducts = prevCart.products.filter(p => p.productId !== productId);
-          if (newProducts.length === 0) router.push('/');
-          return { 
-            ...prevCart, 
+        setCart((prevCart) => {
+          const newProducts = prevCart.products.filter((p) => p.productId !== productId);
+          if (newProducts.length === 0) router.push("/");
+          return {
+            ...prevCart,
             products: newProducts,
             totalAmount: newProducts.reduce((total, item) => {
-              const product = productsDetail.find(p => p._id === item.productId);
+              const product = productsDetail.find((p) => p._id === item.productId);
               return total + (product ? product.unitPrice * item.quantity : 0);
-            }, 0)
+            }, 0),
           };
         });
         toast.success("Product removed from cart");
@@ -175,9 +170,9 @@ const CartPage: React.FC = () => {
     }
   };
 
-  // Scroll handler for fixed order summary
+  // Scroll handler
   useEffect(() => {
-    const handleScroll = (): void => {
+    const handleScroll = () => {
       if (fixedRef.current && targetRef.current) {
         const fixedHeight = fixedRef.current.clientHeight;
         const targetTop = targetRef.current.getBoundingClientRect().top;
@@ -189,61 +184,58 @@ const CartPage: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Increase/decrease quantity
-  const handleIncreaseQuantity = (itemId: string): void => {
-    updateQuantityInternal(itemId, 1);
-  };
+  // Quantity helpers
+  const handleIncreaseQuantity = (itemId: string) => updateQuantityInternal(itemId, 1);
+  const handleDecreaseQuantity = (itemId: string) => updateQuantityInternal(itemId, -1);
 
-  const handleDecreaseQuantity = (itemId: string): void => {
-    updateQuantityInternal(itemId, -1);
-  };
-
-  const updateQuantityInternal = (itemId: string, change: number): void => {
-    setCart(prevCart => {
-      const updatedProducts = prevCart.products.map(item =>
-        item.id === itemId
-          ? { ...item, quantity: Math.max(1, item.quantity + change) }
-          : item
+  const updateQuantityInternal = (itemId: string, change: number) => {
+    setCart((prevCart) => {
+      const updatedProducts = prevCart.products.map((item) =>
+        item.id === itemId ? { ...item, quantity: Math.max(1, item.quantity + change) } : item
       );
-
       const updatedTotal = updatedProducts.reduce((total, item) => {
-        const product = productsDetail.find(p => p._id === item.productId);
+        const product = productsDetail.find((p) => p._id === item.productId);
         return total + (product ? product.unitPrice * item.quantity : 0);
       }, 0);
-
       return { ...prevCart, products: updatedProducts, totalAmount: updatedTotal };
     });
     setUpdateBtnVisible(true);
   };
 
-  const updateQuantity = (itemId: string, newQuantity: number): void => {
-    setCart(prev => {
-      const updatedProducts = prev.products.map(item =>
+  const updateQuantity = (itemId: string, newQuantity: number) => {
+    setCart((prev) => {
+      const updatedProducts = prev.products.map((item) =>
         item.id === itemId ? { ...item, quantity: newQuantity } : item
       );
       const updatedTotal = updatedProducts.reduce((total, item) => {
-        const product = productsDetail.find(p => p._id === item.productId);
+        const product = productsDetail.find((p) => p._id === item.productId);
         return total + (product ? product.unitPrice * item.quantity : 0);
       }, 0);
       return { ...prev, products: updatedProducts, totalAmount: updatedTotal };
     });
   };
 
-  // Fetch cart again if user ID changes
+  // Fetch cart when ID changes
   useEffect(() => {
-    const fetchCart = async (): Promise<void> => {
-      if(!userLoggedIn) return;
+    const fetchCart = async () => {
+      if (!userLoggedIn) return;
       try {
         const response = await axios.get<{ cart: Cart; products: ProductDetail[] }>(`${BASE_URL}/cart/${id}`);
         setCart(response.data.cart);
         setProductsDetail(response.data.products);
         setNumberOfCartItems(response.data.cart.products.length);
-      } catch(err) {
+      } catch (err) {
         console.log("Cart Empty");
       }
     };
     fetchCart();
   }, [id, userLoggedIn]);
+
+  if (loading) {
+    return (
+      <Loading/>
+    );
+  }
 
   return (
     <div>
@@ -255,42 +247,44 @@ const CartPage: React.FC = () => {
         userLoggedIn={userLoggedIn}
       />
 
-      <div className="pt-[15vh] bg-white w-[100%] flex items-center justify-center text-black">
-        <div className="w-[95%] min-h-[100vh] flex flex-row">
-          <div className="w-[76.4%] pr-[20px] h-[100%]">
+      <div className="pt-[18vh] bg-white w-full flex items-center justify-center text-black">
+        <div className="w-[90%] min-h-[100vh] flex flex-row">
+          {/* Left Section */}
+          <div className="w-[76.4%] pr-[20px]">
             {/* Advertisement */}
-            <div className="w-[100%] flex flex-row h-[200px] bg-gray-300 rounded-[10px] mt-[10px] ring-[0.5px] ring-gray-800">
-              <div className="w-[60%] h-[100%] flex flex-col items-center justify-center">
+            <div className="w-full flex flex-row h-[200px] bg-gray-300 rounded-[10px] mt-[10px] ring-[0.5px] ring-gray-800">
+              <div className="w-[60%] flex flex-col items-center justify-center">
                 <div className="w-[80%]">
                   <p className="text-[25px] leading-[30px]">{advertisement[0]?.title}</p>
                   <p className="text-gray-600 leading-[20px] mt-[5px]">{advertisement[0]?.description}</p>
                 </div>
               </div>
-              <div className="w-[40%] h-[100%] flex items-center justify-center">
-                <Image 
-                  src={advertisement[0]?.imageUrl || ProductImage} 
-                  width={220} 
-                  height={150} 
-                  alt="Advertisement" 
-                  className="rounded-[10px]" 
+              <div className="w-[40%] flex items-center justify-center">
+                <Image
+                  src={advertisement[0]?.imageUrl || ProductImage}
+                  width={220}
+                  height={150}
+                  alt="Advertisement"
+                  className="rounded-[10px]"
                 />
               </div>
             </div>
 
             {/* Shopping Cart */}
             <p className="text-[35px] px-[20px] mt-[10px] mb-[5px]">Shopping Cart</p>
-            <div className="w-[100%] mt-[10px] mb-[20px] h-[100%]">
-              <div className="flex flex-col space-y-[8px] w-[100%] bg-gray-300 rounded-[10px] px-[10px] py-[9px] ring-[0.5px] ring-gray-500">
+            <div className="w-full mt-[10px] mb-[20px]">
+              <div className="flex flex-col space-y-[8px] w-full bg-gray-300 rounded-[10px] px-[10px] py-[9px] ring-[0.5px] ring-gray-500">
                 {cart.products.length > 0 ? (
                   cart.products.map((item) => {
-                    const product = productsDetail.find(p => p._id === item.productId);
-                    return product ? (
+                    const product = productsDetail.find((p) => p._id === item.productId);
+                    if (!product) return null;
+                    return (
                       <div
                         key={item._id}
-                        className="w-[100%] h-[120px] pl-[5px] pr-[20px] py-[4.5px] bg-white rounded-[8px] ring-gray-500 ring-[0.5px] flex flex-row justify-between"
+                        className="w-full h-[120px] pl-[5px] pr-[20px] py-[4.5px] bg-white rounded-[8px] ring-gray-500 ring-[0.5px] flex flex-row justify-between"
                       >
                         <div className="flex flex-row space-x-[10px]">
-                          <div className="bg-gray-200 ring-[0px] ring-gray-500 w-[110px] flex items-center justify-center h-[110px] rounded-[6px]">
+                          <div className="bg-gray-200 w-[110px] flex items-center justify-center h-[110px] rounded-[6px]">
                             <Image alt="" src={product.imageUrl || ProductImage} height={90} width={90} />
                           </div>
                           <div className="py-[8px] leading-[24px]">
@@ -308,7 +302,7 @@ const CartPage: React.FC = () => {
                                 >
                                   <div className="bg-black h-[1px] w-[10px]"></div>
                                 </div>
-                                <div className="w-[100%] flex items-center justify-center">
+                                <div className="w-full flex items-center justify-center">
                                   <input
                                     value={item.quantity}
                                     onChange={(e) => {
@@ -318,10 +312,7 @@ const CartPage: React.FC = () => {
                                     className="w-full text-[20px] text-center focus:outline-none"
                                   />
                                 </div>
-                                <div
-                                  onClick={() => handleIncreaseQuantity(item.id)}
-                                  className="px-[10px] cursor-pointer"
-                                >
+                                <div onClick={() => handleIncreaseQuantity(item.id)} className="px-[10px] cursor-pointer">
                                   <p className="text-[20px]">+</p>
                                 </div>
                               </div>
@@ -339,7 +330,9 @@ const CartPage: React.FC = () => {
                         <div>
                           <p className="text-[23px] py-[8px]">Rs. {product.unitPrice * item.quantity}</p>
                           <div className="flex flex-col leading-[22px]">
-                            <div className="cursor-pointer w-fit"><p>Favourites</p></div>
+                            <div className="cursor-pointer w-fit">
+                              <p>Favourites</p>
+                            </div>
                             <div
                               onClick={() => handleDeleteProduct(cart._id, product._id)}
                               className="cursor-pointer w-fit"
@@ -349,7 +342,7 @@ const CartPage: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                    ) : null;
+                    );
                   })
                 ) : (
                   <p>No products in the cart</p>
@@ -358,14 +351,14 @@ const CartPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Order Summary */}
+          {/* Right Section - Order Summary */}
           <div className="w-[38%] h-[100vh] py-[15px]">
             <div
               ref={fixedRef}
               className={`${isFixed ? "fixed w-[30%]" : "static w-[100%]"} py-[10px] px-[20px] rounded-[15px] ring-[0.5px] bg-gray-300 h-[80%]`}
             >
               <p className="text-[20px] text-gray-700">Order Summary</p>
-              <div className="h-[0.5px] w-[100%] mt-[10px] bg-black"></div>
+              <div className="h-[0.5px] w-full mt-[10px] bg-black"></div>
               <div className="flex flex-col my-[10px]">
                 <div className="flex flex-row justify-between">
                   <p>Sub total</p>
@@ -376,7 +369,7 @@ const CartPage: React.FC = () => {
                   <p>Rs. 500</p>
                 </div>
               </div>
-              <div className="h-[0.5px] w-[100%] bg-black"></div>
+              <div className="h-[0.5px] w-full bg-black"></div>
               <div className="flex flex-row justify-between my-[18px]">
                 <input
                   className="border-[0.5px] w-[250px] rounded-[5px] px-[10px] focus:outline-none"
@@ -386,22 +379,20 @@ const CartPage: React.FC = () => {
                   <p>Apply Coupon</p>
                 </div>
               </div>
-              <div className="h-[0.5px] w-[100%] bg-black"></div>
-              <div>
-                <div className="flex flex-row justify-between text-[20px] mt-[10px]">
-                  <p>Grand total</p>
-                  <p>Rs. {cart.totalAmount + 500}</p>
-                </div>
+              <div className="h-[0.5px] w-full bg-black"></div>
+              <div className="flex flex-row justify-between text-[20px] mt-[10px]">
+                <p>Grand total</p>
+                <p>Rs. {cart.totalAmount + 500}</p>
               </div>
               <div className="flex flex-col space-y-[10px] mt-[20px]">
-                <div 
-                  onClick={handleCheckout} 
+                <div
+                  onClick={handleCheckout}
                   className="bg-gray-500 rounded-[10px] py-[10px] cursor-pointer flex items-center justify-center"
                 >
                   <p>Checkout</p>
                 </div>
-                <div 
-                  onClick={() => router.push('/')} 
+                <div
+                  onClick={() => router.push("/")}
                   className="bg-yellow-600 rounded-[10px] py-[10px] cursor-pointer flex items-center justify-center"
                 >
                   <p>Continue Shopping</p>

@@ -225,7 +225,7 @@ const Navigation: React.FC<NavigationProps> = ({
           </div>
           
           {/* Categories Content */}
-          <div className="flex-1 overflow-y-auto sm:p-4">
+          <div className="flex-1  overflow-y-auto sm:p-4">
             <AllNavCategories />
           </div>
         </div>
@@ -407,7 +407,7 @@ const Navigation: React.FC<NavigationProps> = ({
                     className="w-[35px] h-[35px] md:w-[110px] md:h-[45px]"
                   />
                   {numberOfCartItems >= 0 && (
-                    <span className="text-[#FFCC29] absolute -top-[0px] font-bold -right-[-13px] rounded-full w-5 h-5 md:w-7 md:h-7 flex items-center justify-center text-[12px] md:text-[40px] ring-2 ring-[#0A0A0A]">
+                    <span className="text-[#FFCC29] absolute -top-[0px] font-bold -right-[-13px] rounded-full w-5 h-5 md:w-7 md:h-7 flex items-center justify-center text-[12px] md:text-[40px] ">
                       {numberOfCartItems > 99 ? '99+' : numberOfCartItems}
                     </span>
                   )}
@@ -550,7 +550,7 @@ const Navigation: React.FC<NavigationProps> = ({
             <button
               onMouseEnter={handleCategoryMouseEnter}
               onMouseLeave={handleCategoryMouseLeave}
-              className="flex flex-row cursor-pointer space-x-[4px] items-center hover:text-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded px-2 py-1"
+              className="flex flex-row cursor-pointer space-x-[4px] items-center hover:text-gray-200 transition-colors focus:outline-none  px-2 py-1"
               aria-expanded={onCategoryHover}
             >
               <Image
@@ -565,7 +565,7 @@ const Navigation: React.FC<NavigationProps> = ({
             
             <button 
               onClick={() => router.push("/order-history")} 
-              className="cursor-pointer hover:text-gray-200  transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded px-2 py-1"
+              className="cursor-pointer hover:text-gray-200  transition-colors focus:outline-none px-2 py-1"
             >
               Order History
             </button>
@@ -639,6 +639,8 @@ const Navigation: React.FC<NavigationProps> = ({
         <div
           className={`${onCategoryHover ? "max-h-[72vh] opacity-100" : "max-h-0 opacity-0"} 
                       transition-all duration-300 
+                      ring-[1px] ring-black
+                      rounded-b-[20px]
                       overflow-hidden 
                       origin-top 
                       flex justify-center
@@ -650,7 +652,7 @@ const Navigation: React.FC<NavigationProps> = ({
             className="bg-white w-[93vw] max-w-[1350px] overflow-hidden ring-[0.5px] text-black 
                       flex flex-row ring-gray-500 rounded-b-[20px] shadow-lg"
           >
-            <div className="flex flex-col w-full overflow-hidden items-center justify-center">
+            <div className="flex flex-col  w-full overflow-hidden items-center justify-center">
               <AllNavCategories />
             </div>
           </div>

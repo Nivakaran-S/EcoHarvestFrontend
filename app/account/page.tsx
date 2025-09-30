@@ -1,21 +1,16 @@
 'use client';
+
 import Image from "next/image";
 import Navigation from "../components/Navigation";
-import Hero from "../components/Hero";
-import AllCategories from "../components/AllCategories";
-import TopSellers from "../components/TopSellers";
-import PopularProducts from "../components/PopularProducts";
 import Footer from "../components/Footer";
-import YouMightLike from "../components/YouMightLike";
 import Max from "../components/Max";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import Loading from "../components/Loading";
 
-// ==== Config ==== 
 const BASE_URL = "https://eco-harvest-backend.vercel.app";
 
-// ==== Types ====
 interface Product {
   _id: string;
   name: string;
@@ -23,14 +18,13 @@ interface Product {
   imageUrl: string;
   unitPrice: number;
   rating?: number;
-  averageRating?: number; // Added based on your schema
+  averageRating?: number;
   category?: string;
-  productCategory_id?: string; // Added based on your schema
+  productCategory_id?: string;
   brand?: string;
-  MRP?: number; // Added based on your schema
-  numberOfReviews?: number; // Added based on your schema
+  MRP?: number;
+  numberOfReviews?: number;
 }
-
 
 interface CartItem {
   _id: string;
@@ -65,29 +59,18 @@ interface Notification {
   createdAt: string;
 }
 
-interface ProductDetail {
-  _id: string;
-  name: string;
-  unitPrice: number;
-  status: string;
-  imageUrl: string;
-  subtitle: string;
-}
-
 export default function AccountManagement() {
   const [id, setId] = useState<string>("");
   const [role, setRole] = useState<string>("");
   const [userLoggedIn, setUserLoggedIn] = useState<boolean>(false);
-  const [cart, setCart] = useState<Cart>({
-      products: [],
-      totalAmount: 0
-    });
+  const [cart, setCart] = useState<Cart>({ products: [], totalAmount: 0 });
   const [productsDetail, setProductsDetail] = useState<Product[]>([]);
   const [numberOfCartItems, setNumberOfCartItems] = useState<number>(0);
   const [editProfile, setEditProfile] = useState<boolean>(false);
   const [userInformation, setUserInformation] = useState<UserInformation | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  
+  const [loading, setLoading] = useState<boolean>(true);
+
   // Profile editing state
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
@@ -101,80 +84,73 @@ export default function AccountManagement() {
   const router = useRouter();
 
   useEffect(() => {
-    const fetchCookies = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get<{ id: string; role: string }>(
+        const cookieRes = await axios.get<{ id: string; role: string }>(
           `${BASE_URL}/check-cookie/`,
           { withCredentials: true }
         );
 
-        setId(response.data.id);
-        setRole(response.data.role);
+        setId(cookieRes.data.id);
+        setRole(cookieRes.data.role);
 
-        try {
-          const response2 = await axios.get<UserInformation>(
-            `${BASE_URL}/customers/details/${response.data.id}`,
-            { withCredentials: true }
-          );
-          setUserInformation(response2.data);
-          setFirstName(response2.data.firstName);
-          setLastName(response2.data.lastName);
-          setEmail(response2.data.email);
-          setPhoneNumber(response2.data.phoneNumber);
-          setAddress(response2.data.address);
-          setDateOfBirth(response2.data.dateOfBirth);
-          setUsername(response2.data.username);
+        const userRes = await axios.get<UserInformation>(
+          `${BASE_URL}/customers/details/${cookieRes.data.id}`,
+          { withCredentials: true }
+        );
+        setUserInformation(userRes.data);
+        setFirstName(userRes.data.firstName);
+        setLastName(userRes.data.lastName);
+        setEmail(userRes.data.email);
+        setPhoneNumber(userRes.data.phoneNumber);
+        setAddress(userRes.data.address);
+        setDateOfBirth(userRes.data.dateOfBirth);
+        setUsername(userRes.data.username);
 
-          try {
-            const response3 = await axios.get<Notification[]>(
-              `${BASE_URL}/notification/${response.data.id}`,
-              { withCredentials: true }
-            );
-            setNotifications(response3.data);
-          } catch (err) {
-            console.error("Error in fetching notifications: ", err);
-          }
-        } catch (err) {
-          console.error("Error in fetching user information: ", err);
-        }
+        const notifRes = await axios.get<Notification[]>(
+          `${BASE_URL}/notification/${cookieRes.data.id}`,
+          { withCredentials: true }
+        );
+        setNotifications(notifRes.data);
 
-        if (response.data.role === "Customer") {
+        if (cookieRes.data.role === "Customer") {
           setUserLoggedIn(true);
           try {
-            const response2 = await axios.get<{
-              cart: Cart;
-              products: Product[];
-            }>(`${BASE_URL}/cart/${response.data.id}`, { withCredentials: true });
-            setCart(response2.data.cart);
-            setProductsDetail(response2.data.products);
-            setNumberOfCartItems(response2.data.cart.products.length);
+            const cartRes = await axios.get<{ cart: Cart; products: Product[] }>(
+              `${BASE_URL}/cart/${cookieRes.data.id}`,
+              { withCredentials: true }
+            );
+            setCart(cartRes.data.cart);
+            setProductsDetail(cartRes.data.products);
+            setNumberOfCartItems(cartRes.data.cart.products.length);
           } catch {
             console.log("Cart Empty");
           }
-        } else if (response.data.role === "Vendor") {
+        } else if (cookieRes.data.role === "Vendor") {
           router.push("/vendor");
-        } else if (response.data.role === "Admin") {
+        } else if (cookieRes.data.role === "Admin") {
           router.push("/admin");
         }
+        setLoading(false);
       } catch {
         router.push("/login");
       }
     };
 
-    fetchCookies();
+    fetchData();
   }, [router]);
 
   useEffect(() => {
     const fetchCart = async () => {
       if (!userLoggedIn || !id) return;
       try {
-        const response2 = await axios.get<{ cart: Cart; products: Product[] }>(
+        const cartRes = await axios.get<{ cart: Cart; products: Product[] }>(
           `${BASE_URL}/cart/${id}`,
           { withCredentials: true }
         );
-        setCart(response2.data.cart);
-        setProductsDetail(response2.data.products);
-        setNumberOfCartItems(response2.data.cart.products.length);
+        setCart(cartRes.data.cart);
+        setProductsDetail(cartRes.data.products);
+        setNumberOfCartItems(cartRes.data.cart.products.length);
       } catch {
         console.log("Cart Empty");
       }
@@ -217,6 +193,16 @@ export default function AccountManagement() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="flex  flex-col items-center">
+            <Loading/>
+          </div>
+        </div>
+    );
+  }
+
   return (
     <div>
       <Navigation
@@ -230,7 +216,9 @@ export default function AccountManagement() {
       <div className="flex flex-col items-center justify-center text-black min-h-screen bg-gray-100">
         <div className="w-[95%] sm:w-[90vw] flex pb-[5vh] flex-col lg:flex-row min-h-[90vh] mt-[15vh] sm:mt-[18vh] space-y-6 lg:space-y-0">
           <div className="w-full lg:w-[70vw] pt-[20px] px-2 sm:px-0">
-            <p className="leading-tight sm:leading-[35px] text-2xl sm:text-[30px]">Account Management</p>
+            <p className="leading-tight sm:leading-[35px] text-2xl sm:text-[30px]">
+              Account Management
+            </p>
             <p className="text-sm sm:text-base">Manage your account details</p>
 
             {userInformation && (
@@ -255,6 +243,7 @@ export default function AccountManagement() {
                   </p>
                 </div>
 
+                {/* === Profile Editing Fields === */}
                 <div className="flex flex-col sm:flex-row sm:space-x-[20px] justify-between mt-[20px] space-y-4 sm:space-y-0">
                   <div className="w-full sm:w-[50%]">
                     <p className="text-sm sm:text-base">First name</p>
@@ -263,8 +252,7 @@ export default function AccountManagement() {
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       disabled={!editProfile}
-                      placeholder={userInformation.firstName}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px] text-sm sm:text-base"
+                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px]"
                     />
                   </div>
                   <div className="w-full sm:w-[50%]">
@@ -274,8 +262,7 @@ export default function AccountManagement() {
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       disabled={!editProfile}
-                      placeholder={userInformation.lastName}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px] text-sm sm:text-base"
+                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px]"
                     />
                   </div>
                 </div>
@@ -288,8 +275,7 @@ export default function AccountManagement() {
                       value={dateOfBirth}
                       onChange={(e) => setDateOfBirth(e.target.value)}
                       disabled={!editProfile}
-                      placeholder={userInformation.dateOfBirth}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px] text-sm sm:text-base"
+                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px]"
                     />
                   </div>
                 </div>
@@ -302,8 +288,7 @@ export default function AccountManagement() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       disabled={!editProfile}
-                      placeholder={userInformation.email}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px] text-sm sm:text-base"
+                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px]"
                     />
                   </div>
                   <div className="w-full sm:w-[50%]">
@@ -313,8 +298,7 @@ export default function AccountManagement() {
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       disabled={!editProfile}
-                      placeholder={userInformation.phoneNumber}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px] text-sm sm:text-base"
+                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px]"
                     />
                   </div>
                 </div>
@@ -327,8 +311,7 @@ export default function AccountManagement() {
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       disabled={!editProfile}
-                      placeholder={userInformation.address}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px] text-sm sm:text-base"
+                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px]"
                     />
                   </div>
                 </div>
@@ -341,8 +324,7 @@ export default function AccountManagement() {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       disabled={!editProfile}
-                      placeholder={userInformation.username}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px] text-sm sm:text-base"
+                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px]"
                     />
                   </div>
                   <div className="w-full sm:w-[50%]">
@@ -353,7 +335,7 @@ export default function AccountManagement() {
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={!editProfile}
                       placeholder="******"
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px] text-sm sm:text-base"
+                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px]"
                     />
                   </div>
                 </div>
@@ -363,7 +345,7 @@ export default function AccountManagement() {
                     <div className="flex flex-row justify-center sm:justify-end mt-[20px]">
                       <div
                         onClick={() => setEditProfile(true)}
-                        className="bg-orange-500 w-full sm:w-fit px-4 sm:px-[20px] py-3 sm:py-[5px] rounded-[5px] ring-orange-800 ring-[0.5px] cursor-pointer text-center hover:bg-orange-600 transition-colors"
+                        className="bg-orange-500 w-full sm:w-fit px-4 py-3 rounded-[5px] ring-orange-800 ring-[0.5px] cursor-pointer text-center hover:bg-orange-600 transition-colors"
                       >
                         <p className="text-sm sm:text-base text-white">Edit Profile</p>
                       </div>
@@ -371,7 +353,7 @@ export default function AccountManagement() {
                   ) : (
                     <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-[20px] justify-center sm:justify-end mt-[20px]">
                       <div
-                        className="bg-gray-500 px-4 sm:px-[20px] py-3 sm:py-[5px] rounded-[5px] ring-gray-800 ring-[0.5px] cursor-pointer text-center hover:bg-gray-600 transition-colors"
+                        className="bg-gray-500 px-4 py-3 rounded-[5px] ring-gray-800 ring-[0.5px] cursor-pointer text-center hover:bg-gray-600 transition-colors"
                         onClick={() => {
                           setEditProfile(false);
                           setFirstName(userInformation.firstName);
@@ -388,7 +370,7 @@ export default function AccountManagement() {
                       </div>
                       <div
                         onClick={handleUpdateProfile}
-                        className="bg-orange-500 px-4 sm:px-[20px] py-3 sm:py-[5px] rounded-[5px] ring-orange-800 ring-[0.5px] cursor-pointer text-center hover:bg-orange-600 transition-colors"
+                        className="bg-orange-500 px-4 py-3 rounded-[5px] ring-orange-800 ring-[0.5px] cursor-pointer text-center hover:bg-orange-600 transition-colors"
                       >
                         <p className="text-sm sm:text-base text-white">Confirm</p>
                       </div>
@@ -399,6 +381,7 @@ export default function AccountManagement() {
             )}
           </div>
 
+          {/* Notifications Section */}
           <div className="w-full lg:w-[30vw] h-auto lg:h-[90vh] py-[15px] px-4 sm:px-[20px] bg-gray-300 rounded-[15px] ring-[0.5px] ring-gray-800">
             <p className="text-lg sm:text-[20px] mb-2">Notifications</p>
 
@@ -410,7 +393,9 @@ export default function AccountManagement() {
                     className="bg-white p-2 sm:p-[10px] rounded-[5px] mt-[10px]"
                   >
                     <p className="text-sm sm:text-base font-medium">{notification.title}</p>
-                    <p className="text-xs sm:text-[14px] text-gray-700 mt-1">{notification.message}</p>
+                    <p className="text-xs sm:text-[14px] text-gray-700 mt-1">
+                      {notification.message}
+                    </p>
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:pr-[10px] mt-2 space-y-1 sm:space-y-0">
                       <p className="text-gray-500 text-[10px] sm:text-[12px]">
                         {new Date(notification.createdAt).toLocaleDateString(

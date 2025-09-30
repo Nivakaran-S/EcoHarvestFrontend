@@ -406,8 +406,8 @@ const Navigation: React.FC<NavigationProps> = ({
                     height={50}
                     className="w-[35px] h-[35px] md:w-[110px] md:h-[45px]"
                   />
-                  {numberOfCartItems > 0 && (
-                    <span className="text-[#FFCC29] absolute -top-1 font-bold -right-1 bg-[#0A0A0A] rounded-full w-5 h-5 md:w-7 md:h-7 flex items-center justify-center text-[12px] md:text-[14px] ring-2 ring-[#0A0A0A]">
+                  {numberOfCartItems >= 0 && (
+                    <span className="text-[#FFCC29] absolute -top-[0px] font-bold -right-[-13px] rounded-full w-5 h-5 md:w-7 md:h-7 flex items-center justify-center text-[12px] md:text-[40px] ring-2 ring-[#0A0A0A]">
                       {numberOfCartItems > 99 ? '99+' : numberOfCartItems}
                     </span>
                   )}

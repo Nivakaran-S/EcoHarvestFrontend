@@ -71,7 +71,6 @@ export default function AccountManagement() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Profile editing state
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
@@ -94,18 +93,18 @@ export default function AccountManagement() {
         setId(cookieRes.data.id);
         setRole(cookieRes.data.role);
 
-        const userRes = await axios.get<UserInformation>(
+        const userRes = await axios.get<UserInformation[]>(
           `${BASE_URL}/customers/details/${cookieRes.data.id}`,
           { withCredentials: true }
         );
-        setUserInformation(userRes.data);
-        setFirstName(userRes.data.firstName);
-        setLastName(userRes.data.lastName);
-        setEmail(userRes.data.email);
-        setPhoneNumber(userRes.data.phoneNumber);
-        setAddress(userRes.data.address);
-        setDateOfBirth(userRes.data.dateOfBirth);
-        setUsername(userRes.data.username);
+        setUserInformation(userRes.data[2]);
+        setFirstName(userRes.data[2].firstName);
+        setLastName(userRes.data[2].lastName);
+        setEmail(userRes.data[2].email);
+        setPhoneNumber(userRes.data[2].phoneNumber);
+        setAddress(userRes.data[2].address);
+        setDateOfBirth(userRes.data[2].dateOfBirth);
+        setUsername(userRes.data[2].username);
 
         const notifRes = await axios.get<Notification[]>(
           `${BASE_URL}/notification/${cookieRes.data.id}`,
@@ -196,15 +195,15 @@ export default function AccountManagement() {
   if (loading) {
     return (
       <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-white/80 backdrop-blur-sm">
-          <div className="flex  flex-col items-center">
-            <Loading/>
-          </div>
+        <div className="flex flex-col items-center">
+          <Loading />
         </div>
+      </div>
     );
   }
 
   return (
-    <div>
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
       <Navigation
         numberOfCartItems={numberOfCartItems}
         productsDetail={productsDetail}
@@ -213,212 +212,321 @@ export default function AccountManagement() {
         userLoggedIn={userLoggedIn}
       />
 
-      <div className="flex flex-col items-center justify-center text-black min-h-screen bg-gray-100">
-        <div className="w-[95%] sm:w-[90vw] flex pb-[5vh] flex-col lg:flex-row min-h-[90vh] mt-[15vh] sm:mt-[18vh] space-y-6 lg:space-y-0">
-          <div className="w-full lg:w-[70vw] pt-[20px] px-2 sm:px-0">
-            <p className="leading-tight sm:leading-[35px] text-2xl sm:text-[30px]">
-              Account Management
-            </p>
-            <p className="text-sm sm:text-base">Manage your account details</p>
+      <div className="flex items-center justify-center text-gray-900 min-h-screen pt-[12vh] sm:pt-[15vh] pb-8">
+        <div className="w-[95%] lg:w-[90%] xl:w-[85%] flex flex-col lg:flex-row gap-6 mt-8">
+          {/* Main Profile Section */}
+          <div className="w-full lg:w-[70%] space-y-6">
+            {/* Header Card */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-3 bg-blue-100 rounded-xl">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Account Management</h1>
+                  <p className="text-sm text-gray-500">Manage your account details and preferences</p>
+                </div>
+              </div>
+            </div>
 
+            {/* Profile Info Card */}
             {userInformation && (
-              <div className="lg:pr-[30px]">
-                <p className="text-2xl sm:text-3xl lg:text-[45px] leading-tight sm:leading-[40px] lg:leading-[50px] mt-4">
-                  {userInformation.firstName} {userInformation.lastName}
-                </p>
-                <p className="text-xs sm:text-[13px] text-gray-500">
-                  Member since{" "}
-                  {new Date(userInformation.createdTimestamp).toLocaleDateString(
-                    "en-US",
-                    { year: "numeric", month: "long", day: "numeric" }
-                  )}
-                </p>
-
-                <div className="flex flex-row space-x-2 sm:space-x-[20px] w-fit justify-between mt-[5px]">
-                  <p className="bg-yellow-500 px-2 sm:px-[20px] py-[2px] rounded-[5px] ring-yellow-800 ring-[0.5px] text-xs sm:text-sm">
-                    {userInformation.type}
-                  </p>
-                  <p className="bg-orange-500 px-2 sm:px-[20px] py-[2px] rounded-[5px] ring-orange-800 ring-[0.5px] text-xs sm:text-sm">
-                    {userInformation.role}
-                  </p>
-                </div>
-
-                {/* === Profile Editing Fields === */}
-                <div className="flex flex-col sm:flex-row sm:space-x-[20px] justify-between mt-[20px] space-y-4 sm:space-y-0">
-                  <div className="w-full sm:w-[50%]">
-                    <p className="text-sm sm:text-base">First name</p>
-                    <input
-                      type="text"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      disabled={!editProfile}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px]"
-                    />
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
+                {/* User Header */}
+                <div className="pb-6 border-b border-gray-200">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                      {userInformation.firstName?.charAt(0) || ''}{userInformation.lastName?.charAt(0) || ''}
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-bold text-gray-900">
+                        {userInformation.firstName} {userInformation.lastName}
+                      </h2>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {userInformation.createdTimestamp ? (
+                          <>
+                            Member since{" "}
+                            {new Date(userInformation.createdTimestamp).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </>
+                        ) : (
+                          "Member"
+                        )}
+                      </p>
+                    </div>
                   </div>
-                  <div className="w-full sm:w-[50%]">
-                    <p className="text-sm sm:text-base">Last name</p>
-                    <input
-                      type="text"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      disabled={!editProfile}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px]"
-                    />
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-4 py-1.5 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium border border-yellow-300">
+                      {userInformation.type}
+                    </span>
+                    <span className="px-4 py-1.5 bg-orange-100 text-orange-800 rounded-full text-sm font-medium border border-orange-300">
+                      {userInformation.role}
+                    </span>
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:space-x-[20px] justify-between mt-[20px] space-y-4 sm:space-y-0">
-                  <div className="w-full sm:w-[50%]">
-                    <p className="text-sm sm:text-base">Date of birth</p>
+                {/* Profile Form */}
+                <div className="mt-6 space-y-6">
+                  {/* Name Fields */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        First Name
+                      </label>
+                      <input
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        disabled={!editProfile}
+                        className={`w-full px-4 py-3 rounded-xl border-2 ${
+                          editProfile
+                            ? "border-green-300 focus:border-green-500 bg-white"
+                            : "border-gray-200 bg-gray-50"
+                        } outline-none transition-colors`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Last Name
+                      </label>
+                      <input
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        disabled={!editProfile}
+                        className={`w-full px-4 py-3 rounded-xl border-2 ${
+                          editProfile
+                            ? "border-green-300 focus:border-green-500 bg-white"
+                            : "border-gray-200 bg-gray-50"
+                        } outline-none transition-colors`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Date of Birth */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Date of Birth
+                    </label>
                     <input
                       type="date"
                       value={dateOfBirth}
                       onChange={(e) => setDateOfBirth(e.target.value)}
                       disabled={!editProfile}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px]"
+                      className={`w-full px-4 py-3 rounded-xl border-2 ${
+                        editProfile
+                          ? "border-green-300 focus:border-green-500 bg-white"
+                          : "border-gray-200 bg-gray-50"
+                      } outline-none transition-colors`}
                     />
                   </div>
-                </div>
 
-                <div className="flex flex-col sm:flex-row sm:space-x-[20px] justify-between mt-[20px] space-y-4 sm:space-y-0">
-                  <div className="w-full sm:w-[50%]">
-                    <p className="text-sm sm:text-base">Email</p>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={!editProfile}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px]"
-                    />
+                  {/* Contact Fields */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={!editProfile}
+                        className={`w-full px-4 py-3 rounded-xl border-2 ${
+                          editProfile
+                            ? "border-green-300 focus:border-green-500 bg-white"
+                            : "border-gray-200 bg-gray-50"
+                        } outline-none transition-colors`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        disabled={!editProfile}
+                        className={`w-full px-4 py-3 rounded-xl border-2 ${
+                          editProfile
+                            ? "border-green-300 focus:border-green-500 bg-white"
+                            : "border-gray-200 bg-gray-50"
+                        } outline-none transition-colors`}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full sm:w-[50%]">
-                    <p className="text-sm sm:text-base">Phone number</p>
-                    <input
-                      type="tel"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      disabled={!editProfile}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px]"
-                    />
-                  </div>
-                </div>
 
-                <div className="flex flex-col sm:flex-row sm:space-x-[20px] justify-between mt-[20px] space-y-4 sm:space-y-0">
-                  <div className="w-full sm:w-[50%]">
-                    <p className="text-sm sm:text-base">Address</p>
+                  {/* Address */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Address
+                    </label>
                     <input
                       type="text"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       disabled={!editProfile}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px]"
+                      className={`w-full px-4 py-3 rounded-xl border-2 ${
+                        editProfile
+                          ? "border-green-300 focus:border-green-500 bg-white"
+                          : "border-gray-200 bg-gray-50"
+                      } outline-none transition-colors`}
                     />
                   </div>
-                </div>
 
-                <div className="flex flex-col sm:flex-row sm:space-x-[20px] justify-between mt-[20px] space-y-4 sm:space-y-0">
-                  <div className="w-full sm:w-[50%]">
-                    <p className="text-sm sm:text-base">Username</p>
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      disabled={!editProfile}
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px]"
-                    />
+                  {/* Credentials */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Username
+                      </label>
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        disabled={!editProfile}
+                        className={`w-full px-4 py-3 rounded-xl border-2 ${
+                          editProfile
+                            ? "border-green-300 focus:border-green-500 bg-white"
+                            : "border-gray-200 bg-gray-50"
+                        } outline-none transition-colors`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        disabled={!editProfile}
+                        placeholder="••••••"
+                        className={`w-full px-4 py-3 rounded-xl border-2 ${
+                          editProfile
+                            ? "border-green-300 focus:border-green-500 bg-white"
+                            : "border-gray-200 bg-gray-50"
+                        } outline-none transition-colors`}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full sm:w-[50%]">
-                    <p className="text-sm sm:text-base">Password</p>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={!editProfile}
-                      placeholder="******"
-                      className="border-2 outline-none border-gray-300 rounded-md p-2 w-full mt-[5px]"
-                    />
-                  </div>
-                </div>
 
-                <div>
-                  {!editProfile ? (
-                    <div className="flex flex-row justify-center sm:justify-end mt-[20px]">
-                      <div
+                  {/* Action Buttons */}
+                  <div className="pt-6 border-t border-gray-200">
+                    {!editProfile ? (
+                      <button
                         onClick={() => setEditProfile(true)}
-                        className="bg-orange-500 w-full sm:w-fit px-4 py-3 rounded-[5px] ring-orange-800 ring-[0.5px] cursor-pointer text-center hover:bg-orange-600 transition-colors"
+                        className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-[#1A1A1A] cursor-pointer to-[#101010] hover:from-orange-600 hover:to-orange-700 text-white rounded-xl font-semibold transition-all transform hover:scale-[1.02] shadow-md"
                       >
-                        <p className="text-sm sm:text-base text-white">Edit Profile</p>
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Edit Profile
+                        </span>
+                      </button>
+                    ) : (
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <button
+                          onClick={() => {
+                            setEditProfile(false);
+                            setFirstName(userInformation.firstName);
+                            setLastName(userInformation.lastName);
+                            setEmail(userInformation.email);
+                            setPhoneNumber(userInformation.phoneNumber);
+                            setAddress(userInformation.address);
+                            setDateOfBirth(userInformation.dateOfBirth);
+                            setUsername(userInformation.username);
+                            setPassword("");
+                          }}
+                          className="flex-1 px-8 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-semibold transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleUpdateProfile}
+                          className="flex-1 px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl font-semibold transition-all transform hover:scale-[1.02] shadow-md"
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Save Changes
+                          </span>
+                        </button>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-[20px] justify-center sm:justify-end mt-[20px]">
-                      <div
-                        className="bg-gray-500 px-4 py-3 rounded-[5px] ring-gray-800 ring-[0.5px] cursor-pointer text-center hover:bg-gray-600 transition-colors"
-                        onClick={() => {
-                          setEditProfile(false);
-                          setFirstName(userInformation.firstName);
-                          setLastName(userInformation.lastName);
-                          setEmail(userInformation.email);
-                          setPhoneNumber(userInformation.phoneNumber);
-                          setAddress(userInformation.address);
-                          setDateOfBirth(userInformation.dateOfBirth);
-                          setUsername(userInformation.username);
-                          setPassword("");
-                        }}
-                      >
-                        <p className="text-sm sm:text-base text-white">Cancel</p>
-                      </div>
-                      <div
-                        onClick={handleUpdateProfile}
-                        className="bg-orange-500 px-4 py-3 rounded-[5px] ring-orange-800 ring-[0.5px] cursor-pointer text-center hover:bg-orange-600 transition-colors"
-                      >
-                        <p className="text-sm sm:text-base text-white">Confirm</p>
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Notifications Section */}
-          <div className="w-full lg:w-[30vw] h-auto lg:h-[90vh] py-[15px] px-4 sm:px-[20px] bg-gray-300 rounded-[15px] ring-[0.5px] ring-gray-800">
-            <p className="text-lg sm:text-[20px] mb-2">Notifications</p>
+          {/* Notifications Sidebar */}
+          <div className="w-full lg:w-[30%]">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sticky top-24">
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-200">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">Notifications</h2>
+              </div>
 
-            {notifications && notifications.length > 0 ? (
-              <div className="max-h-[60vh] lg:max-h-full overflow-y-auto">
-                {notifications.map((notification) => (
-                  <div
-                    key={notification._id}
-                    className="bg-white p-2 sm:p-[10px] rounded-[5px] mt-[10px]"
-                  >
-                    <p className="text-sm sm:text-base font-medium">{notification.title}</p>
-                    <p className="text-xs sm:text-[14px] text-gray-700 mt-1">
-                      {notification.message}
-                    </p>
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:pr-[10px] mt-2 space-y-1 sm:space-y-0">
-                      <p className="text-gray-500 text-[10px] sm:text-[12px]">
-                        {new Date(notification.createdAt).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "long",
+              {notifications && notifications.length > 0 ? (
+                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
+                  {notifications.map((notification) => (
+                    <div
+                      key={notification._id}
+                      className="bg-gradient-to-br from-gray-50 to-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-shadow"
+                    >
+                      <h3 className="font-semibold text-gray-900 mb-1">{notification.title}</h3>
+                      <p className="text-sm text-gray-600 leading-relaxed mb-3">
+                        {notification.message}
+                      </p>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {new Date(notification.createdAt).toLocaleDateString("en-US", {
+                            month: "short",
                             day: "numeric",
-                          }
-                        )}
-                      </p>
-                      <p className="text-gray-500 text-[10px] sm:text-[12px]">
-                        {new Date(notification.createdAt).toLocaleTimeString()}
-                      </p>
+                            year: "numeric",
+                          })}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {new Date(notification.createdAt).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
                     </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    </svg>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-20">
-                <p className="text-sm sm:text-base text-gray-600">No notifications</p>
-              </div>
-            )}
+                  <p className="text-gray-500 text-center">No notifications yet</p>
+                  <p className="text-sm text-gray-400 text-center mt-1">We'll notify you when something arrives</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

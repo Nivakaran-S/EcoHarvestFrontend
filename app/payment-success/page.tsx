@@ -165,7 +165,7 @@ function PaymentSuccessContent() {
 
   if (!receipt) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen text-black flex flex-col">
         <Navigation
                 cart={cart}
                 id={id}
@@ -173,13 +173,13 @@ function PaymentSuccessContent() {
                 productsDetail={cart.products}
                 numberOfCartItems={cart.products.length}
               />
-        <div className="flex-grow flex items-center justify-center pt-24">
+        <div className="flex-grow flex items-center justify-center pt-25">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Receipt Not Found</h1>
             <p className="text-gray-600 mb-6">The receipt you are looking for does not exist.</p>
             <button
               onClick={() => router.push("/")}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+              className="bg-blue-600 cursor-pointer text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
             >
               Go to Home
             </button>
@@ -191,7 +191,7 @@ function PaymentSuccessContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen text-black bg-gray-50 flex flex-col">
       <Navigation
               cart={cart}
               id={id}
@@ -200,7 +200,7 @@ function PaymentSuccessContent() {
               numberOfCartItems={cart.products.length}
             />
       
-      <main className="flex-grow pt-28 pb-12">
+      <main className="flex-grow pt-37 pb-12">
         <div className="container mx-auto px-4">
           {/* Success Message */}
           <div className="max-w-3xl mx-auto">
@@ -214,21 +214,21 @@ function PaymentSuccessContent() {
                 <button
                   onClick={handleDownloadPDF}
                   disabled={downloadingPDF}
-                  className="flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition disabled:bg-gray-400"
+                  className="flex items-center cursor-pointer justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition disabled:bg-gray-400"
                 >
-                  <Download className="w-5 h-5" />
+                  <Download className="w-5 cursor-pointer h-5" />
                   {downloadingPDF ? "Downloading..." : "Download Receipt"}
                 </button>
                 <button
                   onClick={handlePrint}
-                  className="flex items-center justify-center gap-2 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition"
+                  className="flex items-center cursor-pointer justify-center gap-2 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition"
                 >
                   <Printer className="w-5 h-5" />
                   Print Receipt
                 </button>
                 <button
-                  onClick={() => router.push("/orders")}
-                  className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+                  onClick={() => router.push("/order-history")}
+                  className="flex cursor-pointer items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
                 >
                   View Orders
                   <ArrowRight className="w-5 h-5" />

@@ -149,7 +149,7 @@ const CategoryPage: React.FC = () => {
       try {
         const response = await axios.get<ProductCategory[]>(`${BASE_URL}/productcategories/`);
         setProductCategories(response.data);
-        console.log(response.data);
+        
       } catch (error) {
         console.error("Error fetching categories:", error);
       } finally {
@@ -175,6 +175,7 @@ const CategoryPage: React.FC = () => {
         
         const response = await axios.get<Product[]>(url);
         setProducts(response.data);
+        console.log(response.data)
 
         // Price range setup
         if (response.data.length > 0) {
@@ -465,7 +466,9 @@ const CategoryPage: React.FC = () => {
                     subtitle={product.subtitle}
                     unitPrice={product.unitPrice}
                     imageUrl={product.imageUrl}
+                    averageRating={product.averageRating}
                     discounts={discounts}
+                    numberOfReviews={product.numberOfReviews}
                   />
                 ))
               ) : (

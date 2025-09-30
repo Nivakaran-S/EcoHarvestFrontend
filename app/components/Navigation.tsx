@@ -357,10 +357,10 @@ const Navigation: React.FC<NavigationProps> = ({
             <div className="flex items-center space-x-1 md:space-x-4">
               {/* Login/Logout */}
               {!userLoggedIn ? (
-                <div className="hidden sm:flex flex-col items-center justify-center leading-[18px]">
-                  <p className="text-[12px]">Hello!</p>
+                <div className="hidden sm:flex flex-col items-center justify-center leading-[20px]">
+                  <p className="text-[14px]">Hello!</p>
                   <button
-                    className="bg-[#FDAA1C] cursor-pointer text-black px-[14px] py-[3px] text-[13px] rounded-full flex items-center justify-center hover:bg-[#e6941a] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FDAA1C] focus:ring-offset-2"
+                    className="bg-[#FDAA1C] cursor-pointer text-black px-[14px] py-[3px] text-[13px] rounded-[4px] flex items-center justify-center hover:bg-[#e6941a] transition-colors "
                     onClick={handleNavLoginClick}
                   >
                     Login

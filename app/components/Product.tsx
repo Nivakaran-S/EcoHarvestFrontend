@@ -127,12 +127,12 @@ const ProductCard: React.FC<ProductProps> = ({
           src={imageUrl}
           className="select-none object-contain"
           alt={`${productName} - ${subtitle}`}
-          width={100}
-          height={100}
+          width={150}
+          height={150}
           sizes="(max-width: 640px) 100px, (max-width: 768px) 120px, 145px"
           style={{
-            width: '100px',
-            height: '100px',
+            width: '180px',
+            height: '180px',
           }}
           onError={(e) => {
             console.warn(`Failed to load image for product ${productId}:`, imageUrl);
@@ -156,7 +156,8 @@ const ProductCard: React.FC<ProductProps> = ({
         {/* Price Section */}
         <div>
           {!!discountPrice ? (
-            <div className="text-lg sm:text-xl md:text-[23px] mt-1 sm:mt-[5px]">
+            <div className="text-lg flex flex-row justify-between sm:text-xl md:text-[23px] mt-1 sm:mt-[5px]">
+              <div>
               <p className="line-through  text-gray-400 text-sm sm:text-[14px] md:text-[16px]">
                 Rs. {unitPrice}
               </p>
@@ -168,6 +169,13 @@ const ProductCard: React.FC<ProductProps> = ({
                   MRP: Rs. {MRP}
                 </p>
               )}
+              </div>
+              <div className="flex flex-row items-center space-x-1 sm:space-x-[5px] mt-1">
+                <Image src={Star} alt="Star" className="h-3 w-3 sm:h-[13px] sm:w-[13px] md:h-[15px] md:w-[15px]" />
+                <p className="text-gray-700 text-xs sm:text-[13px] md:text-[15px]">
+                  {averageRating > 0 ? averageRating.toFixed(1) : "0.0"} ({actualReviewCount})
+                </p>
+              </div>
             </div>
           ) : (
             <div className="flex flex-row justify-between">

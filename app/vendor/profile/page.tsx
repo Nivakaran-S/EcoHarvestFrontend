@@ -3,21 +3,18 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
-import { FiCamera } from "react-icons/fi";
-import axios from "axios";
+import { FiCamera, FiSave, FiX } from "react-icons/fi";
 import { useRouter } from "next/navigation";
-import toast, { Toaster } from "react-hot-toast";
 
-// ===== Base URL =====
 const BASE_URL = "https://eco-harvest-backend.vercel.app";
 
-// ===== Vendor type =====
 interface VendorInfo {
   _id?: string;
   businessName?: string;
   phoneNumber?: string;
   email?: string;
-  username?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 interface UserData {
@@ -27,21 +24,25 @@ interface UserData {
 
 export default function ProfilePage() {
   const [vendor, setVendor] = useState<VendorInfo | null>(null);
-  const [vendorId, setVendorId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   const [businessName, setBusinessName] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [username, setUsername] = useState<string>("");
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
   const router = useRouter();
 
   useEffect(() => {
-    const fetchVendorId = async () => {
+    const fetchVendorProfile = async () => {
       try {
-        // Step 1: Check cookie & role
         const res = await fetch(`${BASE_URL}/check-cookie`, {
           credentials: "include",
         });
@@ -54,11 +55,10 @@ export default function ProfilePage() {
           throw new Error("Not authorized or not a vendor");
         }
 
-        const userId: string = data.id;
-        if (!userId) throw new Error("User ID not found in cookie check");
+        const userIdFromCookie: string = data.id;
+        setUserId(userIdFromCookie);
 
-        // Step 2: Fetch vendor info
-        const userRes = await fetch(`${BASE_URL}/vendors/${userId}`, {
+        const userRes = await fetch(`${BASE_URL}/vendors/${userIdFromCookie}`, {
           credentials: "include",
         });
 
@@ -69,76 +69,126 @@ export default function ProfilePage() {
         const vendorInfo = userData?.[0] ?? null;
         const userDetails = userData?.[1] ?? null;
 
-        if (!vendorInfo || !userDetails?.entityId) {
-          throw new Error(
-            `Vendor info or entityId missing. Vendor: ${JSON.stringify(
-              vendorInfo
-            )}, User: ${JSON.stringify(userDetails)}`
-          );
+        if (!vendorInfo || !userDetails) {
+          throw new Error("Vendor info missing");
         }
 
-        // Step 3: Set state safely
-        setVendorId(userDetails.entityId);
         setVendor(vendorInfo);
-
         setBusinessName(vendorInfo.businessName || "");
         setPhoneNumber(vendorInfo.phoneNumber || "");
         setEmail(vendorInfo.email || "");
+        setFirstName(vendorInfo.firstName || "");
+        setLastName(vendorInfo.lastName || "");
         setUsername(userDetails.username || "");
       } catch (err: any) {
-        console.error("Error fetching vendor ID:", err);
-        toast.error(err.message || "Failed to load profile");
+        console.error("Error fetching vendor profile:", err);
+        setMessage({ type: 'error', text: err.message || "Failed to load profile" });
         router.push("/login");
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchVendorId();
+    fetchVendorProfile();
   }, [router]);
 
   const handleSave = async () => {
-    if (!vendorId) return;
+    if (!userId) return;
+
+    setSaving(true);
+    setMessage(null);
 
     try {
-      const res = await axios.put(
-        `${BASE_URL}/vendors/${vendorId}`,
-        {
-          businessName,
-          phoneNumber,
-          email,
-          username,
-          password,
-        },
-        { withCredentials: true }
-      );
+      const updateData: any = {
+        vendorId: userId,
+        businessName,
+        phoneNumber,
+        email,
+        username,
+        firstName,
+        lastName,
+      };
 
-      if (!res.data.vendor) {
-        throw new Error("Vendor update response missing vendor object");
+      if (password.trim()) {
+        updateData.password = password;
       }
 
-      setVendor(res.data.vendor);
+      const res = await fetch(`${BASE_URL}/api/auth/updateVendor`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(updateData),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to update profile");
+      }
+
+      const responseData = await res.json();
+      setMessage({ type: 'success', text: "Profile updated successfully!" });
       setIsEditing(false);
-      toast.success("Vendor profile updated successfully!");
+      setPassword("");
+      
+      setTimeout(() => setMessage(null), 3000);
     } catch (error: any) {
       console.error("Error updating vendor:", error);
-      toast.error(error?.message || "Failed to update vendor profile.");
+      setMessage({ type: 'error', text: error?.message || "Failed to update profile" });
+    } finally {
+      setSaving(false);
     }
   };
 
+  const handleCancel = () => {
+    setBusinessName(vendor?.businessName || "");
+    setPhoneNumber(vendor?.phoneNumber || "");
+    setEmail(vendor?.email || "");
+    setFirstName(vendor?.firstName || "");
+    setLastName(vendor?.lastName || "");
+    setPassword("");
+    setIsEditing(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex text-black h-screen bg-gray-100">
+        <Sidebar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-lg font-semibold text-gray-700">Loading profile...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex text-black h-screen bg-gray-100">
-      <Toaster />
+    <div className="flex text-black min-h-screen bg-gray-100">
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Navbar />
-        <div className="flex flex-col px-8 py-6">
-          <h2 className="text-2xl font-semibold">Profile Details</h2>
-          <p className="text-gray-600">Manage your account information</p>
+        <div className="flex-1 ml-[20vw] px-8 py-6">
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold text-gray-800">Profile Details</h2>
+            <p className="text-gray-600 mt-1">Manage your account information</p>
+          </div>
 
-          <div className="bg-white shadow-md rounded-lg p-6 mt-6">
-            <div className="flex items-center space-x-4">
+          {message && (
+            <div className={`mb-6 p-4 rounded-lg ${
+              message.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+            }`}>
+              {message.text}
+            </div>
+          )}
+
+          <div className="bg-white shadow-lg rounded-lg p-8">
+            <div className="flex items-center space-x-6 mb-8 pb-6 border-b">
               <div className="relative">
-                <div className="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow-md cursor-pointer">
-                  <label htmlFor="profileUpload">
+                <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
+                  {businessName.charAt(0).toUpperCase()}
+                </div>
+                <div className="absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <label htmlFor="profileUpload" className="cursor-pointer">
                     <FiCamera className="text-yellow-500" size={18} />
                   </label>
                   <input
@@ -149,99 +199,118 @@ export default function ProfilePage() {
                   />
                 </div>
               </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-800">{businessName}</h3>
+                <p className="text-gray-600">{email}</p>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-gray-700 font-medium">
-                  Business Name
-                </label>
+                <label className="block text-gray-700 font-semibold mb-2">First Name</label>
+                <input
+                  type="text"
+                  value={firstName}
+                  disabled={!isEditing}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2">Last Name</label>
+                <input
+                  type="text"
+                  value={lastName}
+                  disabled={!isEditing}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2">Business Name</label>
                 <input
                   type="text"
                   value={businessName}
                   disabled={!isEditing}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  className="w-full mt-1 p-2 border rounded-md"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-gray-700 font-medium">
-                  Phone Number
-                </label>
+                <label className="block text-gray-700 font-semibold mb-2">Phone Number</label>
                 <input
                   type="text"
                   value={phoneNumber}
                   disabled={!isEditing}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="w-full mt-1 p-2 border rounded-md"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-gray-700 font-medium">
-                  Email Address
-                </label>
+                <label className="block text-gray-700 font-semibold mb-2">Email Address</label>
                 <input
                   type="email"
                   value={email}
                   disabled={!isEditing}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full mt-1 p-2 border rounded-md"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-gray-700 font-medium">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  value={password || "*******"}
-                  disabled={!isEditing}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full mt-1 p-2 border rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 font-medium">
-                  Username
-                </label>
+                <label className="block text-gray-700 font-semibold mb-2">Username</label>
                 <input
                   type="text"
                   value={username}
                   disabled={!isEditing}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full mt-1 p-2 border rounded-md"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 transition-colors"
                 />
               </div>
-              <div>
-                <label className="block text-gray-700 font-medium">
-                  Account Status
+              <div className="md:col-span-2">
+                <label className="block text-gray-700 font-semibold mb-2">
+                  Password {!isEditing && <span className="text-sm font-normal text-gray-500">(hidden)</span>}
                 </label>
-                <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-md text-sm">
-                  Active
-                </span>
+                <input
+                  type="password"
+                  value={isEditing ? password : "*******"}
+                  disabled={!isEditing}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={isEditing ? "Leave blank to keep current password" : ""}
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-600 transition-colors"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-gray-700 font-semibold mb-2">Account Status</label>
+                <div className="flex items-center">
+                  <span className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-semibold">
+                    ✓ Active
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="mt-6 flex space-x-4">
+            <div className="mt-8 pt-6 border-t flex gap-4">
               {isEditing ? (
                 <>
                   <button
                     onClick={handleSave}
-                    className="bg-green-600 text-white px-4 py-2 rounded-md"
+                    disabled={saving}
+                    className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed font-semibold"
                   >
-                    Save Changes
+                    <FiSave /> {saving ? "Saving..." : "Save Changes"}
                   </button>
                   <button
-                    onClick={() => setIsEditing(false)}
-                    className="bg-gray-400 text-white px-4 py-2 rounded-md"
+                    onClick={handleCancel}
+                    disabled={saving}
+                    className="flex items-center gap-2 bg-gray-400 text-white px-6 py-3 rounded-lg hover:bg-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                   >
-                    Cancel
+                    <FiX /> Cancel
                   </button>
                 </>
               ) : (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="bg-yellow-500 text-white px-4 py-2 rounded-md"
+                  className="bg-yellow-500 text-white px-6 py-3 rounded-lg hover:bg-yellow-600 transition-colors font-semibold"
                 >
                   Edit Profile
                 </button>

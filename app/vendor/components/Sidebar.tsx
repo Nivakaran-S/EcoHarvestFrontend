@@ -4,10 +4,10 @@ import React from "react";
 
 const Sidebar: React.FC = () => {
   return (
-    <div className="w-64 bg-black text-white h-screen p-5">
+    <div className="w-64 fixed z-[99] bg-black text-white h-screen p-5">
       <h2 className="text-2xl font-bold mb-8">EcoHarvest</h2>
       <nav className="flex flex-col space-y-4">
-        <Link href="/vendor/dashboard" passHref>
+        <Link href="/vendor" passHref>
           <div className="flex items-center space-x-2 p-2 hover:bg-yellow-700 rounded cursor-pointer">
             <FiHome /> <span>Dashboard</span>
           </div>

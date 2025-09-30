@@ -8,6 +8,7 @@ export interface Product {
   MRP: number;
   category: string;
   imageUrl: string;
+  vendorId: string;
   imageSrc?: string;
   price?: number;
   oldPrice?: number;

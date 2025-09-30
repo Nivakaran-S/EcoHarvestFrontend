@@ -45,7 +45,7 @@ const Analytics: React.FC = () => {
       <Sidebar />
       <div className="flex-1">
         <Navbar />
-        <div className="p-6">
+        <div className="p-6 ml-[20vw]">
           <h1 className="text-2xl font-bold mb-1">Analytics Dashboard</h1>
           <p className="text-gray-600 mb-6">
             Generate and view your business reports

@@ -169,7 +169,7 @@ const OrdersDashboard: React.FC = () => {
   return (
     <div>
       {/* Orders Table and Modal */}
-      <div className="bg-gray-100 flex text-black space-x-2 flex-row h-[90vh] py-[8px] w-full">
+      <div className="bg-gray-100 flex text-black space-x-2 flex-row min-h-[90vh] py-[8px] w-full">
         <div className="rounded-[10px] pb-[50px] pt-[5px] w-[100%]">
           <div>
             <div className="flex flex-row bg-gray-300 w-[83%] px-[20px] py-[10px] fixed top-[10vh] justify-between items-center">

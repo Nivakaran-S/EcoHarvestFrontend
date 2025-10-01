@@ -74,8 +74,11 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   if (!isOpen || !formData) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0  flex items-center justify-center z-50 p-4">
+      <div onClick={onClose} className="bg-black flex items-center justify-center opacity-50 h-[100vh] w-[100vw]">
+
+      </div>
+      <div className="bg-white absolute rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
           <h2 className="text-2xl font-bold text-gray-800">Edit Product</h2>
           <button

@@ -163,7 +163,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center  z-40">
-      <div className="bg-black opacity-50 h-[100%] w-[100%]">
+      <div onClick={onClose} className="bg-black opacity-50 h-[100%] w-[100%]">
 
       </div>
       <div className="bg-white p-6  absolute rounded-md shadow-lg w-[50vw] max-h-[90vh] overflow-y-auto ">

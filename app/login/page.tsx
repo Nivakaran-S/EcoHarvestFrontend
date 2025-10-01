@@ -303,7 +303,7 @@ const Login: React.FC = () => {
         <div className="w-[90%] sm:w-[70%] lg:w-[50%] px-4 lg:px-0 max-h-screen overflow-y-auto">
           <p className="text-2xl sm:text-3xl lg:text-[35px] mb-4 lg:mb-[20px] text-center lg:text-left">Register</p>
           <div className="flex flex-col space-y-3 lg:space-y-[10px]">
-            <div className="flex relative mb-2 lg:mb-[5px] flex-row space-x-[3px] bg-gray-400 rounded-[10px] p-[3px] ring-[0.5px] ring-gray-600 items-center">
+            <div className="flex relative mb-2 lg:mb-[5px] flex-row space-x-[3px] bg-gray-400 rounded-[10px] px-[8px] mx-[3px] py-[5px] ring-[0.5px] ring-gray-600 items-center">
               <div
                 onClick={handleRegistrationTypeClick}
                 className={`${
@@ -350,7 +350,7 @@ const Login: React.FC = () => {
                       <p>3</p>
                     </div>
                   </div>
-                  <div className="flex flex-col space-y-3 lg:space-y-[15px]">
+                  <div className="flex flex-col px-[10px] space-y-3 lg:space-y-[15px]">
                     <div>
                       <p className="text-sm lg:text-base">Personal Information</p>
                     </div>
@@ -511,7 +511,7 @@ const Login: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col space-y-3 lg:space-y-[13px]">
+                <div className="flex flex-col px-[5px] mt-[5px] space-y-3 lg:space-y-[13px]">
                   <div className="flex flex-row items-center justify-center mb-4">
                     <div
                       onClick={() => setRegistrationPage(1)}
@@ -661,7 +661,7 @@ const Login: React.FC = () => {
                       <p>3</p>
                     </div>
                   </div>
-                  <div className="flex flex-col space-y-3 lg:space-y-[15px]">
+                  <div className="flex flex-col px-[5px] space-y-3 lg:space-y-[15px]">
                     <div>
                       <p className="text-sm lg:text-base">Business Information</p>
                     </div>
@@ -850,7 +850,7 @@ const Login: React.FC = () => {
                   </div>
                 </div>
               ) : registrationPage === 2 ? (
-                <div className="flex flex-col space-y-3 lg:space-y-[13px]">
+                <div className="flex flex-col px-[5px] mt-[10px] space-y-3 lg:space-y-[13px]">
                   <div className="flex flex-row items-center justify-center mb-4">
                     <div
                       onClick={() => setRegistrationPage(1)}
@@ -983,7 +983,7 @@ const Login: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col space-y-3 lg:space-y-[13px]">
+                <div className="flex flex-col px-[5px] mt-[10px] space-y-3 lg:space-y-[13px]">
                   <div className="flex flex-row items-center justify-center mb-4">
                     <div
                       onClick={() => setRegistrationPage(1)}

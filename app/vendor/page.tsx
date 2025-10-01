@@ -195,7 +195,7 @@ export default function Dashboard() {
       <Sidebar />
       <div className="flex-1">
         <Navbar />
-        <div className="p-6 ml-[20vw]">
+        <div className="p-6 ml-[270px]">
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-gray-800">Welcome back, {vendorName}!</h1>
             <p className="text-gray-600 mt-1">Here's your business overview</p>

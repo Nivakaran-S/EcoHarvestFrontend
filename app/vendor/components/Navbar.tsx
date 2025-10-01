@@ -126,7 +126,7 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <div className="relative  ml-[16vw]">
+    <div className="relative  ml-[250px]">
       <div className="flex px-[50px] justify-between items-center p-4 bg-white shadow-md">
         <h1 className="text-xl font-semibold text-gray-800">Welcome back, {vendorName}</h1>
         <div className="flex items-center space-x-4">

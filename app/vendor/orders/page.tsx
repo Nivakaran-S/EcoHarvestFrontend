@@ -111,7 +111,7 @@ export default function OrdersPage() {
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Navbar />
-        <div className="p-6 ml-[20vw]">
+        <div className="p-6 ml-[270px]">
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-gray-800">Orders Management</h2>
             <p className="text-gray-600 mt-1">Manage and track all your orders</p>
